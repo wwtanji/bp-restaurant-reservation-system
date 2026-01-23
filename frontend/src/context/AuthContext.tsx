@@ -152,16 +152,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
+
+        if (response.status === 403) {
+          throw new Error(errorData.detail || 'Email not verified. Please check your email for verification link.');
+        }
+        if (response.status === 423) {
+          throw new Error(errorData.detail || 'Account temporarily locked. Please try again later.');
+        }
+
         throw new Error(errorData.detail || 'Login failed');
       }
 
       const tokenData: TokenResponse = await response.json();
       localStorage.setItem('token', tokenData.access_token);
       localStorage.setItem('refresh_token', tokenData.refresh_token);
-      
+
       const userData = await fetchUserProfile(tokenData.access_token);
       setUser(userData);
-      
+
       localStorage.setItem('justLoggedIn', 'true');
       show(`Welcome back, ${userData?.first_name}! You're now logged into Reservelt.`, 'success');
       navigate('/');
@@ -191,15 +199,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error(message || 'Registration failed');
       }
 
-      const tokenData: TokenResponse = await response.json();
-      localStorage.setItem('token', tokenData.access_token);
-      localStorage.setItem('refresh_token', tokenData.refresh_token);
-      
-      const userData = await fetchUserProfile(tokenData.access_token);
-      setUser(userData);
-      
-      show('Registration successful!', 'success');
-      navigate('/');
+      const responseData = await response.json();
+      // Registration no longer returns tokens, only a message and email
+      // Email verification is disabled for testing
+      show('Registration successful! You can now log in immediately.', 'success');
+      navigate('/login');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Registration failed. Please try again.';
       show(message, 'error');

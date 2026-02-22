@@ -240,12 +240,15 @@ class RestaurantListItem(BaseModel):
 
     id: int
     name: str
-    slug: str
+    slug: Optional[str] = None
     cuisine_type: str
     city: str
+    address: Optional[str] = None
     price_range: int
     average_rating: float
     total_reviews: int
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
     logo_url: Optional[str] = None
     cover_image_url: Optional[str] = None
     is_active: bool

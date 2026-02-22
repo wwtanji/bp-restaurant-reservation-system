@@ -27,10 +27,6 @@ export default function MainText() {
         <div className="mx-auto max-w-4xl py-8 px-2 sm:py-16 md:py-24 lg:py-32">
           <div className="text-center">
             {/* Badge - enhanced for mobile */}
-            <div className="mx-auto max-w-fit rounded-full border border-blue-100 bg-white/80 backdrop-blur-sm px-4 py-1.5 text-xs leading-5 text-blue-700 shadow-sm mb-8 ring-1 ring-blue-50">
-              <span className="inline-block animate-pulse mr-1">🎉</span>
-              Simplifying venue reservations
-            </div>
 
             <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.1]">
               Transform How You

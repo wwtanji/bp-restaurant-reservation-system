@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import NavbarComponent from '../../components/section/NavbarComponent';
 
 const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState('');

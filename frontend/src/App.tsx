@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { NotificationProvider } from './context/NotificationContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import MainPage from './pages/MainPage';
+import DiscoverPage from './pages/DiscoverPage';
 import LoginPage from './pages/Auth/LoginPage';
 import RegisterPage from './pages/Auth/RegisterPage';
 import VerifyEmailPage from './pages/Auth/VerifyEmailPage';
@@ -60,6 +61,7 @@ const AppRoutes = () => {
           <RegisterPage />
         </PublicRoute>
       } />
+      <Route path="/discover" element={<DiscoverPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />

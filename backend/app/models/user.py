@@ -3,7 +3,10 @@ from sqlalchemy import String, Boolean, Integer, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.database import Base
 from app.models.refresh_token import RefreshToken
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.restaurant import Restaurant
 
 
 def get_utc_now():
@@ -46,4 +49,9 @@ class User(Base):
     # Relationship with refresh tokens
     refresh_tokens: Mapped[list["RefreshToken"]] = relationship(
         "RefreshToken", back_populates="user", cascade="all, delete-orphan"
+    )
+
+    # Relationship with restaurants
+    restaurants: Mapped[list["Restaurant"]] = relationship(
+        "Restaurant", back_populates="owner", cascade="all, delete-orphan"
     )

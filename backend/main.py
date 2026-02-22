@@ -1,6 +1,7 @@
 import fastapi as fa
 from fastapi.middleware.cors import CORSMiddleware
 from app.controllers import ALL_CONTROLLERS
+import app.models.restaurant
 
 API = fa.FastAPI(title="API", version="0.1.0", root_path="/api")
 

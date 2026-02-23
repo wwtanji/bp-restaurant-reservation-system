@@ -2,7 +2,12 @@ from datetime import datetime, timezone
 from sqlalchemy import String, Text, Float, Boolean, Integer, JSON, ForeignKey, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.database import Base
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.user import User
+    from app.models.seating import SeatingArea
+    from app.models.reservation import Reservation
 
 
 def get_utc_now():
@@ -88,10 +93,12 @@ class Restaurant(Base):
 
     # Relationships
     owner: Mapped["User"] = relationship("User", back_populates="restaurants")
-    # Uncomment these when creating the respective models
-    # tables: Mapped[List["Table"]] = relationship("Table", back_populates="restaurant", cascade="all, delete-orphan")
-    # reservations: Mapped[List["Reservation"]] = relationship("Reservation", back_populates="restaurant", cascade="all, delete-orphan")
-    # reviews: Mapped[List["Review"]] = relationship("Review", back_populates="restaurant", cascade="all, delete-orphan")
+    seating_areas: Mapped[list["SeatingArea"]] = relationship(
+        "SeatingArea", back_populates="restaurant", cascade="all, delete-orphan"
+    )
+    reservations: Mapped[list["Reservation"]] = relationship(
+        "Reservation", back_populates="restaurant"
+    )
 
     def __repr__(self):
         return f"<Restaurant {self.name} (ID: {self.id})>"

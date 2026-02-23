@@ -4,6 +4,7 @@ import { NotificationProvider } from './context/NotificationContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import MainPage from './pages/MainPage';
 import DiscoverPage from './pages/DiscoverPage';
+import RestaurantDetailPage from './pages/RestaurantDetailPage';
 import LoginPage from './pages/Auth/LoginPage';
 import RegisterPage from './pages/Auth/RegisterPage';
 import VerifyEmailPage from './pages/Auth/VerifyEmailPage';
@@ -62,6 +63,7 @@ const AppRoutes = () => {
         </PublicRoute>
       } />
       <Route path="/discover" element={<DiscoverPage />} />
+      <Route path="/restaurants/:slug" element={<RestaurantDetailPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />

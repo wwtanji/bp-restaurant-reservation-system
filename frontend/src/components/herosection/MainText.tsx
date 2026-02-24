@@ -1,4 +1,7 @@
+import { useNavigate } from 'react-router-dom';
+
 export default function MainText() {
+  const navigate = useNavigate();
   return (
     <div className="bg-gradient-to-b from-white via-blue-50/30 to-white">
       <div className="relative isolate px-4 pt-16 sm:px-6 lg:px-8">
@@ -48,12 +51,12 @@ export default function MainText() {
               >
                 Find Event Venues
               </a>
-              <a
-                href="#"
+              <button
+                onClick={() => navigate('/discover')}
                 className="w-full sm:w-auto rounded-xl border-2 border-gray-200 bg-white/80 backdrop-blur-sm px-8 py-4 sm:px-8 sm:py-3 text-base font-semibold text-gray-900 shadow-sm hover:bg-white hover:border-gray-300 transition-all duration-300 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500"
               >
                 List Your Restaurant
-              </a>
+              </button>
             </div>
 
             {/* Trust indicators - pill-style badges on mobile */}
@@ -97,8 +100,7 @@ export default function MainText() {
               {/* For Event Organizers */}
               <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl sm:rounded-2xl p-6 sm:p-8">
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center">
-                  <span className="text-xl sm:text-2xl mr-3">🎯</span>
-                  For Event Organizers
+For Restaurants                  For Event Organizers
                 </h3>
                 <div className="space-y-3 sm:space-y-4">
                   <div className="flex items-start space-x-3">
@@ -142,7 +144,6 @@ export default function MainText() {
               {/* For Restaurants */}
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl p-6 sm:p-8">
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center">
-                  <span className="text-xl sm:text-2xl mr-3">🍽️</span>
                   For Restaurants
                 </h3>
                 <div className="space-y-3 sm:space-y-4">

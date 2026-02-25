@@ -31,6 +31,8 @@ from app.db.database import Base     # noqa: E402
 import app.models.user               # noqa: F401,E402
 import app.models.refresh_token      # noqa: F401,E402
 import app.models.password_reset_token  # noqa: F401,E402
+import app.models.restaurant        # noqa: F401,E402
+import app.models.reservation       # noqa: F401,E402
 
 target_metadata = Base.metadata
 

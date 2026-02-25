@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import NavbarComponent from '../../components/section/NavbarComponent';
 
 const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -26,7 +25,6 @@ const LoginPage: React.FC = () => {
 
   return (
     <div>
-      <NavbarComponent />
       <div className="min-h-screen flex items-center justify-center bg-white p-6">
         <div className="w-full max-w-md bg-white border border-gray-200 rounded-2xl shadow-xl p-8 sm:p-10">
           <div className="text-center mb-8">

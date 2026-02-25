@@ -31,6 +31,12 @@ interface AuthContextType {
   logout: () => void;
 }
 
+export class FieldValidationError extends Error {
+  constructor(public fieldErrors: Record<string, string>) {
+    super('Validation failed');
+  }
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
@@ -195,16 +201,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (!response.ok) {
         const errorData = await response.json();
         const detail = errorData.detail;
-        const message = Array.isArray(detail) ? detail[0].msg : detail;
-        throw new Error(message || 'Registration failed');
+
+        if (response.status === 422) {
+          const fieldErrors: Record<string, string> = {};
+          if (Array.isArray(detail)) {
+            for (const err of detail) {
+              const field = err.loc?.[err.loc.length - 1] as string | undefined;
+              if (field && field !== 'body') {
+                fieldErrors[field] = err.msg;
+              } else {
+                fieldErrors._general = err.msg;
+              }
+            }
+          } else {
+            fieldErrors._general = typeof detail === 'string' ? detail : 'Registration failed';
+          }
+          throw new FieldValidationError(fieldErrors);
+        }
+
+        throw new Error(typeof detail === 'string' ? detail : 'Registration failed');
       }
 
       await response.json();
-      // Registration no longer returns tokens, only a message and email
-      // Email verification is disabled for testing
       show('Registration successful! You can now log in immediately.', 'success');
       navigate('/login');
     } catch (error) {
+      if (error instanceof FieldValidationError) {
+        throw error;
+      }
       const message = error instanceof Error ? error.message : 'Registration failed. Please try again.';
       show(message, 'error');
       console.error('Registration error:', error);

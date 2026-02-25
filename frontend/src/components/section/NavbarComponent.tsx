@@ -3,7 +3,7 @@ import { Dialog, DialogPanel } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../../context/AuthContext";
 import { useNotification } from "../../context/NotificationContext";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import NotificationComponent from "../notification/NotificationComponent";
 
 const navigation = [
@@ -39,14 +39,14 @@ const NavbarComponent: React.FC = () => {
           className="flex items-center justify-between p-6 lg:px-8"
         >
           <div className="flex lg:flex-1">
-            <a href="" className="-m-1.5 p-1.5 flex items-center gap-2">
+            <Link to="/" className="-m-1.5 p-1.5 flex items-center gap-2">
               <span className="sr-only">Reservelt</span>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-bold text-gray-900">
                   Reservelt
                 </span>
               </div>
-            </a>
+            </Link>
           </div>
           <div className="flex lg:hidden">
             <button
@@ -60,14 +60,14 @@ const NavbarComponent: React.FC = () => {
           </div>
           <div className="hidden lg:flex lg:gap-x-12">
             {navigation.map((item) => (
-              <a
+              <button
                 key={item.name}
-                href={item.href}
+                type="button"
                 className="text-base leading-6 font-semibold text-gray-900 relative group transition-colors duration-300 hover:text-blue-500"
               >
                 {item.name}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span>
-              </a>
+              </button>
             ))}
           </div>
           <div className="hidden lg:flex lg:flex-1 lg:justify-end">
@@ -96,7 +96,7 @@ const NavbarComponent: React.FC = () => {
           <div className="fixed inset-0 z-50" />
           <DialogPanel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white p-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
             <div className="flex items-center justify-between">
-              <a href="#" className="-m-1.5 p-1.5 flex items-center gap-2">
+              <Link to="/" className="-m-1.5 p-1.5 flex items-center gap-2">
                 <span className="sr-only">Reservelt</span>
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
@@ -112,7 +112,7 @@ const NavbarComponent: React.FC = () => {
                     Reservelt
                   </span>
                 </div>
-              </a>
+              </Link>
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
@@ -126,13 +126,13 @@ const NavbarComponent: React.FC = () => {
               <div className="-my-6 divide-y divide-gray-500/10">
                 <div className="space-y-2 py-6">
                   {navigation.map((item) => (
-                    <a
+                    <button
                       key={item.name}
-                      href={item.href}
-                      className="-mx-3 block rounded-lg px-3 py-2 text-base leading-7 font-semibold text-gray-900 hover:bg-blue-50 transition-all duration-300 hover:text-blue-500 hover:pl-4"
+                      type="button"
+                      className="-mx-3 block w-full text-left rounded-lg px-3 py-2 text-base leading-7 font-semibold text-gray-900 hover:bg-blue-50 transition-all duration-300 hover:text-blue-500 hover:pl-4"
                     >
                       {item.name}
-                    </a>
+                    </button>
                   ))}
                 </div>
                 <div className="py-6">

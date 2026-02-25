@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const HowItWorksSection: React.FC = () => {
   return (
@@ -81,18 +82,18 @@ const HowItWorksSection: React.FC = () => {
             Ready to transform how you book event spaces?
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 max-w-md sm:max-w-none mx-auto">
-            <a
-              href="#"
+            <Link
+              to="/discover"
               className="w-full sm:w-auto rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 sm:px-8 text-sm sm:text-base font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
             >
               Start Booking Events
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              to="/"
               className="w-full sm:w-auto rounded-lg border-2 border-blue-500 bg-white px-6 py-3 sm:px-8 text-sm sm:text-base font-semibold text-blue-600 hover:bg-blue-50 transition-colors duration-200"
             >
               Join as Restaurant Partner
-            </a>
+            </Link>
           </div>
         </div>
       </div>

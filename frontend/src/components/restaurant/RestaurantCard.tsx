@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Restaurant } from '../../interfaces/restaurant';
 
 interface RestaurantCardProps {
@@ -26,8 +27,11 @@ const Stars: React.FC<{ rating: number }> = ({ rating }) => (
 );
 
 const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, isActive, onHover }) => {
+  const navigate = useNavigate();
+
   return (
     <div
+      onClick={() => navigate(`/restaurant/${restaurant.slug}`)}
       onMouseEnter={() => onHover(restaurant.id)}
       onMouseLeave={() => onHover(null)}
       className={`flex gap-4 p-4 rounded-xl transition-shadow cursor-pointer ${
@@ -79,6 +83,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, isActive, o
           {restaurant.availableTimes.map(time => (
             <button
               key={time}
+              onClick={e => { e.stopPropagation(); navigate(`/restaurant/${restaurant.slug}`); }}
               className="px-3 py-1.5 text-xs font-semibold text-white bg-[#D4111E] hover:bg-[#b80e19] rounded-md transition-colors"
             >
               {time}

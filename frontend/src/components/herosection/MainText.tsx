@@ -28,11 +28,6 @@ export default function MainText() {
 
         <div className="mx-auto max-w-4xl py-8 px-2 sm:py-16 md:py-24 lg:py-32">
           <div className="text-center">
-            {/* Badge - enhanced for mobile */}
-            <div className="mx-auto max-w-fit rounded-full border border-blue-100 bg-white/80 backdrop-blur-sm px-4 py-1.5 text-xs leading-5 text-blue-700 shadow-sm mb-8 ring-1 ring-blue-50">
-              <span className="inline-block animate-pulse mr-1">🎉</span>
-              Simplifying venue reservations
-            </div>
 
             <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.1]">
               Transform How You
@@ -100,10 +95,8 @@ export default function MainText() {
 
           <div className="mx-auto max-w-2xl sm:max-w-none">
             <div className="grid max-w-xl grid-cols-1 gap-x-6 gap-y-8 sm:gap-x-8 sm:gap-y-10 lg:max-w-none lg:grid-cols-2 lg:gap-y-16">
-              {/* For Event Organizers */}
               <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl sm:rounded-2xl p-6 sm:p-8">
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center">
-                  <span className="text-xl sm:text-2xl mr-3">🎯</span>
                   For Event Organizers
                 </h3>
                 <div className="space-y-3 sm:space-y-4">
@@ -145,10 +138,8 @@ export default function MainText() {
                 </div>
               </div>
 
-              {/* For Restaurants */}
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl p-6 sm:p-8">
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center">
-                  <span className="text-xl sm:text-2xl mr-3">🍽️</span>
                   For Restaurants
                 </h3>
                 <div className="space-y-3 sm:space-y-4">

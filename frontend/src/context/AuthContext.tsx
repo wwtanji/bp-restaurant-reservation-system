@@ -199,7 +199,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error(message || 'Registration failed');
       }
 
-      const responseData = await response.json();
+      await response.json();
       // Registration no longer returns tokens, only a message and email
       // Email verification is disabled for testing
       show('Registration successful! You can now log in immediately.', 'success');

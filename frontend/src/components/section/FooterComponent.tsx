@@ -7,14 +7,14 @@ const FooterComponent: React.FC = () => {
         <div>
           <h2 className="text-sm font-bold mb-6 tracking-widest uppercase">Legal</h2>
           <ul className="space-y-4 text-base text-gray-300">
-            <li><a href="#" className="hover:underline">Imprint</a></li>
+            <li><button type="button" className="hover:underline">Imprint</button></li>
             <li className="flex items-center gap-1">
-              <a href="#" className="hover:underline">Privacy Policy</a>
+              <button type="button" className="hover:underline">Privacy Policy</button>
               <svg className="w-4 h-4 mt-[1px]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </li>
-            <li><a href="#" className="hover:underline">Terms & Conditions</a></li>
+            <li><button type="button" className="hover:underline">Terms & Conditions</button></li>
           </ul>
         </div>
 

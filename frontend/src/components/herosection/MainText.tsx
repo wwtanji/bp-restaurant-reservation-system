@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function MainText() {
   return (
     <div className="bg-gradient-to-b from-white via-blue-50/30 to-white">
@@ -46,18 +48,18 @@ export default function MainText() {
 
             {/* Dual CTA Buttons - improved mobile touch targets */}
             <div className="mt-10 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-4 px-2">
-              <a
-                href="#"
+              <Link
+                to="/discover"
                 className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 px-8 py-4 sm:px-8 sm:py-3 text-base font-semibold text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-300 hover:scale-105 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
               >
                 Find Event Venues
-              </a>
-              <a
-                href="#"
+              </Link>
+              <Link
+                to="/"
                 className="w-full sm:w-auto rounded-xl border-2 border-gray-200 bg-white/80 backdrop-blur-sm px-8 py-4 sm:px-8 sm:py-3 text-base font-semibold text-gray-900 shadow-sm hover:bg-white hover:border-gray-300 transition-all duration-300 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500"
               >
                 List Your Restaurant
-              </a>
+              </Link>
             </div>
 
             {/* Trust indicators - pill-style badges on mobile */}

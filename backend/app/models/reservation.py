@@ -45,6 +45,10 @@ class Reservation(Base):
         String(20), nullable=False, default=ReservationStatus.PENDING
     )
 
+    # Guest info stored per-reservation so users can book on behalf of others
+    guest_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    guest_phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+
     special_requests: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
 

@@ -10,6 +10,8 @@ class ReservationCreate(BaseModel):
     party_size: int
     reservation_date: date
     reservation_time: time
+    guest_name: Optional[str] = None
+    guest_phone: Optional[str] = None
     special_requests: Optional[str] = None
 
     @field_validator("party_size")
@@ -27,6 +29,8 @@ class ReservationOut(BaseModel):
     reservation_date: date
     reservation_time: time
     status: str
+    guest_name: Optional[str]
+    guest_phone: Optional[str]
     special_requests: Optional[str]
     created_at: datetime
 

@@ -1,5 +1,5 @@
-from datetime import date, datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException
+from datetime import date, datetime, time, timedelta
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import exists
 from sqlalchemy.orm import Session, joinedload
 
@@ -8,12 +8,26 @@ from app.models.reservation import Reservation, ReservationStatus
 from app.models.restaurant import Restaurant
 from app.models.user import User, UserRole
 from app.schemas.reservation_schema import ReservationCreate, ReservationOut, ReservationStatusUpdate
-from app.utils.rbac import require_customer, require_restaurant_owner_or_admin
+from app.utils.rbac import get_current_user, require_customer, require_restaurant_owner_or_admin
 from app.controllers.restaurant_controller import get_restaurant_by_slug
 
 RESERVATION_CONTROLLER = APIRouter(prefix="/reservations")
 
-TURN_HOURS = 2
+TURN_HOURS = 1.5
+
+
+def _overlap_window(reservation_date: date, reservation_time: time) -> list:
+    _base = datetime.combine(date(2000, 6, 15), reservation_time)
+    slot_start = (_base - timedelta(hours=TURN_HOURS)).time()
+    slot_end   = (_base + timedelta(hours=TURN_HOURS)).time()
+    _active = [ReservationStatus.PENDING, ReservationStatus.CONFIRMED]
+    return [
+        Reservation.reservation_date == reservation_date,
+        Reservation.status.in_(_active),
+        Reservation.reservation_time > slot_start,
+        Reservation.reservation_time < slot_end,
+    ]
+
 
 # Valid status transitions an owner/admin may apply
 _OWNER_TRANSITIONS: dict[str, list[str]] = {
@@ -62,19 +76,7 @@ def create_reservation(
     if data.reservation_date < date.today():
         raise HTTPException(status_code=400, detail="Reservation date must be today or in the future")
 
-    # Build the overlap window for a TURN_HOURS-duration reservation.
-    # Using a fixed safe date avoids datetime underflow for early-morning times.
-    _base = datetime.combine(date(2000, 6, 15), data.reservation_time)
-    slot_start = (_base - timedelta(hours=TURN_HOURS)).time()  # exclusive lower bound
-    slot_end   = (_base + timedelta(hours=TURN_HOURS)).time()  # exclusive upper bound
-
-    _active = [ReservationStatus.PENDING, ReservationStatus.CONFIRMED]
-    _overlap = [
-        Reservation.reservation_date == data.reservation_date,
-        Reservation.status.in_(_active),
-        Reservation.reservation_time > slot_start,
-        Reservation.reservation_time < slot_end,
-    ]
+    _overlap = _overlap_window(data.reservation_date, data.reservation_time)
 
     # ── Check 1: user-level double-booking (across all restaurants) ──────────
     # exists() emits SELECT EXISTS(...) — stops at first hit, no full scan.
@@ -157,6 +159,27 @@ def cancel_reservation(
 
     reservation.status = ReservationStatus.CANCELLED
     db.commit()
+
+
+@RESERVATION_CONTROLLER.get("/{slug}/availability")
+def get_slot_availability(
+    reservation_date: date = Query(...),
+    reservation_time: time = Query(...),
+    restaurant: Restaurant = Depends(get_restaurant_by_slug),
+    _: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _overlap = _overlap_window(reservation_date, reservation_time)
+    overlapping = (
+        db.query(Reservation)
+        .filter(Reservation.restaurant_id == restaurant.id, *_overlap)
+        .all()
+    )
+    booked = sum(r.party_size for r in overlapping)
+    return {
+        "available_seats": max(0, restaurant.max_capacity - booked),
+        "max_capacity": restaurant.max_capacity,
+    }
 
 
 # ── Owner / Admin endpoints ───────────────────────────────────────────────────

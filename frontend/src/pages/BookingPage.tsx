@@ -97,15 +97,46 @@ const BookingPage: React.FC = () => {
   const [specialRequests, setSpecialRequests] = useState('');
 
   // Page state
-  const [restaurant, setRestaurant]     = useState<RestaurantInfo | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError]               = useState<string | null>(null);
-  const [confirmation, setConfirmation] = useState<BookingOut | null>(null);
+  const [restaurant, setRestaurant]       = useState<RestaurantInfo | null>(null);
+  const [isSubmitting, setIsSubmitting]   = useState(false);
+  const [error, setError]                 = useState<string | null>(null);
+  const [confirmation, setConfirmation]   = useState<BookingOut | null>(null);
+  const [availableSeats, setAvailableSeats]     = useState<number | null>(null);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
   // Pre-fill name from auth
   useEffect(() => {
     if (user) setGuestName(`${user.first_name} ${user.last_name}`);
   }, [user]);
+
+  // Fetch slot availability whenever date or time changes
+  useEffect(() => {
+    if (!slug) return;
+    const controller = new AbortController();
+    setAvailabilityLoading(true);
+    const token = localStorage.getItem('token');
+    const params = new URLSearchParams({
+      reservation_date: selectedDate,
+      reservation_time: toApiTime(selectedTime),
+    });
+    fetch(`${API_URL}/reservations/${slug}/availability?${params}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
+    })
+      .then(res => (res.ok ? res.json() : Promise.reject()))
+      .then((data: { available_seats: number }) => setAvailableSeats(data.available_seats))
+      .catch(() => {})
+      .finally(() => setAvailabilityLoading(false));
+    return () => controller.abort();
+  }, [slug, selectedDate, selectedTime]);
+
+  // Clamp party size if the selected slot has fewer seats than currently chosen
+  useEffect(() => {
+    if (availableSeats === null || availableSeats === 0) return;
+    if (toApiPartySize(partySize) > availableSeats) {
+      setPartySize(PARTY_SIZES[availableSeats - 1]);
+    }
+  }, [availableSeats, partySize]);
 
   // Fetch restaurant display info
   useEffect(() => {
@@ -203,7 +234,7 @@ const BookingPage: React.FC = () => {
           <div className="flex flex-col gap-2">
             <Link
               to={`/restaurant/${slug}`}
-              className="w-full py-3 text-sm font-bold text-white bg-[#d32f2f] rounded-xl hover:bg-[#b71c1c] transition-colors text-center"
+              className="w-full py-3 text-sm font-bold text-white bg-[#2563eb] rounded-xl hover:bg-[#1d4ed8] transition-colors text-center"
             >
               Back to Restaurant
             </Link>
@@ -283,13 +314,13 @@ const BookingPage: React.FC = () => {
                       value={guestName}
                       onChange={e => setGuestName(e.target.value)}
                       placeholder="Full name"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#d32f2f] bg-white"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
-                      Phone number <span className="text-[#d32f2f]">*</span>
+                      Phone number <span className="text-[#2563eb]">*</span>
                     </label>
                     <input
                       type="tel"
@@ -297,7 +328,7 @@ const BookingPage: React.FC = () => {
                       onChange={e => setGuestPhone(e.target.value)}
                       placeholder="+421 900 000 000"
                       required
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#d32f2f] bg-white"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white"
                     />
                   </div>
                 </div>
@@ -314,17 +345,31 @@ const BookingPage: React.FC = () => {
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
                       Party size
                     </label>
-                    <div className="relative">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"><PersonIcon /></div>
-                      <select
-                        value={partySize}
-                        onChange={e => setPartySize(e.target.value)}
-                        className="w-full pl-9 pr-8 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-[#d32f2f] bg-white"
-                      >
-                        {PARTY_SIZES.map(s => <option key={s}>{s}</option>)}
-                      </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><ChevronIcon /></div>
-                    </div>
+                    {availableSeats === 0 ? (
+                      <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 font-medium">
+                        Fully booked
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"><PersonIcon /></div>
+                        <select
+                          value={partySize}
+                          onChange={e => setPartySize(e.target.value)}
+                          className="w-full pl-9 pr-8 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white"
+                        >
+                          {(availableSeats !== null && !availabilityLoading
+                            ? PARTY_SIZES.slice(0, availableSeats)
+                            : PARTY_SIZES
+                          ).map(s => <option key={s}>{s}</option>)}
+                        </select>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><ChevronIcon /></div>
+                      </div>
+                    )}
+                    {availableSeats !== null && availableSeats > 0 && availableSeats <= 3 && (
+                      <p className="mt-1.5 text-xs text-amber-600 font-medium">
+                        Only {availableSeats} seat{availableSeats === 1 ? '' : 's'} left
+                      </p>
+                    )}
                   </div>
 
                   {/* Date */}
@@ -339,7 +384,7 @@ const BookingPage: React.FC = () => {
                         value={selectedDate}
                         min={todayISO()}
                         onChange={e => { setSelectedDate(e.target.value); setError(null); }}
-                        className="w-full pl-9 pr-2 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#d32f2f] bg-white"
+                        className="w-full pl-9 pr-2 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white"
                       />
                     </div>
                   </div>
@@ -354,7 +399,7 @@ const BookingPage: React.FC = () => {
                       <select
                         value={selectedTime}
                         onChange={e => setSelectedTime(e.target.value)}
-                        className="w-full pl-9 pr-8 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-[#d32f2f] bg-white"
+                        className="w-full pl-9 pr-8 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white"
                       >
                         {TIME_OPTIONS.map(t => <option key={t}>{t}</option>)}
                       </select>
@@ -374,7 +419,7 @@ const BookingPage: React.FC = () => {
                     onChange={e => setSpecialRequests(e.target.value)}
                     placeholder="Allergies, anniversary, high chair needed…"
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#d32f2f] bg-white resize-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white resize-none"
                   />
                 </div>
               </div>
@@ -389,8 +434,8 @@ const BookingPage: React.FC = () => {
               {/* Submit */}
               <button
                 type="submit"
-                disabled={isSubmitting || !guestPhone}
-                className="w-full py-4 text-sm font-bold text-white bg-[#d32f2f] rounded-xl hover:bg-[#b71c1c] active:scale-95 transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                disabled={isSubmitting || !guestPhone || availableSeats === 0}
+                className="w-full py-4 text-sm font-bold text-white bg-[#2563eb] rounded-xl hover:bg-[#1d4ed8] active:scale-95 transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <>

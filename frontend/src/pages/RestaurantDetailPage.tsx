@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
-// ── Types ─────────────────────────────────────────────────────────────────
-
 interface Review {
   id: number;
   author: string;
@@ -17,8 +15,6 @@ interface Review {
 function todayISO(): string {
   return new Date().toISOString().split('T')[0];
 }
-
-// ── Constants ─────────────────────────────────────────────────────────────
 
 const NAV_TABS = ['Overview', 'Concierge', 'Photos', 'Menu', 'Reviews', 'Details', 'FAQs'];
 
@@ -133,7 +129,7 @@ const StarRating: React.FC<{ rating: number; size?: 'sm' | 'md' | 'lg' }> = ({
 const RatingBar: React.FC<{ score: number }> = ({ score }) => (
   <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
     <div
-      className="h-full bg-[#d32f2f] rounded-full transition-all duration-700"
+      className="h-full bg-[#2563eb] rounded-full transition-all duration-700"
       style={{ width: `${(score / 5) * 100}%` }}
     />
   </div>
@@ -145,7 +141,7 @@ const NoiseBar: React.FC<{ level: number }> = ({ level }) => (
       <div
         key={i}
         className={`w-1.5 rounded-sm transition-all ${
-          i <= level ? 'bg-[#d32f2f]' : 'bg-gray-200'
+          i <= level ? 'bg-[#2563eb]' : 'bg-gray-200'
         }`}
         style={{ height: `${8 + i * 3}px` }}
       />
@@ -153,7 +149,6 @@ const NoiseBar: React.FC<{ level: number }> = ({ level }) => (
   </div>
 );
 
-// ── Main Component ────────────────────────────────────────────────────────
 
 const RestaurantDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -283,7 +278,7 @@ const RestaurantDetailPage: React.FC = () => {
               onClick={() => scrollToSection(tab)}
               className={`flex-shrink-0 px-4 py-4 text-sm font-semibold transition-all border-b-2 whitespace-nowrap ${
                 activeTab === tab
-                  ? 'border-[#d32f2f] text-[#d32f2f]'
+                  ? 'border-[#2563eb] text-[#2563eb]'
                   : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300'
               }`}
             >
@@ -306,7 +301,7 @@ const RestaurantDetailPage: React.FC = () => {
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
                   Peter Pane – Wien Mariahilferstraße
                 </h1>
-                <span className="text-xs font-bold text-white bg-[#d32f2f] px-2.5 py-1 rounded-full mt-1 flex-shrink-0">
+                <span className="text-xs font-bold text-white bg-[#2563eb] px-2.5 py-1 rounded-full mt-1 flex-shrink-0">
                   NEW
                 </span>
               </div>
@@ -396,7 +391,7 @@ const RestaurantDetailPage: React.FC = () => {
                     >
                       <span className="text-xl flex-shrink-0">{card.emoji}</span>
                       <span className="text-sm text-gray-700 group-hover:text-gray-900 flex-1">{card.text}</span>
-                      <svg className="w-4 h-4 text-gray-300 flex-shrink-0 group-hover:text-[#d32f2f] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <svg className="w-4 h-4 text-gray-300 flex-shrink-0 group-hover:text-[#2563eb] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                       </svg>
                     </button>
@@ -411,7 +406,7 @@ const RestaurantDetailPage: React.FC = () => {
                     placeholder="Ask a question about this restaurant..."
                     className="flex-1 text-sm border border-amber-200 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-amber-300 placeholder-gray-400"
                   />
-                  <button className="bg-[#d32f2f] text-white p-3 rounded-xl hover:bg-[#b71c1c] active:scale-95 transition-all shadow-sm">
+                  <button className="bg-[#2563eb] text-white p-3 rounded-xl hover:bg-[#1d4ed8] active:scale-95 transition-all shadow-sm">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
@@ -533,9 +528,9 @@ const RestaurantDetailPage: React.FC = () => {
 
               {/* Reservation Card */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
-                <div className="bg-gradient-to-r from-[#d32f2f] to-[#b71c1c] px-5 py-4">
+                <div className="bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] px-5 py-4">
                   <h3 className="text-base font-bold text-white">Make a reservation</h3>
-                  <p className="text-red-200 text-xs mt-0.5">No credit card required</p>
+                  <p className="text-blue-200 text-xs mt-0.5">No credit card required</p>
                 </div>
 
                 {/* ── Booking form ──────────────────────────────────────── */}
@@ -552,7 +547,7 @@ const RestaurantDetailPage: React.FC = () => {
                         <select
                           value={partySize}
                           onChange={e => setPartySize(e.target.value)}
-                          className="w-full pl-9 pr-8 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-[#d32f2f] bg-white cursor-pointer font-medium"
+                          className="w-full pl-9 pr-8 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white cursor-pointer font-medium"
                         >
                           {PARTY_SIZES.map(s => <option key={s}>{s}</option>)}
                         </select>
@@ -577,7 +572,7 @@ const RestaurantDetailPage: React.FC = () => {
                             value={selectedDate}
                             min={todayISO()}
                             onChange={e => setSelectedDate(e.target.value)}
-                            className="w-full pl-8 pr-2 py-3 border border-gray-200 rounded-xl text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#d32f2f] bg-white cursor-pointer font-medium"
+                            className="w-full pl-8 pr-2 py-3 border border-gray-200 rounded-xl text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white cursor-pointer font-medium"
                           />
                         </div>
                       </div>
@@ -593,7 +588,7 @@ const RestaurantDetailPage: React.FC = () => {
                           <select
                             value={selectedTime}
                             onChange={e => handleTimeDropdownChange(e.target.value)}
-                            className="w-full pl-8 pr-6 py-3 border border-gray-200 rounded-xl text-xs text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-[#d32f2f] bg-white cursor-pointer font-medium"
+                            className="w-full pl-8 pr-6 py-3 border border-gray-200 rounded-xl text-xs text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white cursor-pointer font-medium"
                           >
                             {TIME_OPTIONS.map(t => <option key={t}>{t}</option>)}
                           </select>
@@ -616,7 +611,7 @@ const RestaurantDetailPage: React.FC = () => {
                           className={`py-2.5 text-xs font-bold rounded-xl transition-all active:scale-95 ${
                             selectedSlot === slot
                               ? 'bg-gray-900 text-white shadow-lg ring-2 ring-gray-900 ring-offset-1'
-                              : 'bg-[#d32f2f] text-white hover:bg-[#b71c1c] shadow-sm hover:shadow-md'
+                              : 'bg-[#2563eb] text-white hover:bg-[#1d4ed8] shadow-sm hover:shadow-md'
                           }`}
                         >
                           {slot}
@@ -627,7 +622,7 @@ const RestaurantDetailPage: React.FC = () => {
                     {/* Primary CTA — navigate to checkout */}
                     <button
                       onClick={handleBook}
-                      className="w-full py-3.5 text-sm font-bold text-white bg-[#d32f2f] rounded-xl hover:bg-[#b71c1c] active:scale-95 transition-all shadow-sm hover:shadow-md mb-3"
+                      className="w-full py-3.5 text-sm font-bold text-white bg-[#2563eb] rounded-xl hover:bg-[#1d4ed8] active:scale-95 transition-all shadow-sm hover:shadow-md mb-3"
                     >
                       {`Book a Table · ${selectedTime}`}
                     </button>
@@ -658,7 +653,7 @@ const RestaurantDetailPage: React.FC = () => {
                     ))}
                   </div>
                   <div className="text-center relative z-10">
-                    <div className="w-9 h-9 bg-[#d32f2f] rounded-full flex items-center justify-center mx-auto mb-1.5 shadow-lg ring-4 ring-white">
+                    <div className="w-9 h-9 bg-[#2563eb] rounded-full flex items-center justify-center mx-auto mb-1.5 shadow-lg ring-4 ring-white">
                       <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
                       </svg>

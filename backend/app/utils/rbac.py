@@ -29,18 +29,18 @@ def get_current_user(
     """
     token = credentials.credentials
 
-    # Verify JWT token
+    # Verify JWT token — sub contains user_email (set in authentication_controller)
     payload = verify_token(token, "access")
-    user_id = payload.get("sub")
+    email = payload.get("sub")
 
-    if not user_id:
+    if not email:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials"
         )
 
     # Get user from database
-    user = db.query(User).filter(User.id == int(user_id)).first()
+    user = db.query(User).filter(User.user_email == email).first()
 
     if not user:
         raise HTTPException(

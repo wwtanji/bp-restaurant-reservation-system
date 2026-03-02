@@ -1,18 +1,22 @@
+/** Matches the backend RestaurantOut schema exactly. */
 export interface Restaurant {
   id: number;
   name: string;
   slug: string;
-  image: string;
-  rating: number;
-  reviewCount: number;
-  ratingLabel: string;
+  description: string | null;
   cuisine: string;
+  price_range: number; // 1 = $  2 = $$  3 = $$$  4 = $$$$
+  phone_number: string | null;
+  email: string | null;
+  address: string;
   city: string;
-  priceRange: string; // '$', '$$', '$$$', '$$$$'
-  bookedToday: number;
-  coords: [number, number]; // [lat, lng]
-  availableTimes: string[];
-  isNew?: boolean;
+  country: string;
+  latitude: number | null;
+  longitude: number | null;
+  cover_image: string | null;
+  rating: number | null;
+  review_count: number;
+  is_active: boolean;
 }
 
 export interface SearchFilters {

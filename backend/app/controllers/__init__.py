@@ -1,5 +1,7 @@
 import fastapi as fa
 from app.controllers.authentication_controller import AUTH_CONTROLLER
+from app.controllers.restaurant_controller import RESTAURANT_CONTROLLER
+from app.controllers.reservation_controller import RESERVATION_CONTROLLER
 
 ROOT_ROUTER = fa.APIRouter()
 
@@ -11,5 +13,7 @@ def test():
 
 ALL_CONTROLLERS = [
     ROOT_ROUTER,
-    AUTH_CONTROLLER
+    AUTH_CONTROLLER,
+    RESTAURANT_CONTROLLER,
+    RESERVATION_CONTROLLER,
 ]

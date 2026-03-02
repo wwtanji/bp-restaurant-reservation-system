@@ -110,6 +110,8 @@ def create_reservation(
         party_size=data.party_size,
         reservation_date=data.reservation_date,
         reservation_time=data.reservation_time,
+        guest_name=data.guest_name,
+        guest_phone=data.guest_phone,
         special_requests=data.special_requests,
         status=ReservationStatus.PENDING,
     )

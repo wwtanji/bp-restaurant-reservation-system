@@ -1,8 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { useNotification } from '../context/NotificationContext';
-
-const API_URL = 'http://localhost:8000/api';
+import { useParams, useNavigate } from 'react-router-dom';
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -16,18 +13,6 @@ interface Review {
   avatarColor: string;
 }
 
-
-function toApiTime(display: string): string {
-  const [timePart, period] = display.split(' ');
-  let [hours, minutes] = timePart.split(':').map(Number);
-  if (period === 'PM' && hours !== 12) hours += 12;
-  if (period === 'AM' && hours === 12) hours = 0;
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
-}
-
-function toApiPartySize(display: string): number {
-  return parseInt(display, 10);
-}
 
 function todayISO(): string {
   return new Date().toISOString().split('T')[0];
@@ -172,16 +157,13 @@ const NoiseBar: React.FC<{ level: number }> = ({ level }) => (
 
 const RestaurantDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { show } = useNotification();
+  const navigate = useNavigate();
 
   // ── Reservation form state ─────────────────────────────────────────────
   const [partySize, setPartySize]       = useState('2 people');
   const [selectedDate, setSelectedDate] = useState(todayISO);
   const [selectedTime, setSelectedTime] = useState('7:00 PM');
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [bookingError, setBookingError] = useState<string | null>(null);
-  const [bookingSuccess, setBookingSuccess] = useState(false);
 
   // ── Page UI state ──────────────────────────────────────────────────────
   const [activeTab, setActiveTab]       = useState('Overview');
@@ -238,55 +220,18 @@ const RestaurantDetailPage: React.FC = () => {
       setSelectedSlot(slot);
       setSelectedTime(slot);
     }
-    setBookingError(null);
   };
 
   const handleTimeDropdownChange = (time: string) => {
     setSelectedTime(time);
     setSelectedSlot(null);
-    setBookingError(null);
   };
 
-  // ── Booking handler ────────────────────────────────────────────────────
-  const handleBook = async () => {
+  // ── Navigate to checkout ────────────────────────────────────────────────
+  const handleBook = () => {
     if (!slug) return;
-
-    if (selectedDate < todayISO()) {
-      setBookingError('Please select a date today or in the future.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    setBookingError(null);
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/reservations/${slug}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          party_size: toApiPartySize(partySize),
-          reservation_date: selectedDate,
-          reservation_time: toApiTime(selectedTime),
-        }),
-      });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.detail ?? 'Reservation failed. Please try again.');
-      }
-
-      setBookingSuccess(true);
-      show(`Table booked for ${partySize} at ${selectedTime} on ${selectedDate}!`, 'success');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Something went wrong.';
-      setBookingError(message);
-    } finally {
-      setIsSubmitting(false);
-    }
+    const params = new URLSearchParams({ date: selectedDate, time: selectedTime, party: partySize });
+    navigate(`/restaurant/${slug}/book?${params.toString()}`);
   };
 
   // ── Render ─────────────────────────────────────────────────────────────
@@ -593,28 +538,8 @@ const RestaurantDetailPage: React.FC = () => {
                   <p className="text-red-200 text-xs mt-0.5">No credit card required</p>
                 </div>
 
-                {/* ── Success confirmation ─────────────────────────────── */}
-                {bookingSuccess ? (
-                  <div className="p-6 text-center">
-                    <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <h4 className="text-base font-bold text-gray-900 mb-1">Reservation Confirmed!</h4>
-                    <p className="text-sm text-gray-500">{partySize}</p>
-                    <p className="text-sm font-semibold text-gray-800 mt-1">{selectedTime}</p>
-                    <p className="text-sm text-gray-500">{selectedDate}</p>
-                    <button
-                      onClick={() => { setBookingSuccess(false); setBookingError(null); }}
-                      className="mt-5 text-sm text-[#d32f2f] hover:underline font-semibold"
-                    >
-                      Make another reservation
-                    </button>
-                  </div>
-                ) : (
-                  // ── Booking form ───────────────────────────────────────
-                  <div className="p-5">
+                {/* ── Booking form ──────────────────────────────────────── */}
+                <div className="p-5">
                     {/* Party size */}
                     <div className="mb-4">
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
@@ -651,7 +576,7 @@ const RestaurantDetailPage: React.FC = () => {
                             type="date"
                             value={selectedDate}
                             min={todayISO()}
-                            onChange={e => { setSelectedDate(e.target.value); setBookingError(null); }}
+                            onChange={e => setSelectedDate(e.target.value)}
                             className="w-full pl-8 pr-2 py-3 border border-gray-200 rounded-xl text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#d32f2f] bg-white cursor-pointer font-medium"
                           />
                         </div>
@@ -699,28 +624,12 @@ const RestaurantDetailPage: React.FC = () => {
                       ))}
                     </div>
 
-                    {/* Error message */}
-                    {bookingError && (
-                      <p className="text-xs text-red-500 text-center mb-3 px-1">{bookingError}</p>
-                    )}
-
-                    {/* Primary CTA — Book a Table */}
+                    {/* Primary CTA — navigate to checkout */}
                     <button
                       onClick={handleBook}
-                      disabled={isSubmitting}
-                      className="w-full py-3.5 text-sm font-bold text-white bg-[#d32f2f] rounded-xl hover:bg-[#b71c1c] active:scale-95 transition-all shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed mb-3 flex items-center justify-center gap-2"
+                      className="w-full py-3.5 text-sm font-bold text-white bg-[#d32f2f] rounded-xl hover:bg-[#b71c1c] active:scale-95 transition-all shadow-sm hover:shadow-md mb-3"
                     >
-                      {isSubmitting ? (
-                        <>
-                          <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                          </svg>
-                          Booking…
-                        </>
-                      ) : (
-                        `Book a Table · ${selectedTime}`
-                      )}
+                      {`Book a Table · ${selectedTime}`}
                     </button>
 
                     {/* Notify me */}
@@ -735,7 +644,6 @@ const RestaurantDetailPage: React.FC = () => {
                       You won't be charged until after your visit
                     </p>
                   </div>
-                )}
               </div>
 
               {/* Location mini-card */}
@@ -808,7 +716,7 @@ const RestaurantDetailPage: React.FC = () => {
           <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-1 p-4 overflow-y-auto" onClick={e => e.stopPropagation()}>
             {HERO_IMAGES.map((src, i) => (
               <div key={i} className={`overflow-hidden rounded-lg ${i === 0 ? 'col-span-2 md:col-span-1' : ''}`}>
-                <img src={src} alt={`Photo ${i + 1}`} className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300" />
+                <img src={src} alt={`Gallery view ${i + 1}`} className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300" />
               </div>
             ))}
           </div>

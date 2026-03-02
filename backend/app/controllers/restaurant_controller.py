@@ -12,11 +12,6 @@ RESTAURANT_CONTROLLER = APIRouter(prefix="/restaurants")
 
 
 def get_restaurant_by_slug(slug: str, db: Session = Depends(get_db)) -> Restaurant:
-    """
-    FastAPI dependency — resolves a slug path parameter to a Restaurant row.
-    Raises 404 if the slug does not exist.
-    Does NOT check is_active; callers decide whether that matters for their context.
-    """
     restaurant = db.query(Restaurant).filter(Restaurant.slug == slug).first()
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")

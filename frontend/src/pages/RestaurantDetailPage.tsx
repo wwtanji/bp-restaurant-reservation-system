@@ -1,4 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { useNotification } from '../context/NotificationContext';
+
+const API_URL = 'http://localhost:8000/api';
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -10,6 +14,23 @@ interface Review {
   rating: number;
   text: string;
   avatarColor: string;
+}
+
+
+function toApiTime(display: string): string {
+  const [timePart, period] = display.split(' ');
+  let [hours, minutes] = timePart.split(':').map(Number);
+  if (period === 'PM' && hours !== 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
+}
+
+function toApiPartySize(display: string): number {
+  return parseInt(display, 10);
+}
+
+function todayISO(): string {
+  return new Date().toISOString().split('T')[0];
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────
@@ -25,6 +46,7 @@ const TAGS = [
 ];
 
 const TIME_SLOTS = ['6:30 PM', '6:45 PM', '7:00 PM', '7:15 PM', '7:30 PM'];
+const TIME_OPTIONS = ['5:30 PM', '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM'];
 
 const PARTY_SIZES = Array.from({ length: 8 }, (_, i) =>
   i === 0 ? '1 person' : `${i + 1} people`
@@ -60,7 +82,7 @@ const REVIEWS: Review[] = [
     initials: 'TK',
     dined: 'Dined on February 14, 2026',
     rating: 4,
-    text: 'Great food, truly unique interior design. One downside is the noise level — it gets quite energetic during peak hours, making conversation a bit of a challenge. The menu system (digital ordering) is also a bit complicated at first, but the staff was very helpful. Definitely recommend booking the separate room for larger groups.',
+    text: 'Great food, truly unique interior design. One downside is the noise level — it gets quite energetic during peak hours, making conversation a bit of a challenge. The menu system (digital ordering) is also a bit complicated at first, but the staff was very helpful.',
     avatarColor: 'from-blue-400 to-indigo-500',
   },
   {
@@ -69,7 +91,7 @@ const REVIEWS: Review[] = [
     initials: 'JW',
     dined: 'Dined on January 30, 2026',
     rating: 4,
-    text: 'Booked the private separate room for our office team of 12 — worked out perfectly! Great selection of burgers and the vegetarian options were surprisingly good and creative. The music was energetic which suited our group vibe perfectly, though one colleague mentioned it was hard to hear across the table.',
+    text: 'Booked the private separate room for our office team of 12 — worked out perfectly! Great selection of burgers and the vegetarian options were surprisingly good and creative.',
     avatarColor: 'from-purple-400 to-pink-500',
   },
   {
@@ -78,7 +100,7 @@ const REVIEWS: Review[] = [
     initials: 'MB',
     dined: 'Dined on January 22, 2026',
     rating: 3,
-    text: 'Beautiful restaurant with jaw-dropping decor. The acoustics in the main hall make it very loud — noise-sensitive guests should be aware! The digital menu ordering system is a bit overwhelming at first glance. Food quality is genuinely high, but prices are on the steeper side for a burger restaurant. Overall a 3/5 experience.',
+    text: 'Beautiful restaurant with jaw-dropping decor. The acoustics in the main hall make it very loud. Food quality is genuinely high, but prices are on the steeper side. Overall a 3/5 experience.',
     avatarColor: 'from-amber-400 to-orange-500',
   },
   {
@@ -87,7 +109,7 @@ const REVIEWS: Review[] = [
     initials: 'AL',
     dined: 'Dined on December 15, 2025',
     rating: 5,
-    text: 'One of the best burger places in Vienna! The forest-themed decor is absolutely stunning and unlike anything else in the city. Ordered the truffle burger and it was exceptional. Service was quick even though it was a packed Friday evening. The vegan options are also outstanding. Will definitely be back!',
+    text: 'One of the best burger places in Vienna! The forest-themed decor is absolutely stunning. Ordered the truffle burger and it was exceptional. Will definitely be back!',
     avatarColor: 'from-emerald-400 to-teal-500',
   },
 ];
@@ -149,11 +171,20 @@ const NoiseBar: React.FC<{ level: number }> = ({ level }) => (
 // ── Main Component ────────────────────────────────────────────────────────
 
 const RestaurantDetailPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('Overview');
-  const [partySize, setPartySize] = useState('2 people');
-  const [selectedDate, setSelectedDate] = useState('2026-03-12');
+  const { slug } = useParams<{ slug: string }>();
+  const { show } = useNotification();
+
+  // ── Reservation form state ─────────────────────────────────────────────
+  const [partySize, setPartySize]       = useState('2 people');
+  const [selectedDate, setSelectedDate] = useState(todayISO);
   const [selectedTime, setSelectedTime] = useState('7:00 PM');
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
+
+  // ── Page UI state ──────────────────────────────────────────────────────
+  const [activeTab, setActiveTab]       = useState('Overview');
   const [reviewSearch, setReviewSearch] = useState('');
   const [showAllPhotos, setShowAllPhotos] = useState(false);
   const [conciergeQuery, setConciergeQuery] = useState('');
@@ -163,22 +194,21 @@ const RestaurantDetailPage: React.FC = () => {
   const conciergeRef = useRef<HTMLDivElement>(null);
 
   const sectionRefs: Record<string, React.RefObject<HTMLDivElement | null>> = {
-    Overview:   overviewRef,
-    Concierge:  conciergeRef,
-    Reviews:    reviewsRef,
+    Overview:  overviewRef,
+    Concierge: conciergeRef,
+    Reviews:   reviewsRef,
   };
 
   const scrollToSection = (tab: string) => {
     setActiveTab(tab);
     const ref = sectionRefs[tab];
     if (ref?.current) {
-      const offset = 72; // sticky nav height
+      const offset = 72;
       const top = ref.current.getBoundingClientRect().top + window.scrollY - offset;
       window.scrollTo({ top, behavior: 'smooth' });
     }
   };
 
-  // Highlight active tab based on scroll position
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY + 100;
@@ -201,25 +231,79 @@ const RestaurantDetailPage: React.FC = () => {
       r.author.toLowerCase().includes(reviewSearch.toLowerCase())
   );
 
+  const handleSlotClick = (slot: string) => {
+    if (slot === selectedSlot) {
+      setSelectedSlot(null);
+    } else {
+      setSelectedSlot(slot);
+      setSelectedTime(slot);
+    }
+    setBookingError(null);
+  };
+
+  const handleTimeDropdownChange = (time: string) => {
+    setSelectedTime(time);
+    setSelectedSlot(null);
+    setBookingError(null);
+  };
+
+  // ── Booking handler ────────────────────────────────────────────────────
+  const handleBook = async () => {
+    if (!slug) return;
+
+    if (selectedDate < todayISO()) {
+      setBookingError('Please select a date today or in the future.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setBookingError(null);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/reservations/${slug}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          party_size: toApiPartySize(partySize),
+          reservation_date: selectedDate,
+          reservation_time: toApiTime(selectedTime),
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.detail ?? 'Reservation failed. Please try again.');
+      }
+
+      setBookingSuccess(true);
+      show(`Table booked for ${partySize} at ${selectedTime} on ${selectedDate}!`, 'success');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Something went wrong.';
+      setBookingError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // ── Render ─────────────────────────────────────────────────────────────
+
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Montserrat', 'Open Sans', sans-serif" }}>
 
       {/* ── Hero Gallery ─────────────────────────────────────────────── */}
       <div className="relative">
-        {/* Mobile: single image */}
         <div className="md:hidden h-64 overflow-hidden">
-          <img
-            src={HERO_IMAGES[0]}
-            alt="Peter Pane interior"
-            className="w-full h-full object-cover"
-          />
+          <img src={HERO_IMAGES[0]} alt="Restaurant interior" className="w-full h-full object-cover" />
         </div>
 
-        {/* Desktop: 5-image grid */}
         <div className="hidden md:grid md:grid-cols-[2fr_1fr] md:grid-rows-2 h-[480px] gap-0.5 overflow-hidden">
           <img
             src={HERO_IMAGES[0]}
-            alt="Peter Pane main interior"
+            alt="Restaurant main interior"
             className="row-span-2 w-full h-full object-cover hover:brightness-95 transition-all cursor-pointer"
             onClick={() => setShowAllPhotos(true)}
           />
@@ -227,14 +311,13 @@ const RestaurantDetailPage: React.FC = () => {
             <img
               key={i}
               src={src}
-              alt={`Restaurant photo ${i + 2}`}
+              alt={`Interior view ${i + 2}`}
               className="w-full h-full object-cover hover:brightness-95 transition-all cursor-pointer"
               onClick={() => setShowAllPhotos(true)}
             />
           ))}
         </div>
 
-        {/* View all photos button */}
         <button
           onClick={() => setShowAllPhotos(true)}
           className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm text-gray-800 text-sm font-semibold px-4 py-2 rounded-xl shadow-lg hover:bg-white hover:shadow-xl transition-all flex items-center gap-2 border border-gray-200"
@@ -308,14 +391,12 @@ const RestaurantDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Divider */}
             <hr className="border-gray-100 mb-8" />
 
             {/* About Section */}
             <div className="mb-10">
               <h2 className="text-lg font-bold text-gray-900 mb-4">About this restaurant</h2>
 
-              {/* Tag chips */}
               <div className="flex flex-wrap gap-2 mb-5">
                 {TAGS.map(tag => (
                   <span
@@ -330,24 +411,19 @@ const RestaurantDetailPage: React.FC = () => {
                 ))}
               </div>
 
-              {/* Description */}
               <div className="space-y-3 text-gray-600 text-sm leading-relaxed">
                 <p>
                   Step into a fairy-tale world at <strong className="text-gray-900">Peter Pane</strong> on
                   Vienna's famous Mariahilferstraße. Our restaurant enchants guests with its spectacular
-                  interior — towering tree-like structures, lush greenery, and warm amber lighting that
-                  transforms every meal into a truly magical experience.
+                  interior — towering tree-like structures, lush greenery, and warm amber lighting.
                 </p>
                 <p>
                   We serve premium hand-crafted burgers using high-quality, sustainably sourced ingredients,
-                  with an extensive menu featuring creative options for every dietary preference — from
-                  hearty meat lovers' choices to imaginative vegan and vegetarian alternatives. Our digital
-                  ordering system puts the entire menu at your fingertips.
+                  with an extensive menu featuring creative options for every dietary preference.
                 </p>
                 <p>
                   For larger celebrations and corporate gatherings, we offer a dedicated separate dining
-                  room that can be reserved exclusively for your group, ensuring a more intimate atmosphere
-                  away from the vibrant main floor.
+                  room that can be reserved exclusively for your group.
                 </p>
               </div>
             </div>
@@ -363,9 +439,7 @@ const RestaurantDetailPage: React.FC = () => {
                   AI-Powered
                 </span>
               </div>
-              <p className="text-sm text-gray-400 mb-5">
-                Ask me anything about Peter Pane – Wien Mariahilferstraße
-              </p>
+              <p className="text-sm text-gray-400 mb-5">Ask me anything about this restaurant</p>
 
               <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 rounded-2xl p-5 border border-amber-100">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
@@ -376,13 +450,8 @@ const RestaurantDetailPage: React.FC = () => {
                       className="flex items-center gap-3 bg-white p-3.5 rounded-xl border border-amber-200/70 text-left hover:shadow-md hover:border-amber-300 hover:-translate-y-0.5 transition-all group"
                     >
                       <span className="text-xl flex-shrink-0">{card.emoji}</span>
-                      <span className="text-sm text-gray-700 group-hover:text-gray-900 flex-1">
-                        {card.text}
-                      </span>
-                      <svg
-                        className="w-4 h-4 text-gray-300 flex-shrink-0 group-hover:text-[#d32f2f] transition-colors"
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                      >
+                      <span className="text-sm text-gray-700 group-hover:text-gray-900 flex-1">{card.text}</span>
+                      <svg className="w-4 h-4 text-gray-300 flex-shrink-0 group-hover:text-[#d32f2f] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                       </svg>
                     </button>
@@ -408,15 +477,12 @@ const RestaurantDetailPage: React.FC = () => {
 
             <hr className="border-gray-100 mb-10" />
 
-            {/* ── Reviews Section ───────────────────────────────────── */}
+            {/* Reviews Section */}
             <div ref={reviewsRef} className="scroll-mt-20">
               <h2 className="text-lg font-bold text-gray-900 mb-6">Overall ratings and reviews</h2>
 
-              {/* Ratings Dashboard */}
               <div className="bg-gray-50 rounded-2xl p-6 mb-6 border border-gray-100">
                 <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
-
-                  {/* Overall score */}
                   <div className="flex flex-col items-center justify-center sm:w-32 flex-shrink-0 text-center">
                     <span className="text-5xl font-bold text-gray-900 tracking-tight mb-1">4.5</span>
                     <StarRating rating={4.5} size="lg" />
@@ -424,7 +490,6 @@ const RestaurantDetailPage: React.FC = () => {
                     <span className="text-xs text-gray-400 mt-0.5">659 reviews</span>
                   </div>
 
-                  {/* Category bars */}
                   <div className="flex-1">
                     <div className="space-y-3 mb-5">
                       {RATING_CATEGORIES.map(cat => (
@@ -438,7 +503,6 @@ const RestaurantDetailPage: React.FC = () => {
                       ))}
                     </div>
 
-                    {/* Noise indicator */}
                     <div className="flex items-center gap-3 pt-3 border-t border-gray-200">
                       <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
@@ -452,12 +516,8 @@ const RestaurantDetailPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Review search */}
               <div className="relative mb-6">
-                <svg
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                >
+                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input
@@ -468,10 +528,7 @@ const RestaurantDetailPage: React.FC = () => {
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 bg-white placeholder-gray-400"
                 />
                 {reviewSearch && (
-                  <button
-                    onClick={() => setReviewSearch('')}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
+                  <button onClick={() => setReviewSearch('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -479,26 +536,20 @@ const RestaurantDetailPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Review count */}
               {reviewSearch && (
                 <p className="text-sm text-gray-500 mb-4">
                   Showing {filteredReviews.length} of {REVIEWS.length} reviews
                 </p>
               )}
 
-              {/* Review list */}
               <div className="space-y-7">
                 {filteredReviews.length > 0 ? (
                   filteredReviews.map(review => (
                     <div key={review.id} className="border-b border-gray-100 pb-7 last:border-0">
                       <div className="flex items-start gap-3 mb-3">
-                        {/* Avatar */}
-                        <div
-                          className={`w-10 h-10 rounded-full bg-gradient-to-br ${review.avatarColor} flex items-center justify-center flex-shrink-0 shadow-sm`}
-                        >
+                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${review.avatarColor} flex items-center justify-center flex-shrink-0 shadow-sm`}>
                           <span className="text-white font-bold text-xs">{review.initials}</span>
                         </div>
-
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap mb-0.5">
                             <span className="text-sm font-bold text-gray-900">{review.author}</span>
@@ -510,9 +561,7 @@ const RestaurantDetailPage: React.FC = () => {
                           <span className="text-xs text-gray-400">{review.dined}</span>
                         </div>
                       </div>
-
                       <p className="text-sm text-gray-600 leading-relaxed">{review.text}</p>
-
                       <button className="mt-2 text-xs text-[#006AFF] hover:underline flex items-center gap-1">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
@@ -539,146 +588,165 @@ const RestaurantDetailPage: React.FC = () => {
 
               {/* Reservation Card */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
-                {/* Card header */}
                 <div className="bg-gradient-to-r from-[#d32f2f] to-[#b71c1c] px-5 py-4">
                   <h3 className="text-base font-bold text-white">Make a reservation</h3>
                   <p className="text-red-200 text-xs mt-0.5">No credit card required</p>
                 </div>
 
-                <div className="p-5">
-                  {/* Party size */}
-                  <div className="mb-4">
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
-                      Party size
-                    </label>
-                    <div className="relative">
-                      <svg
-                        className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      <select
-                        value={partySize}
-                        onChange={e => setPartySize(e.target.value)}
-                        className="w-full pl-9 pr-8 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-[#d32f2f] bg-white cursor-pointer font-medium"
-                      >
-                        {PARTY_SIZES.map(s => <option key={s}>{s}</option>)}
-                      </select>
-                      <svg
-                        className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                {/* ── Success confirmation ─────────────────────────────── */}
+                {bookingSuccess ? (
+                  <div className="p-6 text-center">
+                    <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
+                    <h4 className="text-base font-bold text-gray-900 mb-1">Reservation Confirmed!</h4>
+                    <p className="text-sm text-gray-500">{partySize}</p>
+                    <p className="text-sm font-semibold text-gray-800 mt-1">{selectedTime}</p>
+                    <p className="text-sm text-gray-500">{selectedDate}</p>
+                    <button
+                      onClick={() => { setBookingSuccess(false); setBookingError(null); }}
+                      className="mt-5 text-sm text-[#d32f2f] hover:underline font-semibold"
+                    >
+                      Make another reservation
+                    </button>
                   </div>
-
-                  {/* Date & Time row */}
-                  <div className="grid grid-cols-2 gap-3 mb-5">
-                    <div>
+                ) : (
+                  // ── Booking form ───────────────────────────────────────
+                  <div className="p-5">
+                    {/* Party size */}
+                    <div className="mb-4">
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
-                        Date
+                        Party size
                       </label>
                       <div className="relative">
-                        <svg
-                          className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none z-10"
-                          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <input
-                          type="date"
-                          value={selectedDate}
-                          onChange={e => setSelectedDate(e.target.value)}
-                          className="w-full pl-8 pr-2 py-3 border border-gray-200 rounded-xl text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#d32f2f] bg-white cursor-pointer font-medium"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
-                        Time
-                      </label>
-                      <div className="relative">
-                        <svg
-                          className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none"
-                          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                         <select
-                          value={selectedTime}
-                          onChange={e => setSelectedTime(e.target.value)}
-                          className="w-full pl-8 pr-6 py-3 border border-gray-200 rounded-xl text-xs text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-[#d32f2f] bg-white cursor-pointer font-medium"
+                          value={partySize}
+                          onChange={e => setPartySize(e.target.value)}
+                          className="w-full pl-9 pr-8 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-[#d32f2f] bg-white cursor-pointer font-medium"
                         >
-                          {['5:30 PM','6:00 PM','6:30 PM','7:00 PM','7:30 PM','8:00 PM','8:30 PM','9:00 PM'].map(t => (
-                            <option key={t}>{t}</option>
-                          ))}
+                          {PARTY_SIZES.map(s => <option key={s}>{s}</option>)}
                         </select>
-                        <svg
-                          className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none"
-                          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                        >
+                        <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                         </svg>
                       </div>
                     </div>
+
+                    {/* Date & Time row */}
+                    <div className="grid grid-cols-2 gap-3 mb-5">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                          Date
+                        </label>
+                        <div className="relative">
+                          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <input
+                            type="date"
+                            value={selectedDate}
+                            min={todayISO()}
+                            onChange={e => { setSelectedDate(e.target.value); setBookingError(null); }}
+                            className="w-full pl-8 pr-2 py-3 border border-gray-200 rounded-xl text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#d32f2f] bg-white cursor-pointer font-medium"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                          Time
+                        </label>
+                        <div className="relative">
+                          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <select
+                            value={selectedTime}
+                            onChange={e => handleTimeDropdownChange(e.target.value)}
+                            className="w-full pl-8 pr-6 py-3 border border-gray-200 rounded-xl text-xs text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-[#d32f2f] bg-white cursor-pointer font-medium"
+                          >
+                            {TIME_OPTIONS.map(t => <option key={t}>{t}</option>)}
+                          </select>
+                          <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quick-select time slots */}
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+                      Quick-select a time
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 mb-5">
+                      {TIME_SLOTS.map(slot => (
+                        <button
+                          key={slot}
+                          onClick={() => handleSlotClick(slot)}
+                          className={`py-2.5 text-xs font-bold rounded-xl transition-all active:scale-95 ${
+                            selectedSlot === slot
+                              ? 'bg-gray-900 text-white shadow-lg ring-2 ring-gray-900 ring-offset-1'
+                              : 'bg-[#d32f2f] text-white hover:bg-[#b71c1c] shadow-sm hover:shadow-md'
+                          }`}
+                        >
+                          {slot}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Error message */}
+                    {bookingError && (
+                      <p className="text-xs text-red-500 text-center mb-3 px-1">{bookingError}</p>
+                    )}
+
+                    {/* Primary CTA — Book a Table */}
+                    <button
+                      onClick={handleBook}
+                      disabled={isSubmitting}
+                      className="w-full py-3.5 text-sm font-bold text-white bg-[#d32f2f] rounded-xl hover:bg-[#b71c1c] active:scale-95 transition-all shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed mb-3 flex items-center justify-center gap-2"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          </svg>
+                          Booking…
+                        </>
+                      ) : (
+                        `Book a Table · ${selectedTime}`
+                      )}
+                    </button>
+
+                    {/* Notify me */}
+                    <button className="w-full py-3 text-sm font-semibold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                      </svg>
+                      Notify me
+                    </button>
+
+                    <p className="text-xs text-gray-400 text-center mt-3">
+                      You won't be charged until after your visit
+                    </p>
                   </div>
-
-                  {/* Available time slots */}
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-                    Select a time
-                  </p>
-                  <div className="grid grid-cols-3 gap-2 mb-4">
-                    {TIME_SLOTS.map(slot => (
-                      <button
-                        key={slot}
-                        onClick={() => setSelectedSlot(slot === selectedSlot ? null : slot)}
-                        className={`py-2.5 text-xs font-bold rounded-xl transition-all active:scale-95 ${
-                          selectedSlot === slot
-                            ? 'bg-gray-900 text-white shadow-lg ring-2 ring-gray-900 ring-offset-1'
-                            : 'bg-[#d32f2f] text-white hover:bg-[#b71c1c] shadow-sm hover:shadow-md'
-                        }`}
-                      >
-                        {slot}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* View full availability */}
-                  <button className="w-full py-3 text-sm font-bold text-[#d32f2f] border-2 border-[#d32f2f] rounded-xl hover:bg-red-50 transition-colors mb-3">
-                    View full availability
-                  </button>
-
-                  {/* Notify me */}
-                  <button className="w-full py-3 text-sm font-semibold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                    </svg>
-                    Notify me
-                  </button>
-
-                  <p className="text-xs text-gray-400 text-center mt-3">
-                    You won't be charged until after your visit
-                  </p>
-                </div>
+                )}
               </div>
 
               {/* Location mini-card */}
               <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
                 <div className="relative h-32 bg-gradient-to-br from-green-100 via-emerald-100 to-teal-100 flex items-center justify-center overflow-hidden">
-                  {/* Simulated map background pattern */}
                   <div className="absolute inset-0 opacity-20">
                     {[...Array(6)].map((_, i) => (
-                      <div key={i} className="absolute border-gray-400 border" style={{
-                        left: `${i * 16}%`, top: 0, bottom: 0, width: '1px'
-                      }} />
+                      <div key={i} className="absolute border-gray-400 border" style={{ left: `${i * 16}%`, top: 0, bottom: 0, width: '1px' }} />
                     ))}
                     {[...Array(5)].map((_, i) => (
-                      <div key={i} className="absolute border-gray-400 border" style={{
-                        top: `${i * 25}%`, left: 0, right: 0, height: '1px'
-                      }} />
+                      <div key={i} className="absolute border-gray-400 border" style={{ top: `${i * 25}%`, left: 0, right: 0, height: '1px' }} />
                     ))}
                   </div>
                   <div className="text-center relative z-10">
@@ -704,7 +772,7 @@ const RestaurantDetailPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Additional info card */}
+              {/* Good to know */}
               <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
                 <h4 className="text-sm font-bold text-gray-900 mb-3">Good to know</h4>
                 <div className="space-y-2">
@@ -728,27 +796,16 @@ const RestaurantDetailPage: React.FC = () => {
 
       {/* ── Photo Lightbox Modal ──────────────────────────────────────── */}
       {showAllPhotos && (
-        <div
-          className="fixed inset-0 z-50 bg-black/95 flex flex-col"
-          onClick={() => setShowAllPhotos(false)}
-        >
+        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col" onClick={() => setShowAllPhotos(false)}>
           <div className="flex items-center justify-between px-6 py-4">
-            <h3 className="text-white font-semibold text-lg">
-              Peter Pane – Wien Mariahilferstraße · All photos
-            </h3>
-            <button
-              onClick={() => setShowAllPhotos(false)}
-              className="text-white hover:text-gray-300 transition-colors"
-            >
+            <h3 className="text-white font-semibold text-lg">All photos</h3>
+            <button onClick={() => setShowAllPhotos(false)} className="text-white hover:text-gray-300 transition-colors">
               <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
-          <div
-            className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-1 p-4 overflow-y-auto"
-            onClick={e => e.stopPropagation()}
-          >
+          <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-1 p-4 overflow-y-auto" onClick={e => e.stopPropagation()}>
             {HERO_IMAGES.map((src, i) => (
               <div key={i} className={`overflow-hidden rounded-lg ${i === 0 ? 'col-span-2 md:col-span-1' : ''}`}>
                 <img src={src} alt={`Photo ${i + 1}`} className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300" />

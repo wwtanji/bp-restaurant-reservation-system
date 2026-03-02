@@ -1,5 +1,6 @@
-from datetime import date
+from datetime import date, datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import exists
 from sqlalchemy.orm import Session, joinedload
 
 from app.db.database import get_db
@@ -11,6 +12,8 @@ from app.utils.rbac import require_customer, require_restaurant_owner_or_admin
 from app.controllers.restaurant_controller import get_restaurant_by_slug
 
 RESERVATION_CONTROLLER = APIRouter(prefix="/reservations")
+
+TURN_HOURS = 2
 
 # Valid status transitions an owner/admin may apply
 _OWNER_TRANSITIONS: dict[str, list[str]] = {
@@ -58,6 +61,48 @@ def create_reservation(
 
     if data.reservation_date < date.today():
         raise HTTPException(status_code=400, detail="Reservation date must be today or in the future")
+
+    # Build the overlap window for a TURN_HOURS-duration reservation.
+    # Using a fixed safe date avoids datetime underflow for early-morning times.
+    _base = datetime.combine(date(2000, 6, 15), data.reservation_time)
+    slot_start = (_base - timedelta(hours=TURN_HOURS)).time()  # exclusive lower bound
+    slot_end   = (_base + timedelta(hours=TURN_HOURS)).time()  # exclusive upper bound
+
+    _active = [ReservationStatus.PENDING, ReservationStatus.CONFIRMED]
+    _overlap = [
+        Reservation.reservation_date == data.reservation_date,
+        Reservation.status.in_(_active),
+        Reservation.reservation_time > slot_start,
+        Reservation.reservation_time < slot_end,
+    ]
+
+    # ── Check 1: user-level double-booking (across all restaurants) ──────────
+    # exists() emits SELECT EXISTS(...) — stops at first hit, no full scan.
+    user_conflict = db.query(
+        exists().where(Reservation.user_id == current_user.id, *_overlap)
+    ).scalar()
+    if user_conflict:
+        raise HTTPException(
+            status_code=409,
+            detail="You already have a reservation at this time.",
+        )
+
+    # ── Check 2: restaurant capacity (pessimistic lock) ──────────────────────
+    # Fetching rows with FOR UPDATE acquires InnoDB row + gap locks on the
+    # (restaurant_id, reservation_date) index, serialising concurrent requests.
+    overlapping = (
+        db.query(Reservation)
+        .filter(Reservation.restaurant_id == restaurant.id, *_overlap)
+        .with_for_update()
+        .all()
+    )
+    booked_seats = sum(r.party_size for r in overlapping)
+    if booked_seats + data.party_size > restaurant.max_capacity:
+        available = max(0, restaurant.max_capacity - booked_seats)
+        raise HTTPException(
+            status_code=409,
+            detail=f"Not enough capacity. {available} seat(s) available for this time slot.",
+        )
 
     reservation = Reservation(
         user_id=current_user.id,

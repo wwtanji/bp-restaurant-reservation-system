@@ -19,6 +19,7 @@ class RestaurantOut(BaseModel):
     cover_image: Optional[str]
     rating: Optional[float]
     review_count: int
+    max_capacity: int
     is_active: bool
 
     model_config = ConfigDict(from_attributes=True)

@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Restaurant } from '../../interfaces/restaurant';
 
+const PRICE_SYMBOL: Record<number, string> = { 1: '$', 2: '$$', 3: '$$$', 4: '$$$$' };
 
 const createMarkerIcon = (isActive: boolean) =>
   L.divIcon({
@@ -34,9 +35,9 @@ const FlyToActive: React.FC<FlyToActiveProps> = ({ restaurants, activeId }) => {
 
   useEffect(() => {
     if (activeId === null) return;
-    const restaurant = restaurants.find(r => r.id === activeId);
-    if (restaurant) {
-      map.panTo(restaurant.coords, { animate: true, duration: 0.4 });
+    const r = restaurants.find(r => r.id === activeId);
+    if (r?.latitude && r?.longitude) {
+      map.panTo([r.latitude, r.longitude], { animate: true, duration: 0.4 });
     }
   }, [activeId, restaurants, map]);
 
@@ -50,31 +51,24 @@ interface RestaurantMarkerProps {
   onNavigate: (slug: string) => void;
 }
 
-const RestaurantMarker: React.FC<RestaurantMarkerProps> = ({
-  restaurant,
-  isActive,
-  onNavigate,
-}) => {
-  const icon = useMemo(
-    () => createMarkerIcon(isActive),
-    [isActive]
-  );
+const RestaurantMarker: React.FC<RestaurantMarkerProps> = ({ restaurant, isActive, onNavigate }) => {
+  const icon = useMemo(() => createMarkerIcon(isActive), [isActive]);
+
+  if (!restaurant.latitude || !restaurant.longitude) return null;
 
   return (
     <Marker
-      position={restaurant.coords}
+      position={[restaurant.latitude, restaurant.longitude]}
       icon={icon}
-      eventHandlers={{
-        click: () => onNavigate(restaurant.slug),
-      }}
+      eventHandlers={{ click: () => onNavigate(restaurant.slug) }}
     >
       <Popup>
         <div className="text-sm">
           <p className="font-semibold text-gray-800">{restaurant.name}</p>
           <p className="text-gray-500 text-xs mt-0.5">
-            {restaurant.cuisine} · {restaurant.priceRange}
+            {restaurant.cuisine} · {PRICE_SYMBOL[restaurant.price_range] ?? ''}
           </p>
-          <p className="text-yellow-500 text-xs mt-0.5">★ {restaurant.rating}</p>
+          <p className="text-yellow-500 text-xs mt-0.5">★ {restaurant.rating ?? '—'}</p>
         </div>
       </Popup>
     </Marker>
@@ -96,32 +90,30 @@ const MapView: React.FC<MapViewProps> = ({
   onMarkerClick,
   center = [48.148, 17.107],
   zoom = 13,
-}) => {
-  return (
-    <MapContainer
-      center={center}
-      zoom={zoom}
-      style={{ height: '100%', width: '100%' }}
-      zoomControl={true}
-      scrollWheelZoom={true}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+}) => (
+  <MapContainer
+    center={center}
+    zoom={zoom}
+    style={{ height: '100%', width: '100%' }}
+    zoomControl={true}
+    scrollWheelZoom={true}
+  >
+    <TileLayer
+      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+    />
+
+    <FlyToActive restaurants={restaurants} activeId={activeId} />
+
+    {restaurants.map(r => (
+      <RestaurantMarker
+        key={r.id}
+        restaurant={r}
+        isActive={activeId === r.id}
+        onNavigate={onMarkerClick}
       />
-
-      <FlyToActive restaurants={restaurants} activeId={activeId} />
-
-      {restaurants.map(restaurant => (
-        <RestaurantMarker
-          key={restaurant.id}
-          restaurant={restaurant}
-          isActive={activeId === restaurant.id}
-          onNavigate={onMarkerClick}
-        />
-      ))}
-    </MapContainer>
-  );
-};
+    ))}
+  </MapContainer>
+);
 
 export default MapView;

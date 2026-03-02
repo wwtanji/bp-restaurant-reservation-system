@@ -1,92 +1,41 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MapView from '../components/map/MapView';
 import { Restaurant } from '../interfaces/restaurant';
 
+const API_URL = 'http://localhost:8000/api';
+
+const PRICE_SYMBOL: Record<number, string> = { 1: '$', 2: '$$', 3: '$$$', 4: '$$$$' };
+
+function ratingLabel(rating: number | null): string {
+  if (!rating) return '';
+  if (rating >= 4.5) return 'Exceptional';
+  if (rating >= 4.0) return 'Awesome';
+  if (rating >= 3.5) return 'Very Good';
+  return 'Good';
+}
+
+// Maps category chip labels to backend cuisine query param values
+const CATEGORY_CUISINE: Record<string, string | undefined> = {
+  Italian:  'Italian',
+  Mexican:  'Mexican',
+  Japanese: 'Japanese',
+  Steak:    'Steakhouse',
+  Vegan:    'Vegetarian',
+  American: 'American',
+  Seafood:  'Seafood',
+};
 
 type ViewMode = 'grid' | 'list';
-type SortKey  = 'relevance' | 'rating' | 'reviews' | 'booked';
-
-
-const MOCK_RESTAURANTS: Restaurant[] = [
-  {
-    id: 1,
-    name: 'Albrecht Restaurant',
-    slug: 'albrecht-restaurant-bratislava',
-    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=400&fit=crop',
-    rating: 4.8, reviewCount: 524, ratingLabel: 'Exceptional',
-    cuisine: 'Slovak', city: 'Bratislava', priceRange: '$$$',
-    bookedToday: 26, coords: [48.155, 17.074],
-    availableTimes: ['6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM'], isNew: false,
-  },
-  {
-    id: 2,
-    name: 'Sky Bar & Restaurant',
-    slug: 'sky-bar-bratislava',
-    image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop',
-    rating: 4.5, reviewCount: 336, ratingLabel: 'Awesome',
-    cuisine: 'International', city: 'Bratislava', priceRange: '$$$',
-    bookedToday: 11, coords: [48.142, 17.111],
-    availableTimes: ['6:45 PM', '7:00 PM', '7:15 PM', '7:30 PM'], isNew: true,
-  },
-  {
-    id: 3,
-    name: 'Paparazzi',
-    slug: 'paparazzi-bratislava',
-    image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&h=400&fit=crop',
-    rating: 4.6, reviewCount: 289, ratingLabel: 'Exceptional',
-    cuisine: 'Italian', city: 'Bratislava', priceRange: '$$',
-    bookedToday: 18, coords: [48.144, 17.104],
-    availableTimes: ['6:30 PM', '7:00 PM', '8:00 PM'], isNew: false,
-  },
-  {
-    id: 4,
-    name: 'Tempus Fugit',
-    slug: 'tempus-fugit-bratislava',
-    image: 'https://images.unsplash.com/photo-1550966871-3ed3cfd06327?w=600&h=400&fit=crop',
-    rating: 4.7, reviewCount: 412, ratingLabel: 'Exceptional',
-    cuisine: 'European', city: 'Bratislava', priceRange: '$$',
-    bookedToday: 9, coords: [48.146, 17.102],
-    availableTimes: ['6:00 PM', '7:00 PM', '7:30 PM', '9:00 PM'], isNew: false,
-  },
-  {
-    id: 5,
-    name: 'UFO Restaurant',
-    slug: 'ufo-restaurant-bratislava',
-    image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=600&h=400&fit=crop',
-    rating: 4.3, reviewCount: 678, ratingLabel: 'Awesome',
-    cuisine: 'International', city: 'Bratislava', priceRange: '$$$$',
-    bookedToday: 33, coords: [48.144, 17.105],
-    availableTimes: ['7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM'], isNew: false,
-  },
-  {
-    id: 6,
-    name: 'Zylinder',
-    slug: 'zylinder-bratislava',
-    image: 'https://images.unsplash.com/photo-1559329007-40df8a9345d8?w=600&h=400&fit=crop',
-    rating: 4.4, reviewCount: 195, ratingLabel: 'Awesome',
-    cuisine: 'Slovak', city: 'Bratislava', priceRange: '$$',
-    bookedToday: 7, coords: [48.148, 17.108],
-    availableTimes: ['6:30 PM', '7:00 PM', '7:45 PM'], isNew: false,
-  },
-];
+type SortKey  = 'relevance' | 'rating' | 'reviews';
 
 const CATEGORIES = [
-  { label: 'Featured',   },
-  { label: 'Romantic',   },
-  { label: 'Italian',   },
-  { label: 'Brunch',     },
-  { label: 'Mexican',    },
-  { label: 'Pizza',      },
-  { label: 'Seafood',    },
-  { label: 'American',   },
-  { label: 'Japanese',   },
-  { label: 'Birthdays',  },
-  { label: 'Steak',      },
-  { label: 'Vegan',      },
+  'Featured', 'Romantic', 'Italian', 'Brunch', 'Mexican',
+  'Pizza', 'Seafood', 'American', 'Japanese', 'Birthdays', 'Steak', 'Vegan',
 ];
 
-// ── M3 Star icon ──────────────────────────────────────────────────────────
+
+// ── Icons ─────────────────────────────────────────────────────────────────────
 
 const StarIcon: React.FC = () => (
   <svg className="w-3 h-3 text-yellow-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -94,6 +43,22 @@ const StarIcon: React.FC = () => (
   </svg>
 );
 
+const Stars: React.FC<{ rating: number | null }> = ({ rating }) => (
+  <div className="flex items-center gap-0.5">
+    {[1, 2, 3, 4, 5].map(i => (
+      <svg
+        key={i}
+        className={`w-3.5 h-3.5 ${i <= Math.round(rating ?? 0) ? 'text-yellow-400' : 'text-gray-200'}`}
+        fill="currentColor" viewBox="0 0 20 20"
+      >
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z" />
+      </svg>
+    ))}
+  </div>
+);
+
+
+// ── Cards ─────────────────────────────────────────────────────────────────────
 
 const ShowcaseCard: React.FC<{
   restaurant: Restaurant;
@@ -106,38 +71,21 @@ const ShowcaseCard: React.FC<{
     onMouseEnter={() => onHover(restaurant.id)}
     onMouseLeave={() => onHover(null)}
     className={`group rounded-[28px] overflow-hidden bg-white cursor-pointer transition-all duration-200 ${
-      isActive
-        ? 'shadow-2xl ring-2 ring-blue-500/30'
-        : 'shadow-md hover:shadow-xl'
+      isActive ? 'shadow-2xl ring-2 ring-blue-500/30' : 'shadow-md hover:shadow-xl'
     }`}
   >
     <div className="relative h-44 overflow-hidden">
       <img
-        src={restaurant.image}
+        src={restaurant.cover_image ?? ''}
         alt={restaurant.name}
         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
-      {restaurant.isNew && (
-        <span className="absolute top-3 left-3 text-[11px] font-bold text-white bg-blue-600 px-2.5 py-0.5 rounded-full shadow-sm">
-          NEW
-        </span>
-      )}
-
       <div className="absolute top-3 right-3 flex items-center gap-1 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full shadow text-xs font-bold text-gray-900">
         <StarIcon />
-        {restaurant.rating}
+        {restaurant.rating ?? '—'}
       </div>
-
-      {restaurant.bookedToday > 0 && (
-        <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white text-[11px] font-medium px-2.5 py-1 rounded-full">
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          Booked {restaurant.bookedToday}× today
-        </div>
-      )}
     </div>
 
     <div className="p-4">
@@ -153,45 +101,19 @@ const ShowcaseCard: React.FC<{
         </svg>
       </div>
 
-      <div className="flex items-center gap-1 text-xs text-gray-500 mb-3 flex-wrap">
-        <span className="font-semibold text-gray-700">{restaurant.ratingLabel}</span>
+      <div className="flex items-center gap-1 text-xs text-gray-500 flex-wrap">
+        <span className="font-semibold text-gray-700">{ratingLabel(restaurant.rating)}</span>
         <span className="text-gray-300">·</span>
-        <span>({restaurant.reviewCount})</span>
+        <span>({restaurant.review_count})</span>
         <span className="text-gray-300">·</span>
-        <span>{restaurant.priceRange}</span>
+        <span>{PRICE_SYMBOL[restaurant.price_range]}</span>
         <span className="text-gray-300">·</span>
         <span>{restaurant.cuisine}</span>
-      </div>
-
-      <div className="flex flex-wrap gap-1.5">
-        {restaurant.availableTimes.slice(0, 4).map(time => (
-          <button
-            key={time}
-            onClick={e => e.stopPropagation()}
-            className="px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white rounded-lg border border-blue-100 hover:border-blue-600 transition-colors"
-          >
-            {time}
-          </button>
-        ))}
       </div>
     </div>
   </div>
 );
 
-
-const Stars: React.FC<{ rating: number }> = ({ rating }) => (
-  <div className="flex items-center gap-0.5">
-    {[1, 2, 3, 4, 5].map(i => (
-      <svg
-        key={i}
-        className={`w-3.5 h-3.5 ${i <= Math.round(rating) ? 'text-yellow-400' : 'text-gray-200'}`}
-        fill="currentColor" viewBox="0 0 20 20"
-      >
-        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z" />
-      </svg>
-    ))}
-  </div>
-);
 
 const ListCard: React.FC<{
   restaurant: Restaurant;
@@ -209,7 +131,7 @@ const ListCard: React.FC<{
   >
     <div className="relative w-36 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
       <img
-        src={restaurant.image}
+        src={restaurant.cover_image ?? ''}
         alt={restaurant.name}
         className="w-full h-full object-cover"
       />
@@ -217,60 +139,34 @@ const ListCard: React.FC<{
 
     <div className="flex flex-col justify-between flex-1 min-w-0">
       <div className="space-y-1">
-
-        <div className="flex items-center gap-2 flex-wrap">
-          <h3 className="font-semibold text-blue-600 text-[15px] leading-snug group-hover:underline">
-            {restaurant.name}
-          </h3>
-          {restaurant.isNew && (
-            <span className="text-[10px] font-bold text-white bg-blue-600 px-2 py-0.5 rounded-full">
-              NEW
-            </span>
-          )}
-        </div>
+        <h3 className="font-semibold text-blue-600 text-[15px] leading-snug group-hover:underline">
+          {restaurant.name}
+        </h3>
 
         <div className="flex items-center gap-1.5">
           <Stars rating={restaurant.rating} />
-          <span className="text-sm font-semibold text-gray-800">{restaurant.ratingLabel}</span>
-          <span className="text-sm text-gray-500">({restaurant.reviewCount})</span>
+          <span className="text-sm font-semibold text-gray-800">{ratingLabel(restaurant.rating)}</span>
+          <span className="text-sm text-gray-500">({restaurant.review_count})</span>
         </div>
 
         <p className="text-sm text-gray-500">
-          {restaurant.priceRange}
+          {PRICE_SYMBOL[restaurant.price_range]}
           <span className="mx-1.5 text-gray-300">·</span>
           {restaurant.cuisine}
           <span className="mx-1.5 text-gray-300">·</span>
           {restaurant.city}
         </p>
 
-        {/* Booked today */}
-        {restaurant.bookedToday > 0 && (
-          <div className="flex items-center gap-1.5 text-sm text-gray-500">
-            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            Booked {restaurant.bookedToday} times today
-          </div>
+        {restaurant.address && (
+          <p className="text-xs text-gray-400 truncate">{restaurant.address}</p>
         )}
-      </div>
-
-      {/* Time slot buttons — all times, filled blue */}
-      <div className="flex flex-wrap gap-2 mt-3">
-        {restaurant.availableTimes.map(time => (
-          <button
-            key={time}
-            onClick={e => e.stopPropagation()}
-            className="px-4 py-1.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-md transition-colors"
-          >
-            {time}
-          </button>
-        ))}
       </div>
     </div>
   </div>
 );
 
-// ── M3 Empty State ────────────────────────────────────────────────────────
+
+// ── Empty / Error / Loading states ────────────────────────────────────────────
 
 const EmptyState: React.FC<{ query: string; onReset: () => void }> = ({ query, onReset }) => (
   <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
@@ -302,34 +198,79 @@ const EmptyState: React.FC<{ query: string; onReset: () => void }> = ({ query, o
   </div>
 );
 
-// ── Main Component ────────────────────────────────────────────────────────
+const LoadingSpinner: React.FC = () => (
+  <div className="flex items-center justify-center py-20">
+    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500" />
+  </div>
+);
+
+const ErrorState: React.FC<{ message: string; onRetry: () => void }> = ({ message, onRetry }) => (
+  <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+    <p className="text-sm text-red-500 mb-4">{message}</p>
+    <button
+      onClick={onRetry}
+      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-2xl text-sm"
+    >
+      Retry
+    </button>
+  </div>
+);
+
+
+// ── Main Component ────────────────────────────────────────────────────────────
 
 const SearchPage: React.FC = () => {
   const navigate = useNavigate();
 
+  const [restaurants, setRestaurants]       = useState<Restaurant[]>([]);
+  const [isLoading, setIsLoading]           = useState(false);
+  const [error, setError]                   = useState<string | null>(null);
   const [searchQuery, setSearchQuery]       = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('Featured');
   const [sortBy, setSortBy]                 = useState<SortKey>('relevance');
   const [viewMode, setViewMode]             = useState<ViewMode>('list');
   const [activeId, setActiveId]             = useState<number | null>(null);
   const [showMap, setShowMap]               = useState(false);
+  const [fetchKey, setFetchKey]             = useState(0);
 
-  const handleMarkerClick = (slug: string) => navigate(`/restaurant/${slug}`);
+  // Debounce search input
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedQuery(searchQuery), 400);
+    return () => clearTimeout(id);
+  }, [searchQuery]);
+
+  // Fetch restaurants from backend
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const params = new URLSearchParams({ limit: '50' });
+
+    if (debouncedQuery) params.set('q', debouncedQuery);
+
+    const cuisine = CATEGORY_CUISINE[activeCategory];
+    if (cuisine) params.set('cuisine', cuisine);
+
+    setIsLoading(true);
+    setError(null);
+
+    fetch(`${API_URL}/restaurants/?${params}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => {
+        if (!r.ok) throw new Error('Failed to load restaurants. Is the backend running?');
+        return r.json() as Promise<Restaurant[]>;
+      })
+      .then(setRestaurants)
+      .catch(err => setError(err instanceof Error ? err.message : 'Unknown error'))
+      .finally(() => setIsLoading(false));
+  }, [debouncedQuery, activeCategory, fetchKey]);
 
   const displayedRestaurants = useMemo(() => {
-    const filtered = MOCK_RESTAURANTS.filter(r =>
-      searchQuery === '' ||
-      r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.cuisine.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.city.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    switch (sortBy) {
-      case 'rating':  return [...filtered].sort((a, b) => b.rating - a.rating);
-      case 'reviews': return [...filtered].sort((a, b) => b.reviewCount - a.reviewCount);
-      case 'booked':  return [...filtered].sort((a, b) => b.bookedToday - a.bookedToday);
-      default:        return filtered;
-    }
-  }, [searchQuery, sortBy]);
+    const list = [...restaurants];
+    if (sortBy === 'rating')  return list.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+    if (sortBy === 'reviews') return list.sort((a, b) => b.review_count - a.review_count);
+    return list;
+  }, [restaurants, sortBy]);
 
   const resetFilters = () => {
     setSearchQuery('');
@@ -340,11 +281,10 @@ const SearchPage: React.FC = () => {
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-slate-50">
 
-      {/* ── M3 Top App Bar ───────────────────────────────────────── */}
+      {/* ── Top App Bar ───────────────────────────────────────────── */}
       <div className="flex-shrink-0 bg-gradient-to-r from-blue-600 to-indigo-700 px-4 pt-4 pb-4 shadow-lg">
         <div className="max-w-7xl mx-auto space-y-3">
 
-          {/* Logo + booking param pills */}
           <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
             <span className="text-white font-extrabold text-lg tracking-tight hidden sm:block mr-2 select-none">
               Reservelt
@@ -419,9 +359,10 @@ const SearchPage: React.FC = () => {
         </div>
       </div>
 
+      {/* ── Category chips ────────────────────────────────────────── */}
       <div className="flex-shrink-0 bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 flex items-center gap-2 py-2.5 overflow-x-auto scrollbar-hide">
-          {CATEGORIES.map(({ label }) => {
+          {CATEGORIES.map(label => {
             const active = activeCategory === label;
             return (
               <button
@@ -447,18 +388,20 @@ const SearchPage: React.FC = () => {
 
       <div className="flex flex-1 overflow-hidden">
 
+        {/* ── Results panel ──────────────────────────────────────────── */}
         <div className={`${showMap ? 'hidden' : 'flex'} md:flex flex-col flex-1 overflow-hidden`}>
 
+          {/* Sort / view controls */}
           <div className="flex-shrink-0 bg-white border-b border-slate-100 px-4 py-2.5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-gray-900">
-                  {displayedRestaurants.length}{' '}
+                  {isLoading ? '…' : displayedRestaurants.length}{' '}
                   {displayedRestaurants.length === 1 ? 'restaurant' : 'restaurants'}
                 </p>
                 <p className="text-xs text-gray-400">
-                  Bratislava · {activeCategory}
-                  {searchQuery && ` · "${searchQuery}"`}
+                  Slovakia · {activeCategory}
+                  {debouncedQuery && ` · "${debouncedQuery}"`}
                 </p>
               </div>
 
@@ -472,7 +415,6 @@ const SearchPage: React.FC = () => {
                     <option value="relevance">Relevance</option>
                     <option value="rating">Highest Rated</option>
                     <option value="reviews">Most Reviewed</option>
-                    <option value="booked">Most Booked</option>
                   </select>
                   <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -507,9 +449,14 @@ const SearchPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Results */}
           <div className="flex-1 overflow-y-auto bg-white">
             <div className={viewMode === 'list' ? 'px-4' : 'p-4'}>
-              {displayedRestaurants.length > 0 ? (
+              {isLoading ? (
+                <LoadingSpinner />
+              ) : error ? (
+                <ErrorState message={error} onRetry={() => setFetchKey(k => k + 1)} />
+              ) : displayedRestaurants.length > 0 ? (
                 viewMode === 'grid' ? (
                   <div className="grid grid-cols-1 gap-4">
                     {displayedRestaurants.map(r => (
@@ -536,22 +483,25 @@ const SearchPage: React.FC = () => {
                   </div>
                 )
               ) : (
-                <EmptyState query={searchQuery} onReset={resetFilters} />
+                <EmptyState query={debouncedQuery} onReset={resetFilters} />
               )}
             </div>
           </div>
         </div>
 
+        {/* ── Map panel ──────────────────────────────────────────────── */}
         <div className={`${showMap ? 'flex-1' : 'hidden'} md:block md:w-[45%] md:flex-none flex-shrink-0`}>
           <MapView
-            restaurants={MOCK_RESTAURANTS}
+            restaurants={displayedRestaurants}
             activeId={activeId}
-            onMarkerClick={handleMarkerClick}
+            onMarkerClick={slug => navigate(`/restaurant/${slug}`)}
             center={[48.148, 17.107]}
-            zoom={13}
+            zoom={7}
           />
         </div>
       </div>
+
+      {/* ── Mobile map toggle ─────────────────────────────────────────── */}
       <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
         <button
           onClick={() => setShowMap(v => !v)}

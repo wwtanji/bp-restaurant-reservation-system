@@ -2,6 +2,16 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Restaurant } from '../../interfaces/restaurant';
 
+const PRICE_SYMBOL: Record<number, string> = { 1: '$', 2: '$$', 3: '$$$', 4: '$$$$' };
+
+function ratingLabel(rating: number | null): string {
+  if (!rating) return '';
+  if (rating >= 4.5) return 'Exceptional';
+  if (rating >= 4.0) return 'Awesome';
+  if (rating >= 3.5) return 'Very Good';
+  return 'Good';
+}
+
 interface RestaurantCardProps {
   restaurant: Restaurant;
   isActive: boolean;
@@ -18,10 +28,10 @@ const StarIcon: React.FC<{ filled: boolean }> = ({ filled }) => (
   </svg>
 );
 
-const Stars: React.FC<{ rating: number }> = ({ rating }) => (
+const Stars: React.FC<{ rating: number | null }> = ({ rating }) => (
   <div className="flex items-center gap-0.5">
     {[1, 2, 3, 4, 5].map(i => (
-      <StarIcon key={i} filled={i <= Math.round(rating)} />
+      <StarIcon key={i} filled={i <= Math.round(rating ?? 0)} />
     ))}
   </div>
 );
@@ -40,7 +50,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, isActive, o
     >
       <div className="flex-shrink-0 w-36 h-28 rounded-lg overflow-hidden bg-gray-200">
         <img
-          src={restaurant.image}
+          src={restaurant.cover_image ?? ''}
           alt={restaurant.name}
           className="w-full h-full object-cover"
         />
@@ -48,47 +58,19 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, isActive, o
 
       <div className="flex flex-col justify-between min-w-0 flex-1">
         <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-semibold text-[#006AFF] text-sm hover:underline truncate">
-              {restaurant.name}
-            </h3>
-            {restaurant.isNew && (
-              <span className="text-xs font-semibold text-white bg-[#D4111E] px-2 py-0.5 rounded-full">
-                NEW
-              </span>
-            )}
-          </div>
+          <h3 className="font-semibold text-[#006AFF] text-sm hover:underline truncate">
+            {restaurant.name}
+          </h3>
 
           <div className="flex items-center gap-1.5 mt-1">
             <Stars rating={restaurant.rating} />
-            <span className="text-xs font-semibold text-gray-700">{restaurant.ratingLabel}</span>
-            <span className="text-xs text-gray-400">({restaurant.reviewCount})</span>
+            <span className="text-xs font-semibold text-gray-700">{ratingLabel(restaurant.rating)}</span>
+            <span className="text-xs text-gray-400">({restaurant.review_count})</span>
           </div>
 
           <p className="text-xs text-gray-500 mt-0.5">
-            {restaurant.priceRange} · {restaurant.cuisine} · {restaurant.city}
+            {PRICE_SYMBOL[restaurant.price_range]} · {restaurant.cuisine} · {restaurant.city}
           </p>
-
-          {restaurant.bookedToday > 0 && (
-            <div className="flex items-center gap-1 mt-1">
-              <svg className="w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span className="text-xs text-gray-500">Booked {restaurant.bookedToday} times today</span>
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-1.5 mt-2">
-          {restaurant.availableTimes.map(time => (
-            <button
-              key={time}
-              onClick={e => { e.stopPropagation(); navigate(`/restaurant/${restaurant.slug}`); }}
-              className="px-3 py-1.5 text-xs font-semibold text-white bg-[#D4111E] hover:bg-[#b80e19] rounded-md transition-colors"
-            >
-              {time}
-            </button>
-          ))}
         </div>
       </div>
     </div>

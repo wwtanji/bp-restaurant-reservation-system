@@ -8,10 +8,11 @@ from app.models.restaurant import Restaurant
 from app.models.user import User, UserRole
 from app.schemas.reservation_schema import ReservationCreate, ReservationOut, ReservationStatusUpdate
 from app.utils.rbac import require_customer, require_restaurant_owner_or_admin
+from app.controllers.restaurant_controller import get_restaurant_by_slug
 
 RESERVATION_CONTROLLER = APIRouter(prefix="/reservations")
 
-# Which statuses an owner can transition to from each current status
+# Valid status transitions an owner/admin may apply
 _OWNER_TRANSITIONS: dict[str, list[str]] = {
     ReservationStatus.PENDING: [
         ReservationStatus.CONFIRMED,
@@ -39,18 +40,20 @@ def _get_reservation_with_restaurant(reservation_id: int, db: Session) -> Reserv
 
 # ── Customer endpoints ────────────────────────────────────────────────────────
 
-@RESERVATION_CONTROLLER.post("/{restaurant_slug}", response_model=ReservationOut, status_code=201)
+@RESERVATION_CONTROLLER.post("/{slug}", response_model=ReservationOut, status_code=201)
 def create_reservation(
-    restaurant_slug: str,
     data: ReservationCreate,
+    restaurant: Restaurant = Depends(get_restaurant_by_slug),
     current_user: User = Depends(require_customer),
     db: Session = Depends(get_db),
 ):
-    restaurant = db.query(Restaurant).filter(
-        Restaurant.slug == restaurant_slug,
-        Restaurant.is_active == True,  # noqa: E712
-    ).first()
-    if not restaurant:
+    """
+    Flow: slug path param → get_restaurant_by_slug resolves it to a Restaurant row
+    (raises 404 automatically if unknown). We then check is_active before booking.
+    The reservation is always tied to current_user.id and restaurant.id — never to
+    anything the caller supplies directly.
+    """
+    if not restaurant.is_active:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
     if data.reservation_date < date.today():
@@ -113,14 +116,10 @@ def cancel_reservation(
 
 @RESERVATION_CONTROLLER.get("/restaurant/{slug}", response_model=list[ReservationOut])
 def list_restaurant_reservations(
-    slug: str,
+    restaurant: Restaurant = Depends(get_restaurant_by_slug),
     current_user: User = Depends(require_restaurant_owner_or_admin),
     db: Session = Depends(get_db),
 ):
-    restaurant = db.query(Restaurant).filter(Restaurant.slug == slug).first()
-    if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
-
     if current_user.role != UserRole.ADMIN and restaurant.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not your restaurant")
 

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useRe
 import { useNavigate } from 'react-router-dom';
 import { User } from '../interfaces/user';
 import { useNotification } from './NotificationContext';
+import { API_URL } from '../utils/api';
 
 interface LoginData {
   user_email: string;
@@ -50,8 +51,6 @@ export const useAuth = () => {
 interface AuthProviderProps {
   children: ReactNode;
 }
-
-const API_URL = 'http://localhost:8000/api';
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);

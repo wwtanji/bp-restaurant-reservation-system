@@ -11,6 +11,7 @@ import ResetPasswordPage from './pages/Auth/ResetPasswordPage';
 import SearchPage from './pages/SearchPage';
 import RestaurantDetailPage from './pages/RestaurantDetailPage';
 import BookingPage from './pages/BookingPage';
+import MyReservationsPage from './pages/MyReservationsPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -79,6 +80,11 @@ const AppRoutes = () => {
       <Route path="/restaurant/:slug/book" element={
         <ProtectedRoute>
           <BookingPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/my-reservations" element={
+        <ProtectedRoute>
+          <MyReservationsPage />
         </ProtectedRoute>
       } />
     </Routes>

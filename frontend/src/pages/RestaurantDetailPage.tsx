@@ -1,5 +1,19 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { Restaurant } from '../interfaces/restaurant';
+import { SlotAvailability } from '../interfaces/reservation';
+import { apiFetch } from '../utils/api';
+import {
+  TIME_OPTIONS,
+  QUICK_TIME_SLOTS,
+  PARTY_SIZES,
+  todayISO,
+  toApiTime,
+  PRICE_SYMBOLS,
+} from '../constants/reservation';
 
 interface Review {
   id: number;
@@ -9,11 +23,6 @@ interface Review {
   rating: number;
   text: string;
   avatarColor: string;
-}
-
-
-function todayISO(): string {
-  return new Date().toISOString().split('T')[0];
 }
 
 const NAV_TABS = ['Overview', 'Concierge', 'Photos', 'Menu', 'Reviews', 'Details', 'FAQs'];
@@ -26,18 +35,11 @@ const TAGS = [
   'Halal',
 ];
 
-const TIME_SLOTS = ['6:30 PM', '6:45 PM', '7:00 PM', '7:15 PM', '7:30 PM'];
-const TIME_OPTIONS = ['5:30 PM', '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM'];
-
-const PARTY_SIZES = Array.from({ length: 8 }, (_, i) =>
-  i === 0 ? '1 person' : `${i + 1} people`
-);
-
 const CONCIERGE_SUGGESTIONS = [
-  { emoji: '🌿', text: 'Is it suitable for a romantic dinner?' },
-  { emoji: '🍔', text: 'What are the most popular dishes?' },
-  { emoji: '🌲', text: 'Tell me about the forest-themed atmosphere' },
-  { emoji: '👥', text: 'Can it accommodate large groups?' },
+  { emoji: '\u{1F33F}', text: 'Is it suitable for a romantic dinner?' },
+  { emoji: '\u{1F354}', text: 'What are the most popular dishes?' },
+  { emoji: '\u{1F332}', text: 'Tell me about the atmosphere' },
+  { emoji: '\u{1F465}', text: 'Can it accommodate large groups?' },
 ];
 
 const RATING_CATEGORIES = [
@@ -49,49 +51,24 @@ const RATING_CATEGORIES = [
 
 const REVIEWS: Review[] = [
   {
-    id: 1,
-    author: 'Sarah M.',
-    initials: 'SM',
-    dined: 'Dined on February 18, 2026',
-    rating: 5,
-    text: 'Absolutely magical atmosphere! The towering tree-like structures and warm amber lighting create a truly enchanting fairy-tale forest vibe. The burgers were fantastic and the staff was very attentive. Perfect for a special occasion dinner — my partner was completely wowed by the decor.',
+    id: 1, author: 'Sarah M.', initials: 'SM', dined: 'Dined on February 18, 2026',
+    rating: 5, text: 'Absolutely magical atmosphere! The food was fantastic and the staff was very attentive. Perfect for a special occasion dinner.',
     avatarColor: 'from-rose-400 to-red-500',
   },
   {
-    id: 2,
-    author: 'Thomas K.',
-    initials: 'TK',
-    dined: 'Dined on February 14, 2026',
-    rating: 4,
-    text: 'Great food, truly unique interior design. One downside is the noise level — it gets quite energetic during peak hours, making conversation a bit of a challenge. The menu system (digital ordering) is also a bit complicated at first, but the staff was very helpful.',
+    id: 2, author: 'Thomas K.', initials: 'TK', dined: 'Dined on February 14, 2026',
+    rating: 4, text: 'Great food, truly unique interior design. One downside is the noise level during peak hours. The menu is also a bit complicated at first, but the staff was very helpful.',
     avatarColor: 'from-blue-400 to-indigo-500',
   },
   {
-    id: 3,
-    author: 'Julia W.',
-    initials: 'JW',
-    dined: 'Dined on January 30, 2026',
-    rating: 4,
-    text: 'Booked the private separate room for our office team of 12 — worked out perfectly! Great selection of burgers and the vegetarian options were surprisingly good and creative.',
+    id: 3, author: 'Julia W.', initials: 'JW', dined: 'Dined on January 30, 2026',
+    rating: 4, text: 'Booked the private room for our office team of 12 — worked out perfectly! Great selection and the vegetarian options were surprisingly good.',
     avatarColor: 'from-purple-400 to-pink-500',
   },
   {
-    id: 4,
-    author: 'Marco B.',
-    initials: 'MB',
-    dined: 'Dined on January 22, 2026',
-    rating: 3,
-    text: 'Beautiful restaurant with jaw-dropping decor. The acoustics in the main hall make it very loud. Food quality is genuinely high, but prices are on the steeper side. Overall a 3/5 experience.',
+    id: 4, author: 'Marco B.', initials: 'MB', dined: 'Dined on January 22, 2026',
+    rating: 3, text: 'Beautiful restaurant with jaw-dropping decor. Food quality is genuinely high, but prices are on the steeper side. Overall a 3/5 experience.',
     avatarColor: 'from-amber-400 to-orange-500',
-  },
-  {
-    id: 5,
-    author: 'Anna L.',
-    initials: 'AL',
-    dined: 'Dined on December 15, 2025',
-    rating: 5,
-    text: 'One of the best burger places in Vienna! The forest-themed decor is absolutely stunning. Ordered the truffle burger and it was exceptional. Will definitely be back!',
-    avatarColor: 'from-emerald-400 to-teal-500',
   },
 ];
 
@@ -103,7 +80,13 @@ const HERO_IMAGES = [
   'https://images.unsplash.com/photo-1550966871-3ed3cfd06327?w=450&h=300&fit=crop',
 ];
 
-// ── Sub-components ────────────────────────────────────────────────────────
+function ratingLabel(rating: number | null): string {
+  if (!rating) return '';
+  if (rating >= 4.5) return 'Exceptional';
+  if (rating >= 4.0) return 'Awesome';
+  if (rating >= 3.5) return 'Very Good';
+  return 'Good';
+}
 
 const StarRating: React.FC<{ rating: number; size?: 'sm' | 'md' | 'lg' }> = ({
   rating,
@@ -149,18 +132,62 @@ const NoiseBar: React.FC<{ level: number }> = ({ level }) => (
   </div>
 );
 
+const createPinIcon = () =>
+  L.divIcon({
+    className: '',
+    html: `
+      <div style="position:relative;width:36px;height:46px;">
+        <svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 28 18 28s18-14.5 18-28C36 8.06 27.94 0 18 0z" fill="#2563eb"/>
+          <circle cx="18" cy="18" r="8" fill="white"/>
+          <circle cx="18" cy="18" r="4" fill="#2563eb"/>
+        </svg>
+      </div>
+    `,
+    iconSize: [36, 46],
+    iconAnchor: [18, 46],
+  });
+
+const BRATISLAVA_CENTER: [number, number] = [48.148, 17.107];
+
+const LocationMiniMap: React.FC<{ lat: number | null; lng: number | null; name: string }> = ({ lat, lng, name }) => {
+  const position: [number, number] = lat && lng ? [lat, lng] : BRATISLAVA_CENTER;
+  const icon = useMemo(createPinIcon, []);
+
+  return (
+    <MapContainer
+      center={position}
+      zoom={15}
+      style={{ height: '100%', width: '100%' }}
+      zoomControl={false}
+      scrollWheelZoom={false}
+      dragging={false}
+      doubleClickZoom={false}
+      attributionControl={false}
+    >
+      <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+      <Marker position={position} icon={icon} title={name} />
+    </MapContainer>
+  );
+};
+
 
 const RestaurantDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
 
-  // ── Reservation form state ─────────────────────────────────────────────
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [restaurantLoading, setRestaurantLoading] = useState(true);
+  const [restaurantError, setRestaurantError] = useState<string | null>(null);
+
   const [partySize, setPartySize]       = useState('2 people');
   const [selectedDate, setSelectedDate] = useState(todayISO);
   const [selectedTime, setSelectedTime] = useState('7:00 PM');
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
-  // ── Page UI state ──────────────────────────────────────────────────────
+  const [availability, setAvailability] = useState<SlotAvailability | null>(null);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+
   const [activeTab, setActiveTab]       = useState('Overview');
   const [reviewSearch, setReviewSearch] = useState('');
   const [showAllPhotos, setShowAllPhotos] = useState(false);
@@ -175,6 +202,30 @@ const RestaurantDetailPage: React.FC = () => {
     Concierge: conciergeRef,
     Reviews:   reviewsRef,
   };
+
+  useEffect(() => {
+    if (!slug) return;
+    setRestaurantLoading(true);
+    apiFetch<Restaurant>(`/restaurants/${slug}`)
+      .then(setRestaurant)
+      .catch(() => setRestaurantError('Restaurant not found'))
+      .finally(() => setRestaurantLoading(false));
+  }, [slug]);
+
+  useEffect(() => {
+    if (!slug) return;
+    const controller = new AbortController();
+    setAvailabilityLoading(true);
+    const params = new URLSearchParams({
+      reservation_date: selectedDate,
+      reservation_time: toApiTime(selectedTime),
+    });
+    apiFetch<SlotAvailability>(`/reservations/${slug}/availability?${params}`)
+      .then(setAvailability)
+      .catch(() => {})
+      .finally(() => setAvailabilityLoading(false));
+    return () => controller.abort();
+  }, [slug, selectedDate, selectedTime]);
 
   const scrollToSection = (tab: string) => {
     setActiveTab(tab);
@@ -222,28 +273,46 @@ const RestaurantDetailPage: React.FC = () => {
     setSelectedSlot(null);
   };
 
-  // ── Navigate to checkout ────────────────────────────────────────────────
   const handleBook = () => {
     if (!slug) return;
     const params = new URLSearchParams({ date: selectedDate, time: selectedTime, party: partySize });
     navigate(`/restaurant/${slug}/book?${params.toString()}`);
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────
+  if (restaurantLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500" />
+      </div>
+    );
+  }
+
+  if (restaurantError || !restaurant) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <p className="text-gray-600">{restaurantError ?? 'Restaurant not found'}</p>
+        <button onClick={() => navigate('/search')} className="text-[#2563eb] font-semibold hover:underline">
+          Back to search
+        </button>
+      </div>
+    );
+  }
+
+  const priceLabel = PRICE_SYMBOLS[restaurant.price_range] ?? '$$';
+  const overallRating = restaurant.rating ?? 4.5;
 
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Montserrat', 'Open Sans', sans-serif" }}>
 
-      {/* ── Hero Gallery ─────────────────────────────────────────────── */}
       <div className="relative">
         <div className="md:hidden h-64 overflow-hidden">
-          <img src={HERO_IMAGES[0]} alt="Restaurant interior" className="w-full h-full object-cover" />
+          <img src={restaurant.cover_image ?? HERO_IMAGES[0]} alt={restaurant.name} className="w-full h-full object-cover" />
         </div>
 
         <div className="hidden md:grid md:grid-cols-[2fr_1fr] md:grid-rows-2 h-[480px] gap-0.5 overflow-hidden">
           <img
-            src={HERO_IMAGES[0]}
-            alt="Restaurant main interior"
+            src={restaurant.cover_image ?? HERO_IMAGES[0]}
+            alt={restaurant.name}
             className="row-span-2 w-full h-full object-cover hover:brightness-95 transition-all cursor-pointer"
             onClick={() => setShowAllPhotos(true)}
           />
@@ -269,7 +338,6 @@ const RestaurantDetailPage: React.FC = () => {
         </button>
       </div>
 
-      {/* ── Sticky Navigation Tabs ────────────────────────────────────── */}
       <div className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 flex items-center overflow-x-auto scrollbar-hide">
           {NAV_TABS.map(tab => (
@@ -288,92 +356,69 @@ const RestaurantDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Page Body ────────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
 
-          {/* ── Left Column ──────────────────────────────────────────── */}
           <div className="flex-1 min-w-0">
 
-            {/* Restaurant Header */}
             <div ref={overviewRef} className="mb-8 scroll-mt-20">
               <div className="flex items-start gap-3 flex-wrap mb-2">
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
-                  Peter Pane – Wien Mariahilferstraße
+                  {restaurant.name}
                 </h1>
-                <span className="text-xs font-bold text-white bg-[#2563eb] px-2.5 py-1 rounded-full mt-1 flex-shrink-0">
-                  NEW
-                </span>
               </div>
 
               <div className="flex items-center gap-2 flex-wrap text-sm text-gray-600 mb-3">
                 <div className="flex items-center gap-1.5">
-                  <StarRating rating={4.5} size="sm" />
-                  <span className="font-bold text-gray-900">Awesome</span>
-                  <span className="text-gray-400">(659 reviews)</span>
+                  <StarRating rating={overallRating} size="sm" />
+                  <span className="font-bold text-gray-900">{ratingLabel(restaurant.rating)}</span>
+                  <span className="text-gray-400">({restaurant.review_count} reviews)</span>
                 </div>
                 <span className="text-gray-300 hidden sm:block">|</span>
-                <span className="font-medium">$$$$</span>
-                <span className="text-gray-300">·</span>
-                <span>Burgers</span>
-                <span className="text-gray-300">·</span>
-                <span>Vienna, Mariahilferstraße</span>
+                <span className="font-medium">{priceLabel}</span>
+                <span className="text-gray-300">&middot;</span>
+                <span>{restaurant.cuisine}</span>
+                <span className="text-gray-300">&middot;</span>
+                <span>{restaurant.city}</span>
               </div>
 
               <div className="flex items-center gap-1.5 text-sm text-gray-500">
                 <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <span>Booked <span className="font-semibold text-gray-700">26 times</span> today</span>
-                <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                  In high demand
-                </span>
+                <span>{restaurant.address}, {restaurant.city}</span>
               </div>
             </div>
 
             <hr className="border-gray-100 mb-8" />
 
-            {/* About Section */}
-            <div className="mb-10">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">About this restaurant</h2>
+            {restaurant.description && (
+              <>
+                <div className="mb-10">
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">About this restaurant</h2>
+                  <div className="flex flex-wrap gap-2 mb-5">
+                    {TAGS.map(tag => (
+                      <span
+                        key={tag}
+                        className="px-3 py-1.5 bg-gray-50 text-gray-700 text-sm rounded-full border border-gray-200 hover:bg-gray-100 transition cursor-default flex items-center gap-1.5"
+                      >
+                        <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-gray-600 text-sm leading-relaxed">{restaurant.description}</p>
+                </div>
+                <hr className="border-gray-100 mb-10" />
+              </>
+            )}
 
-              <div className="flex flex-wrap gap-2 mb-5">
-                {TAGS.map(tag => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1.5 bg-gray-50 text-gray-700 text-sm rounded-full border border-gray-200 hover:bg-gray-100 transition cursor-default flex items-center gap-1.5"
-                  >
-                    <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    {tag}
-                  </span>
-                ))}
-              </div>
-
-              <div className="space-y-3 text-gray-600 text-sm leading-relaxed">
-                <p>
-                  Step into a fairy-tale world at <strong className="text-gray-900">Peter Pane</strong> on
-                  Vienna's famous Mariahilferstraße. Our restaurant enchants guests with its spectacular
-                  interior — towering tree-like structures, lush greenery, and warm amber lighting.
-                </p>
-                <p>
-                  We serve premium hand-crafted burgers using high-quality, sustainably sourced ingredients,
-                  with an extensive menu featuring creative options for every dietary preference.
-                </p>
-                <p>
-                  For larger celebrations and corporate gatherings, we offer a dedicated separate dining
-                  room that can be reserved exclusively for your group.
-                </p>
-              </div>
-            </div>
-
-            <hr className="border-gray-100 mb-10" />
-
-            {/* Concierge AI Section */}
             <div ref={conciergeRef} className="mb-10 scroll-mt-20">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xl">✨</span>
+                <span className="text-xl">{'\u2728'}</span>
                 <h2 className="text-lg font-bold text-gray-900">Concierge</h2>
                 <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold border border-amber-200">
                   AI-Powered
@@ -417,17 +462,16 @@ const RestaurantDetailPage: React.FC = () => {
 
             <hr className="border-gray-100 mb-10" />
 
-            {/* Reviews Section */}
             <div ref={reviewsRef} className="scroll-mt-20">
               <h2 className="text-lg font-bold text-gray-900 mb-6">Overall ratings and reviews</h2>
 
               <div className="bg-gray-50 rounded-2xl p-6 mb-6 border border-gray-100">
                 <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
                   <div className="flex flex-col items-center justify-center sm:w-32 flex-shrink-0 text-center">
-                    <span className="text-5xl font-bold text-gray-900 tracking-tight mb-1">4.5</span>
-                    <StarRating rating={4.5} size="lg" />
-                    <span className="text-sm font-bold text-gray-800 mt-1.5">Awesome</span>
-                    <span className="text-xs text-gray-400 mt-0.5">659 reviews</span>
+                    <span className="text-5xl font-bold text-gray-900 tracking-tight mb-1">{overallRating.toFixed(1)}</span>
+                    <StarRating rating={overallRating} size="lg" />
+                    <span className="text-sm font-bold text-gray-800 mt-1.5">{ratingLabel(restaurant.rating)}</span>
+                    <span className="text-xs text-gray-400 mt-0.5">{restaurant.review_count} reviews</span>
                   </div>
 
                   <div className="flex-1">
@@ -522,20 +566,16 @@ const RestaurantDetailPage: React.FC = () => {
             </div>
           </div>
 
-          {/* ── Right Column: Reservation Widget ─────────────────────── */}
           <div className="lg:w-80 xl:w-[22rem] flex-shrink-0">
             <div className="lg:sticky lg:top-20 space-y-4">
 
-              {/* Reservation Card */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
                 <div className="bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] px-5 py-4">
                   <h3 className="text-base font-bold text-white">Make a reservation</h3>
                   <p className="text-blue-200 text-xs mt-0.5">No credit card required</p>
                 </div>
 
-                {/* ── Booking form ──────────────────────────────────────── */}
                 <div className="p-5">
-                    {/* Party size */}
                     <div className="mb-4">
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
                         Party size
@@ -557,7 +597,6 @@ const RestaurantDetailPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Date & Time row */}
                     <div className="grid grid-cols-2 gap-3 mb-5">
                       <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
@@ -599,12 +638,27 @@ const RestaurantDetailPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Quick-select time slots */}
+                    {availability && !availabilityLoading && (
+                      <div className={`mb-4 px-3 py-2 rounded-lg text-xs font-medium ${
+                        availability.available_seats === 0
+                          ? 'bg-red-50 text-red-600 border border-red-200'
+                          : availability.available_seats <= 3
+                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                            : 'bg-green-50 text-green-700 border border-green-200'
+                      }`}>
+                        {availability.available_seats === 0
+                          ? 'Fully booked for this time slot'
+                          : availability.available_seats <= 3
+                            ? `Only ${availability.available_seats} seat${availability.available_seats === 1 ? '' : 's'} left`
+                            : `${availability.available_seats} seats available`}
+                      </div>
+                    )}
+
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
                       Quick-select a time
                     </p>
                     <div className="grid grid-cols-3 gap-2 mb-5">
-                      {TIME_SLOTS.map(slot => (
+                      {QUICK_TIME_SLOTS.map(slot => (
                         <button
                           key={slot}
                           onClick={() => handleSlotClick(slot)}
@@ -619,15 +673,16 @@ const RestaurantDetailPage: React.FC = () => {
                       ))}
                     </div>
 
-                    {/* Primary CTA — navigate to checkout */}
                     <button
                       onClick={handleBook}
-                      className="w-full py-3.5 text-sm font-bold text-white bg-[#2563eb] rounded-xl hover:bg-[#1d4ed8] active:scale-95 transition-all shadow-sm hover:shadow-md mb-3"
+                      disabled={availability?.available_seats === 0}
+                      className="w-full py-3.5 text-sm font-bold text-white bg-[#2563eb] rounded-xl hover:bg-[#1d4ed8] active:scale-95 transition-all shadow-sm hover:shadow-md mb-3 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      {`Book a Table · ${selectedTime}`}
+                      {availability?.available_seats === 0
+                        ? 'Fully booked'
+                        : `Book a Table \u00B7 ${selectedTime}`}
                     </button>
 
-                    {/* Notify me */}
                     <button className="w-full py-3 text-sm font-semibold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -641,49 +696,43 @@ const RestaurantDetailPage: React.FC = () => {
                   </div>
               </div>
 
-              {/* Location mini-card */}
               <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-                <div className="relative h-32 bg-gradient-to-br from-green-100 via-emerald-100 to-teal-100 flex items-center justify-center overflow-hidden">
-                  <div className="absolute inset-0 opacity-20">
-                    {[...Array(6)].map((_, i) => (
-                      <div key={i} className="absolute border-gray-400 border" style={{ left: `${i * 16}%`, top: 0, bottom: 0, width: '1px' }} />
-                    ))}
-                    {[...Array(5)].map((_, i) => (
-                      <div key={i} className="absolute border-gray-400 border" style={{ top: `${i * 25}%`, left: 0, right: 0, height: '1px' }} />
-                    ))}
-                  </div>
-                  <div className="text-center relative z-10">
-                    <div className="w-9 h-9 bg-[#2563eb] rounded-full flex items-center justify-center mx-auto mb-1.5 shadow-lg ring-4 ring-white">
-                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold text-gray-700 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded-full">
-                      Mariahilferstraße
-                    </span>
-                  </div>
+                <div className="relative h-44 overflow-hidden">
+                  <LocationMiniMap
+                    lat={restaurant.latitude}
+                    lng={restaurant.longitude}
+                    name={restaurant.name}
+                  />
+                  <div className="absolute inset-0 pointer-events-none rounded-t-2xl ring-1 ring-inset ring-black/5" />
                 </div>
-                <div className="px-4 py-3">
-                  <p className="text-sm font-semibold text-gray-900">Mariahilferstraße 1-7</p>
-                  <p className="text-xs text-gray-500">1060 Vienna, Austria</p>
-                  <button className="text-xs text-[#006AFF] mt-1.5 hover:underline flex items-center gap-1">
+                <div className="px-4 py-3.5">
+                  <p className="text-sm font-semibold text-gray-900">{restaurant.address}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{restaurant.city}, {restaurant.country}</p>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      `${restaurant.address}, ${restaurant.city}, ${restaurant.country}`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#2563eb] mt-2 hover:underline"
+                  >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                     Get directions
-                  </button>
+                  </a>
                 </div>
               </div>
 
-              {/* Good to know */}
               <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
                 <h4 className="text-sm font-bold text-gray-900 mb-3">Good to know</h4>
                 <div className="space-y-2">
                   {[
-                    { icon: '🕐', text: 'Open until 11:00 PM today' },
-                    { icon: '📞', text: '+43 1 234 5678' },
-                    { icon: '🅿️', text: 'Parking nearby' },
-                    { icon: '♿', text: 'Wheelchair accessible' },
+                    { icon: '\u{1F550}', text: 'Open until 11:00 PM today' },
+                    ...(restaurant.phone_number ? [{ icon: '\u{1F4DE}', text: restaurant.phone_number }] : []),
+                    { icon: '\u{1F17F}\u{FE0F}', text: 'Parking nearby' },
+                    { icon: '\u{267F}', text: 'Wheelchair accessible' },
                   ].map((item, i) => (
                     <div key={i} className="flex items-center gap-2.5 text-sm text-gray-600">
                       <span className="text-base">{item.icon}</span>
@@ -697,7 +746,6 @@ const RestaurantDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Photo Lightbox Modal ──────────────────────────────────────── */}
       {showAllPhotos && (
         <div className="fixed inset-0 z-50 bg-black/95 flex flex-col" onClick={() => setShowAllPhotos(false)}>
           <div className="flex items-center justify-between px-6 py-4">

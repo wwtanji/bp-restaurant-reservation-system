@@ -2,10 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MapView from '../components/map/MapView';
 import { Restaurant } from '../interfaces/restaurant';
-
-const API_URL = 'http://localhost:8000/api';
-
-const PRICE_SYMBOL: Record<number, string> = { 1: '$', 2: '$$', 3: '$$$', 4: '$$$$' };
+import { apiFetch } from '../utils/api';
+import { PRICE_SYMBOLS, todayISO, formatDate } from '../constants/reservation';
 
 function ratingLabel(rating: number | null): string {
   if (!rating) return '';
@@ -106,7 +104,7 @@ const ShowcaseCard: React.FC<{
         <span className="text-gray-300">·</span>
         <span>({restaurant.review_count})</span>
         <span className="text-gray-300">·</span>
-        <span>{PRICE_SYMBOL[restaurant.price_range]}</span>
+        <span>{PRICE_SYMBOLS[restaurant.price_range]}</span>
         <span className="text-gray-300">·</span>
         <span>{restaurant.cuisine}</span>
       </div>
@@ -150,7 +148,7 @@ const ListCard: React.FC<{
         </div>
 
         <p className="text-sm text-gray-500">
-          {PRICE_SYMBOL[restaurant.price_range]}
+          {PRICE_SYMBOLS[restaurant.price_range]}
           <span className="mx-1.5 text-gray-300">·</span>
           {restaurant.cuisine}
           <span className="mx-1.5 text-gray-300">·</span>
@@ -240,9 +238,7 @@ const SearchPage: React.FC = () => {
     return () => clearTimeout(id);
   }, [searchQuery]);
 
-  // Fetch restaurants from backend
   useEffect(() => {
-    const token = localStorage.getItem('token');
     const params = new URLSearchParams({ limit: '50' });
 
     if (debouncedQuery) params.set('q', debouncedQuery);
@@ -253,15 +249,9 @@ const SearchPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
 
-    fetch(`${API_URL}/restaurants/?${params}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => {
-        if (!r.ok) throw new Error('Failed to load restaurants. Is the backend running?');
-        return r.json() as Promise<Restaurant[]>;
-      })
+    apiFetch<Restaurant[]>(`/restaurants/?${params}`)
       .then(setRestaurants)
-      .catch(err => setError(err instanceof Error ? err.message : 'Unknown error'))
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load restaurants'))
       .finally(() => setIsLoading(false));
   }, [debouncedQuery, activeCategory, fetchKey]);
 
@@ -290,34 +280,32 @@ const SearchPage: React.FC = () => {
               Reservelt
             </span>
             <div className="flex items-center gap-2 flex-wrap">
-              {(
-                [
-                  {
-                    label: 'Mar 12, 2026',
-                    icon: (
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    ),
-                  },
-                  {
-                    label: '7:00 PM',
-                    icon: (
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    ),
-                  },
-                  {
-                    label: '2 people',
-                    icon: (
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    ),
-                  },
-                ] as { label: string; icon: React.ReactNode }[]
-              ).map(({ label, icon }) => (
+              {[
+                {
+                  label: formatDate(todayISO()),
+                  icon: (
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  ),
+                },
+                {
+                  label: '7:00 PM',
+                  icon: (
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  ),
+                },
+                {
+                  label: '2 people',
+                  icon: (
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  ),
+                },
+              ].map(({ label, icon }) => (
                 <button
                   key={label}
                   className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white text-xs font-medium px-3 py-1.5 rounded-full transition-colors"

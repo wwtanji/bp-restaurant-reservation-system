@@ -125,14 +125,34 @@ def create_reservation(
 
 @RESERVATION_CONTROLLER.get("/my", response_model=list[ReservationOut])
 def list_my_reservations(
+    status: str | None = Query(default=None),
+    upcoming: bool = Query(default=False),
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, le=100),
     current_user: User = Depends(require_customer),
     db: Session = Depends(get_db),
 ):
-    return (
+    query = (
         db.query(Reservation)
         .options(joinedload(Reservation.restaurant))
         .filter(Reservation.user_id == current_user.id)
-        .order_by(Reservation.reservation_date.desc())
+    )
+
+    if status:
+        valid = {s.value for s in ReservationStatus}
+        if status in valid:
+            query = query.filter(Reservation.status == status)
+
+    if upcoming:
+        query = query.filter(
+            Reservation.reservation_date >= date.today(),
+            Reservation.status.in_([ReservationStatus.PENDING, ReservationStatus.CONFIRMED]),
+        )
+
+    return (
+        query.order_by(Reservation.reservation_date.desc())
+        .offset(skip)
+        .limit(limit)
         .all()
     )
 

@@ -1,61 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
-const API_URL = 'http://localhost:8000/api';
-
-const TIME_OPTIONS = [
-  '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM',
-  '1:00 PM',  '1:30 PM',  '2:00 PM',  '2:30 PM',
-  '5:00 PM',  '5:30 PM',  '6:00 PM',  '6:30 PM',
-  '7:00 PM',  '7:30 PM',  '8:00 PM',  '8:30 PM',  '9:00 PM',
-];
-
-const PARTY_SIZES = Array.from({ length: 10 }, (_, i) =>
-  i === 0 ? '1 person' : `${i + 1} people`
-);
-
-function toApiTime(display: string): string {
-  const [timePart, period] = display.split(' ');
-  let [hours, minutes] = timePart.split(':').map(Number);
-  if (period === 'PM' && hours !== 12) hours += 12;
-  if (period === 'AM' && hours === 12) hours = 0;
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
-}
-
-function toApiPartySize(display: string): number {
-  return parseInt(display, 10);
-}
-
-function todayISO(): string {
-  return new Date().toISOString().split('T')[0];
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso + 'T00:00:00').toLocaleDateString('en-US', {
-    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
-  });
-}
-
-interface RestaurantInfo {
-  name: string;
-  cuisine: string;
-  city: string;
-  address: string;
-  cover_image: string | null;
-}
-
-interface BookingOut {
-  id: number;
-  reservation_date: string;
-  reservation_time: string;
-  party_size: number;
-  status: string;
-  guest_name: string | null;
-  restaurant: { name: string; address: string; city: string };
-}
-
-// ── Shared icon components ─────────────────────────────────────────────────
+import { apiFetch } from '../utils/api';
+import { Restaurant } from '../interfaces/restaurant';
+import { Reservation, SlotAvailability } from '../interfaces/reservation';
+import {
+  TIME_OPTIONS,
+  PARTY_SIZES,
+  toApiTime,
+  toApiPartySize,
+  todayISO,
+  formatDate,
+  fromApiTime,
+  RESERVATION_STATUS_PENDING,
+} from '../constants/reservation';
 
 const CalendarIcon = () => (
   <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -78,59 +36,46 @@ const ChevronIcon = () => (
   </svg>
 );
 
-// ── Main component ─────────────────────────────────────────────────────────
-
 const BookingPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Pre-filled from the detail page via query params
   const [selectedDate, setSelectedDate] = useState(searchParams.get('date') || todayISO());
   const [selectedTime, setSelectedTime] = useState(searchParams.get('time') || '7:00 PM');
   const [partySize, setPartySize]       = useState(searchParams.get('party') || '2 people');
 
-  // Guest info
   const [guestName, setGuestName]           = useState('');
   const [guestPhone, setGuestPhone]         = useState('');
   const [specialRequests, setSpecialRequests] = useState('');
 
-  // Page state
-  const [restaurant, setRestaurant]       = useState<RestaurantInfo | null>(null);
+  const [restaurant, setRestaurant]       = useState<Restaurant | null>(null);
   const [isSubmitting, setIsSubmitting]   = useState(false);
   const [error, setError]                 = useState<string | null>(null);
-  const [confirmation, setConfirmation]   = useState<BookingOut | null>(null);
+  const [confirmation, setConfirmation]   = useState<Reservation | null>(null);
   const [availableSeats, setAvailableSeats]     = useState<number | null>(null);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
-  // Pre-fill name from auth
   useEffect(() => {
     if (user) setGuestName(`${user.first_name} ${user.last_name}`);
   }, [user]);
 
-  // Fetch slot availability whenever date or time changes
   useEffect(() => {
     if (!slug) return;
     const controller = new AbortController();
     setAvailabilityLoading(true);
-    const token = localStorage.getItem('token');
     const params = new URLSearchParams({
       reservation_date: selectedDate,
       reservation_time: toApiTime(selectedTime),
     });
-    fetch(`${API_URL}/reservations/${slug}/availability?${params}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      signal: controller.signal,
-    })
-      .then(res => (res.ok ? res.json() : Promise.reject()))
-      .then((data: { available_seats: number }) => setAvailableSeats(data.available_seats))
+    apiFetch<SlotAvailability>(`/reservations/${slug}/availability?${params}`)
+      .then(data => setAvailableSeats(data.available_seats))
       .catch(() => {})
       .finally(() => setAvailabilityLoading(false));
     return () => controller.abort();
   }, [slug, selectedDate, selectedTime]);
 
-  // Clamp party size if the selected slot has fewer seats than currently chosen
   useEffect(() => {
     if (availableSeats === null || availableSeats === 0) return;
     if (toApiPartySize(partySize) > availableSeats) {
@@ -138,14 +83,9 @@ const BookingPage: React.FC = () => {
     }
   }, [availableSeats, partySize]);
 
-  // Fetch restaurant display info
   useEffect(() => {
     if (!slug) return;
-    const token = localStorage.getItem('token');
-    fetch(`${API_URL}/restaurants/${slug}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(res => (res.ok ? res.json() : Promise.reject()))
+    apiFetch<Restaurant>(`/restaurants/${slug}`)
       .then(setRestaurant)
       .catch(() => navigate(`/restaurant/${slug}`));
   }, [slug, navigate]);
@@ -163,13 +103,8 @@ const BookingPage: React.FC = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/reservations/${slug}`, {
+      const data = await apiFetch<Reservation>(`/reservations/${slug}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           party_size:       toApiPartySize(partySize),
           reservation_date: selectedDate,
@@ -179,13 +114,7 @@ const BookingPage: React.FC = () => {
           special_requests: specialRequests || null,
         }),
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail ?? 'Reservation failed. Please try again.');
-      }
-
-      setConfirmation(await res.json());
+      setConfirmation(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.');
     } finally {
@@ -193,28 +122,37 @@ const BookingPage: React.FC = () => {
     }
   };
 
-  // ── Success view ─────────────────────────────────────────────────────────
-
   if (confirmation) {
+    const isPending = confirmation.status === RESERVATION_STATUS_PENDING;
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4" style={{ fontFamily: "'Montserrat', 'Open Sans', sans-serif" }}>
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
-            <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
+          <div className={`w-16 h-16 ${isPending ? 'bg-amber-100' : 'bg-green-100'} rounded-full flex items-center justify-center mx-auto mb-5`}>
+            {isPending ? (
+              <svg className="w-8 h-8 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            )}
           </div>
 
-          <h2 className="text-xl font-bold text-gray-900 mb-1">You're all set!</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-1">
+            {isPending ? 'Reservation submitted!' : 'You\'re all set!'}
+          </h2>
           <p className="text-sm text-gray-500 mb-6">
-            Your reservation is confirmed. See you there!
+            {isPending
+              ? 'Your reservation is pending confirmation from the restaurant.'
+              : 'Your reservation is confirmed. See you there!'}
           </p>
 
           <div className="bg-gray-50 rounded-xl p-4 text-left space-y-2.5 mb-6">
             {[
               ['Restaurant', confirmation.restaurant.name],
               ['Date',       formatDate(confirmation.reservation_date)],
-              ['Time',       selectedTime],
+              ['Time',       fromApiTime(confirmation.reservation_time)],
               ['Party',      `${confirmation.party_size} ${confirmation.party_size === 1 ? 'person' : 'people'}`],
               ...(confirmation.guest_name ? [['Name', confirmation.guest_name]] : []),
             ].map(([label, value]) => (
@@ -229,20 +167,28 @@ const BookingPage: React.FC = () => {
                 #{confirmation.id}
               </span>
             </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Status</span>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                isPending ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+              }`}>
+                {isPending ? 'Pending' : 'Confirmed'}
+              </span>
+            </div>
           </div>
 
           <div className="flex flex-col gap-2">
             <Link
-              to={`/restaurant/${slug}`}
+              to="/my-reservations"
               className="w-full py-3 text-sm font-bold text-white bg-[#2563eb] rounded-xl hover:bg-[#1d4ed8] transition-colors text-center"
             >
-              Back to Restaurant
+              View my reservations
             </Link>
             <Link
-              to="/search"
+              to={`/restaurant/${slug}`}
               className="w-full py-3 text-sm font-semibold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-center"
             >
-              Explore more restaurants
+              Back to Restaurant
             </Link>
           </div>
         </div>
@@ -250,12 +196,9 @@ const BookingPage: React.FC = () => {
     );
   }
 
-  // ── Booking form ─────────────────────────────────────────────────────────
-
   return (
     <div className="min-h-screen bg-gray-50" style={{ fontFamily: "'Montserrat', 'Open Sans', sans-serif" }}>
 
-      {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-4">
         <div className="max-w-4xl mx-auto flex items-center gap-3">
           <button
@@ -276,10 +219,8 @@ const BookingPage: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
 
-          {/* ── Left: Form ──────────────────────────────────────────────── */}
           <div className="flex-1 min-w-0">
 
-            {/* Restaurant + booking summary strip */}
             <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 flex items-center gap-4">
               {restaurant?.cover_image ? (
                 <img
@@ -293,14 +234,13 @@ const BookingPage: React.FC = () => {
               <div className="min-w-0">
                 <p className="font-bold text-gray-900 text-sm truncate">{restaurant?.name}</p>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  {formatDate(selectedDate)} · {selectedTime} · {partySize}
+                  {formatDate(selectedDate)} &middot; {selectedTime} &middot; {partySize}
                 </p>
               </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
 
-              {/* Your details */}
               <div className="bg-white rounded-xl border border-gray-200 p-5">
                 <h2 className="text-sm font-bold text-gray-900 mb-4">Your details</h2>
 
@@ -328,19 +268,21 @@ const BookingPage: React.FC = () => {
                       onChange={e => setGuestPhone(e.target.value)}
                       placeholder="+421 900 000 000"
                       required
+                      pattern="^\+?[\d\s\-()]{6,20}$"
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white"
                     />
+                    <p className="mt-1 text-xs text-gray-400">
+                      We'll only use this to contact you about your reservation
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Reservation details */}
               <div className="bg-white rounded-xl border border-gray-200 p-5">
                 <h2 className="text-sm font-bold text-gray-900 mb-4">Reservation details</h2>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
 
-                  {/* Party size */}
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
                       Party size
@@ -372,7 +314,6 @@ const BookingPage: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Date */}
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
                       Date
@@ -389,7 +330,6 @@ const BookingPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Time */}
                   <div className="col-span-2 sm:col-span-1">
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
                       Time
@@ -408,7 +348,6 @@ const BookingPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Special requests */}
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
                     Special requests{' '}
@@ -417,21 +356,26 @@ const BookingPage: React.FC = () => {
                   <textarea
                     value={specialRequests}
                     onChange={e => setSpecialRequests(e.target.value)}
-                    placeholder="Allergies, anniversary, high chair needed…"
+                    placeholder="Allergies, anniversary, high chair needed..."
                     rows={3}
+                    maxLength={500}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white resize-none"
                   />
+                  <p className="mt-1 text-xs text-gray-400 text-right">
+                    {specialRequests.length}/500
+                  </p>
                 </div>
               </div>
 
-              {/* Error banner */}
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
-                  {error}
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700 flex items-start gap-2">
+                  <svg className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{error}</span>
                 </div>
               )}
 
-              {/* Submit */}
               <button
                 type="submit"
                 disabled={isSubmitting || !guestPhone || availableSeats === 0}
@@ -443,7 +387,7 @@ const BookingPage: React.FC = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    Completing reservation…
+                    Completing reservation...
                   </>
                 ) : (
                   'Complete reservation'
@@ -456,7 +400,6 @@ const BookingPage: React.FC = () => {
             </form>
           </div>
 
-          {/* ── Right: Booking summary ───────────────────────────────────── */}
           <div className="lg:w-72 xl:w-80 flex-shrink-0">
             <div className="bg-white rounded-xl border border-gray-200 p-5 lg:sticky lg:top-8">
               <h3 className="text-sm font-bold text-gray-900 mb-4">Booking summary</h3>

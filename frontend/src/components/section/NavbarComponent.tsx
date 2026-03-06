@@ -7,10 +7,8 @@ import { Link, useNavigate } from "react-router-dom";
 import NotificationComponent from "../notification/NotificationComponent";
 
 const navigation = [
-  { name: "Product", href: "#" },
-  { name: "Features", href: "#" },
-  { name: "Marketplace", href: "#" },
-  { name: "Company", href: "#" },
+  { name: "Search", href: "/search" },
+  { name: "My Reservations", href: "/my-reservations" },
 ];
 
 const NavbarComponent: React.FC = () => {
@@ -60,14 +58,14 @@ const NavbarComponent: React.FC = () => {
           </div>
           <div className="hidden lg:flex lg:gap-x-12">
             {navigation.map((item) => (
-              <button
+              <Link
                 key={item.name}
-                type="button"
+                to={item.href}
                 className="text-base leading-6 font-semibold text-gray-900 relative group transition-colors duration-300 hover:text-blue-500"
               >
                 {item.name}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full"></span>
-              </button>
+              </Link>
             ))}
           </div>
           <div className="hidden lg:flex lg:flex-1 lg:justify-end">
@@ -126,13 +124,14 @@ const NavbarComponent: React.FC = () => {
               <div className="-my-6 divide-y divide-gray-500/10">
                 <div className="space-y-2 py-6">
                   {navigation.map((item) => (
-                    <button
+                    <Link
                       key={item.name}
-                      type="button"
-                      className="-mx-3 block w-full text-left rounded-lg px-3 py-2 text-base leading-7 font-semibold text-gray-900 hover:bg-blue-50 transition-all duration-300 hover:text-blue-500 hover:pl-4"
+                      to={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="-mx-3 block rounded-lg px-3 py-2 text-base leading-7 font-semibold text-gray-900 hover:bg-blue-50 transition-all duration-300 hover:text-blue-500 hover:pl-4"
                     >
                       {item.name}
-                    </button>
+                    </Link>
                   ))}
                 </div>
                 <div className="py-6">

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import NavbarComponent from '../components/section/NavbarComponent';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { apiFetch, ApiError } from '../utils/api';
+import { User } from '../interfaces/user';
 import { Reservation } from '../interfaces/reservation';
 import {
   formatDate,
@@ -15,10 +17,25 @@ import {
   RESERVATION_STATUS_NO_SHOW,
 } from '../constants/reservation';
 
-type SidebarSection = 'reservations' | 'reviews' | 'saved' | 'transactions' | 'settings';
+type SidebarSection = 'overview' | 'reservations' | 'reviews' | 'saved' | 'transactions' | 'settings';
 type ReservationTab = 'upcoming' | 'past' | 'cancelled';
 
+const ROLE_LABELS: Record<number, string> = {
+  0: 'Customer',
+  1: 'Restaurant Owner',
+  2: 'Admin',
+};
+
 const SIDEBAR_ITEMS: { key: SidebarSection; label: string; icon: React.ReactNode }[] = [
+  {
+    key: 'overview',
+    label: 'Overview',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    ),
+  },
   {
     key: 'reservations',
     label: 'Reservations',
@@ -48,7 +65,7 @@ const SIDEBAR_ITEMS: { key: SidebarSection; label: string; icon: React.ReactNode
   },
   {
     key: 'transactions',
-    label: 'Transaction History',
+    label: 'Transactions',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -57,7 +74,7 @@ const SIDEBAR_ITEMS: { key: SidebarSection; label: string; icon: React.ReactNode
   },
   {
     key: 'settings',
-    label: 'Account Settings',
+    label: 'Settings',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z" />
@@ -81,9 +98,34 @@ const RESERVATION_TABS: { key: ReservationTab; label: string }[] = [
   { key: 'cancelled', label: 'Cancelled' },
 ];
 
+
 const ProfilePage: React.FC = () => {
-  const { user } = useAuth();
-  const [activeSection, setActiveSection] = useState<SidebarSection>('reservations');
+  const { user, logout: authLogout } = useAuth();
+  const { show } = useNotification();
+  const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState<SidebarSection>('overview');
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [reservationsLoading, setReservationsLoading] = useState(true);
+
+  useEffect(() => {
+    apiFetch<Reservation[]>('/reservations/my')
+      .then(setReservations)
+      .catch(() => {})
+      .finally(() => setReservationsLoading(false));
+  }, []);
+
+  const handleLogout = () => {
+    authLogout();
+    localStorage.removeItem('justLoggedIn');
+    show('You have successfully logged out', 'error');
+    navigate('/');
+  };
+
+  const today = todayISO();
+  const upcomingReservations = reservations.filter(r =>
+    r.reservation_date >= today &&
+    (r.status === RESERVATION_STATUS_PENDING || r.status === RESERVATION_STATUS_CONFIRMED)
+  );
 
   return (
     <div className="min-h-screen bg-ot-athens-gray">
@@ -91,67 +133,96 @@ const ProfilePage: React.FC = () => {
 
       <div className="max-w-ot mx-auto px-4 lg:px-6 py-8">
         <div className="flex gap-8">
-          <aside className="hidden lg:block w-64 flex-shrink-0">
-            <div className="bg-white rounded-ot-card border border-ot-iron sticky top-8">
-              <div className="p-6 border-b border-ot-iron">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-ot-charade flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
-                    {user?.first_name?.[0]}{user?.last_name?.[0]}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-base font-bold text-ot-charade truncate">
-                      {user?.first_name} {user?.last_name}
-                    </p>
-                    <p className="text-xs text-ot-pale-sky truncate">{user?.user_email}</p>
-                    <p className="text-xs text-ot-manatee mt-0.5">
-                      Member since {user?.registered_at ? new Date(user.registered_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : ''}
-                    </p>
-                  </div>
+          <aside className="hidden lg:block w-72 flex-shrink-0">
+            <div className="bg-white rounded-2xl border border-ot-iron sticky top-8 overflow-hidden shadow-sm">
+              <div className="bg-gradient-to-br from-ot-primary to-ot-primary-dark p-6 text-center">
+                <div className="w-20 h-20 mx-auto rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-2xl font-bold border-2 border-white/30">
+                  {user?.first_name?.[0]}{user?.last_name?.[0]}
+                </div>
+                <p className="text-white font-bold text-lg mt-3">
+                  {user?.first_name} {user?.last_name}
+                </p>
+                <p className="text-indigo-200 text-sm mt-0.5">{user?.user_email}</p>
+                {user?.phone_number && (
+                  <p className="text-indigo-300 text-xs mt-1">{user.phone_number}</p>
+                )}
+                <p className="text-indigo-300 text-xs mt-2">
+                  Member since{' '}
+                  {user?.registered_at
+                    ? new Date(user.registered_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                    : ''}
+                </p>
+              </div>
+
+              <div className="flex border-b border-ot-iron">
+                <div className="flex-1 text-center py-3.5 border-r border-ot-iron">
+                  <p className="text-lg font-bold text-ot-charade">
+                    {reservationsLoading ? '–' : reservations.length}
+                  </p>
+                  <p className="text-xs text-ot-manatee">Reservations</p>
+                </div>
+                <div className="flex-1 text-center py-3.5">
+                  <p className="text-lg font-bold text-ot-charade">0</p>
+                  <p className="text-xs text-ot-manatee">Reviews</p>
                 </div>
               </div>
 
-              <nav className="p-2">
+              <nav className="p-3">
                 {SIDEBAR_ITEMS.map(item => (
                   <button
                     key={item.key}
                     onClick={() => setActiveSection(item.key)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-ot-btn text-sm font-medium transition-colors ${
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                       activeSection === item.key
-                        ? 'bg-ot-athens-gray text-ot-charade'
+                        ? 'bg-indigo-50 text-ot-primary'
                         : 'text-ot-pale-sky hover:bg-ot-athens-gray hover:text-ot-charade'
                     }`}
                   >
-                    <span className={activeSection === item.key ? 'text-ot-charade' : 'text-ot-manatee'}>
+                    <span className={activeSection === item.key ? 'text-ot-primary' : 'text-ot-manatee'}>
                       {item.icon}
                     </span>
                     {item.label}
                   </button>
                 ))}
               </nav>
+
+              <div className="p-3 border-t border-ot-iron">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-ot-pale-sky hover:text-red-500 hover:bg-red-50 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Sign Out
+                </button>
+              </div>
             </div>
           </aside>
 
           <div className="lg:hidden w-full mb-0">
-            <div className="bg-white rounded-ot-card border border-ot-iron p-4 mb-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-ot-charade flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                  {user?.first_name?.[0]}{user?.last_name?.[0]}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-ot-charade truncate">
-                    {user?.first_name} {user?.last_name}
-                  </p>
-                  <p className="text-xs text-ot-pale-sky truncate">{user?.user_email}</p>
+            <div className="bg-white rounded-2xl border border-ot-iron overflow-hidden mb-6 shadow-sm">
+              <div className="bg-gradient-to-r from-ot-primary to-ot-primary-dark p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-sm font-bold border-2 border-white/30 flex-shrink-0">
+                    {user?.first_name?.[0]}{user?.last_name?.[0]}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-white font-bold truncate">
+                      {user?.first_name} {user?.last_name}
+                    </p>
+                    <p className="text-indigo-200 text-xs truncate">{user?.user_email}</p>
+                  </div>
                 </div>
               </div>
-              <div className="flex gap-1 overflow-x-auto pb-1">
+              <div className="flex gap-1 overflow-x-auto p-2 scrollbar-hide">
                 {SIDEBAR_ITEMS.map(item => (
                   <button
                     key={item.key}
                     onClick={() => setActiveSection(item.key)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-ot-btn text-xs font-medium whitespace-nowrap transition-colors ${
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
                       activeSection === item.key
-                        ? 'bg-ot-charade text-white'
+                        ? 'bg-ot-primary text-white'
                         : 'bg-ot-athens-gray text-ot-pale-sky'
                     }`}
                   >
@@ -164,7 +235,21 @@ const ProfilePage: React.FC = () => {
           </div>
 
           <main className="flex-1 min-w-0">
-            {activeSection === 'reservations' && <ReservationsSection />}
+            {activeSection === 'overview' && (
+              <OverviewSection
+                reservations={reservations}
+                upcomingReservations={upcomingReservations}
+                isLoading={reservationsLoading}
+                onNavigate={setActiveSection}
+              />
+            )}
+            {activeSection === 'reservations' && (
+              <ReservationsSection
+                reservations={reservations}
+                isLoading={reservationsLoading}
+                onUpdate={setReservations}
+              />
+            )}
             {activeSection === 'reviews' && <ReviewsSection />}
             {activeSection === 'saved' && <SavedVenuesSection />}
             {activeSection === 'transactions' && <TransactionsSection />}
@@ -177,31 +262,220 @@ const ProfilePage: React.FC = () => {
 };
 
 
-const ReservationsSection: React.FC = () => {
+interface OverviewSectionProps {
+  reservations: Reservation[];
+  upcomingReservations: Reservation[];
+  isLoading: boolean;
+  onNavigate: (section: SidebarSection) => void;
+}
+
+const OverviewSection: React.FC<OverviewSectionProps> = ({
+  reservations,
+  upcomingReservations,
+  isLoading,
+  onNavigate,
+}) => {
+  const { user } = useAuth();
+  const completedCount = reservations.filter(r => r.status === RESERVATION_STATUS_COMPLETED).length;
+  const cancelledCount = reservations.filter(r => r.status === RESERVATION_STATUS_CANCELLED).length;
+
+  const statCards = [
+    {
+      label: 'Total Bookings',
+      value: reservations.length,
+      color: 'bg-indigo-50 text-ot-primary',
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Upcoming',
+      value: upcomingReservations.length,
+      color: 'bg-amber-50 text-amber-600',
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Completed',
+      value: completedCount,
+      color: 'bg-green-50 text-green-600',
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Cancelled',
+      value: cancelledCount,
+      color: 'bg-red-50 text-red-500',
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+    },
+  ];
+
+  const accountRows = [
+    { label: 'Full Name', value: `${user?.first_name} ${user?.last_name}` },
+    {
+      label: 'Email',
+      value: (
+        <span className="flex items-center gap-2 justify-end flex-wrap">
+          {user?.user_email}
+          {user?.email_verified && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              Verified
+            </span>
+          )}
+        </span>
+      ),
+    },
+    { label: 'Phone', value: user?.phone_number || 'Not provided' },
+    { label: 'Account Type', value: ROLE_LABELS[user?.role ?? 0] ?? 'Customer' },
+    {
+      label: 'Registered',
+      value: user?.registered_at
+        ? new Date(user.registered_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+        : '',
+    },
+  ];
+
+  return (
+    <div>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-ot-charade">
+          Welcome back, {user?.first_name}!
+        </h1>
+        <p className="text-ot-pale-sky mt-1">Here's an overview of your account activity.</p>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        {statCards.map((card, i) => (
+          <div key={i} className="bg-white rounded-xl border border-ot-iron p-4 shadow-sm">
+            <div className={`w-10 h-10 rounded-lg ${card.color} flex items-center justify-center mb-3`}>
+              {card.icon}
+            </div>
+            <p className="text-2xl font-bold text-ot-charade">
+              {isLoading ? '–' : card.value}
+            </p>
+            <p className="text-xs text-ot-manatee mt-0.5">{card.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-white rounded-xl border border-ot-iron overflow-hidden shadow-sm mb-8">
+        <div className="px-6 py-4 border-b border-ot-iron flex items-center justify-between">
+          <h2 className="text-sm font-bold text-ot-charade">Account Information</h2>
+          <button
+            onClick={() => onNavigate('settings')}
+            className="text-xs font-bold text-ot-primary hover:text-ot-primary-dark transition-colors"
+          >
+            Edit
+          </button>
+        </div>
+        <div className="divide-y divide-ot-iron">
+          {accountRows.map((row, i) => (
+            <div key={i} className="px-6 py-3.5 flex items-center justify-between gap-4">
+              <span className="text-sm text-ot-pale-sky flex-shrink-0">{row.label}</span>
+              <span className="text-sm font-medium text-ot-charade text-right">{row.value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {upcomingReservations.length > 0 && (
+        <div className="bg-white rounded-xl border border-ot-iron overflow-hidden shadow-sm mb-8">
+          <div className="px-6 py-4 border-b border-ot-iron flex items-center justify-between">
+            <h2 className="text-sm font-bold text-ot-charade">Upcoming Reservations</h2>
+            <button
+              onClick={() => onNavigate('reservations')}
+              className="text-xs font-bold text-ot-primary hover:text-ot-primary-dark transition-colors"
+            >
+              View All
+            </button>
+          </div>
+          <div className="divide-y divide-ot-iron">
+            {upcomingReservations.slice(0, 3).map(r => {
+              const badge = STATUS_BADGE[r.status] ?? STATUS_BADGE[RESERVATION_STATUS_PENDING];
+              return (
+                <div key={r.id} className="px-6 py-4 flex items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      to={`/restaurant/${r.restaurant.slug}`}
+                      className="text-sm font-bold text-ot-charade hover:text-ot-primary transition-colors"
+                    >
+                      {r.restaurant.name}
+                    </Link>
+                    <p className="text-xs text-ot-pale-sky mt-0.5">
+                      {formatDate(r.reservation_date)} &middot; {fromApiTime(r.reservation_time)} &middot;{' '}
+                      {r.party_size} {r.party_size === 1 ? 'person' : 'people'}
+                    </p>
+                  </div>
+                  <span className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-bold ${badge.bg} ${badge.text}`}>
+                    {badge.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-3">
+        <Link
+          to="/search"
+          className="inline-flex items-center gap-2 bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-6 py-3 rounded-lg transition-colors text-sm"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          Browse Restaurants
+        </Link>
+        <button
+          onClick={() => onNavigate('settings')}
+          className="inline-flex items-center gap-2 bg-white border border-ot-iron text-ot-charade font-bold px-6 py-3 rounded-lg hover:bg-ot-athens-gray transition-colors text-sm"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          Edit Profile
+        </button>
+      </div>
+    </div>
+  );
+};
+
+
+interface ReservationsSectionProps {
+  reservations: Reservation[];
+  isLoading: boolean;
+  onUpdate: React.Dispatch<React.SetStateAction<Reservation[]>>;
+}
+
+const ReservationsSection: React.FC<ReservationsSectionProps> = ({
+  reservations,
+  isLoading,
+  onUpdate,
+}) => {
   const [tab, setTab] = useState<ReservationTab>('upcoming');
-  const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
-
-  const fetchReservations = () => {
-    setIsLoading(true);
-    setError(null);
-    apiFetch<Reservation[]>('/reservations/my')
-      .then(setReservations)
-      .catch((err: unknown) => {
-        setError(err instanceof ApiError ? err.message : 'Failed to load reservations');
-      })
-      .finally(() => setIsLoading(false));
-  };
-
-  useEffect(fetchReservations, []);
 
   const handleCancel = async (id: number) => {
     setCancellingId(id);
     try {
       await apiFetch(`/reservations/${id}`, { method: 'DELETE' });
-      setReservations(prev =>
+      onUpdate(prev =>
         prev.map(r => r.id === id ? { ...r, status: RESERVATION_STATUS_CANCELLED } : r)
       );
     } catch (err: unknown) {
@@ -233,14 +507,14 @@ const ReservationsSection: React.FC = () => {
     <div>
       <h2 className="text-xl font-bold text-ot-charade mb-6">My Reservations</h2>
 
-      <div className="flex gap-1 bg-white rounded-ot-btn p-1 mb-6 border border-ot-iron">
+      <div className="flex gap-1 bg-white rounded-lg p-1 mb-6 border border-ot-iron">
         {RESERVATION_TABS.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex-1 py-2.5 text-sm font-bold rounded-ot-btn transition-all ${
+            className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${
               tab === t.key
-                ? 'bg-ot-charade text-white'
+                ? 'bg-ot-primary text-white shadow-sm'
                 : 'text-ot-pale-sky hover:text-ot-charade'
             }`}
           >
@@ -250,17 +524,17 @@ const ReservationsSection: React.FC = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-ot-btn p-3 text-sm text-red-700 mb-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700 mb-4">
           {error}
         </div>
       )}
 
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-ot-charade" />
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-ot-primary" />
         </div>
       ) : displayed.length === 0 ? (
-        <div className="bg-white rounded-ot-card border border-ot-iron text-center py-16 px-6">
+        <div className="bg-white rounded-xl border border-ot-iron text-center py-16 px-6 shadow-sm">
           <svg className="w-14 h-14 text-ot-iron mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
@@ -277,7 +551,7 @@ const ReservationsSection: React.FC = () => {
           {tab === 'upcoming' && (
             <Link
               to="/search"
-              className="inline-flex items-center gap-2 bg-ot-charade hover:bg-ot-primary-dark text-white font-bold px-6 py-3 rounded-ot-btn transition-colors text-sm"
+              className="inline-flex items-center gap-2 bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-6 py-3 rounded-lg transition-colors text-sm"
             >
               Find restaurants
             </Link>
@@ -292,14 +566,14 @@ const ReservationsSection: React.FC = () => {
             return (
               <div
                 key={reservation.id}
-                className="bg-white rounded-ot-card border border-ot-iron overflow-hidden hover:shadow-md transition-shadow"
+                className="bg-white rounded-xl border border-ot-iron overflow-hidden hover:shadow-md transition-shadow shadow-sm"
               >
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="min-w-0">
                       <Link
                         to={`/restaurant/${reservation.restaurant.slug}`}
-                        className="text-base font-bold text-ot-charade hover:text-ot-teal transition-colors"
+                        className="text-base font-bold text-ot-charade hover:text-ot-primary transition-colors"
                       >
                         {reservation.restaurant.name}
                       </Link>
@@ -350,14 +624,14 @@ const ReservationsSection: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <Link
                       to={`/restaurant/${reservation.restaurant.slug}`}
-                      className="text-xs font-bold text-ot-pale-sky hover:text-ot-charade px-3 py-1.5 rounded-ot-btn border border-ot-iron transition-colors"
+                      className="text-xs font-bold text-ot-pale-sky hover:text-ot-charade px-3 py-1.5 rounded-lg border border-ot-iron transition-colors"
                     >
                       View Restaurant
                     </Link>
                     {canCancel(reservation.status) && (
                       <Link
                         to={`/restaurant/${reservation.restaurant.slug}/book`}
-                        className="text-xs font-bold text-ot-pale-sky hover:text-ot-charade px-3 py-1.5 rounded-ot-btn border border-ot-iron transition-colors"
+                        className="text-xs font-bold text-ot-pale-sky hover:text-ot-charade px-3 py-1.5 rounded-lg border border-ot-iron transition-colors"
                       >
                         Edit Booking
                       </Link>
@@ -367,7 +641,7 @@ const ReservationsSection: React.FC = () => {
                     <button
                       onClick={() => handleCancel(reservation.id)}
                       disabled={isCancelling}
-                      className="text-xs font-bold text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-ot-btn transition-colors disabled:opacity-50"
+                      className="text-xs font-bold text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
                     >
                       {isCancelling ? 'Cancelling...' : 'Cancel'}
                     </button>
@@ -383,105 +657,100 @@ const ReservationsSection: React.FC = () => {
 };
 
 
-const ReviewsSection: React.FC = () => {
-  return (
-    <div>
-      <h2 className="text-xl font-bold text-ot-charade mb-6">Review Center</h2>
+const ReviewsSection: React.FC = () => (
+  <div>
+    <h2 className="text-xl font-bold text-ot-charade mb-6">Review Center</h2>
 
-      <div className="bg-white rounded-ot-card border border-ot-iron p-6 mb-6">
-        <div className="flex items-center gap-6">
-          <div className="text-center">
-            <p className="text-4xl font-bold text-ot-charade">0</p>
-            <p className="text-xs text-ot-pale-sky mt-1">Reviews</p>
-          </div>
-          <div className="h-12 w-px bg-ot-iron" />
-          <div className="text-center">
-            <p className="text-4xl font-bold text-ot-charade">&mdash;</p>
-            <p className="text-xs text-ot-pale-sky mt-1">Avg. Rating</p>
-          </div>
-          <div className="h-12 w-px bg-ot-iron" />
-          <div className="flex-1">
-            {[5, 4, 3, 2, 1].map(star => (
-              <div key={star} className="flex items-center gap-2 mb-1">
-                <span className="text-xs text-ot-pale-sky w-3">{star}</span>
-                <div className="flex-1 h-2 bg-ot-athens-gray rounded-full overflow-hidden">
-                  <div className="h-full bg-ot-charade rounded-full" style={{ width: '0%' }} />
-                </div>
-                <span className="text-xs text-ot-manatee w-4">0</span>
+    <div className="bg-white rounded-xl border border-ot-iron p-6 mb-6 shadow-sm">
+      <div className="flex items-center gap-6">
+        <div className="text-center">
+          <p className="text-4xl font-bold text-ot-charade">0</p>
+          <p className="text-xs text-ot-pale-sky mt-1">Reviews</p>
+        </div>
+        <div className="h-12 w-px bg-ot-iron" />
+        <div className="text-center">
+          <p className="text-4xl font-bold text-ot-charade">&mdash;</p>
+          <p className="text-xs text-ot-pale-sky mt-1">Avg. Rating</p>
+        </div>
+        <div className="h-12 w-px bg-ot-iron" />
+        <div className="flex-1">
+          {[5, 4, 3, 2, 1].map(star => (
+            <div key={star} className="flex items-center gap-2 mb-1">
+              <span className="text-xs text-ot-pale-sky w-3">{star}</span>
+              <div className="flex-1 h-2 bg-ot-athens-gray rounded-full overflow-hidden">
+                <div className="h-full bg-ot-primary rounded-full" style={{ width: '0%' }} />
               </div>
-            ))}
-          </div>
+              <span className="text-xs text-ot-manatee w-4">0</span>
+            </div>
+          ))}
         </div>
       </div>
-
-      <div className="bg-white rounded-ot-card border border-ot-iron text-center py-16 px-6">
-        <svg className="w-14 h-14 text-ot-iron mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-        </svg>
-        <h3 className="text-base font-bold text-ot-charade mb-1">No reviews yet</h3>
-        <p className="text-sm text-ot-pale-sky mb-6">
-          After dining at a restaurant, you can share your experience here.
-        </p>
-        <Link
-          to="/search"
-          className="inline-flex items-center gap-2 bg-ot-charade hover:bg-ot-primary-dark text-white font-bold px-6 py-3 rounded-ot-btn transition-colors text-sm"
-        >
-          Find restaurants to review
-        </Link>
-      </div>
     </div>
-  );
-};
 
-
-const SavedVenuesSection: React.FC = () => {
-  return (
-    <div>
-      <h2 className="text-xl font-bold text-ot-charade mb-6">Saved Venues</h2>
-
-      <div className="bg-white rounded-ot-card border border-ot-iron text-center py-16 px-6">
-        <svg className="w-14 h-14 text-ot-iron mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-        </svg>
-        <h3 className="text-base font-bold text-ot-charade mb-1">No saved venues</h3>
-        <p className="text-sm text-ot-pale-sky mb-6">
-          Save your favorite restaurants so you can easily find them later.
-        </p>
-        <Link
-          to="/search"
-          className="inline-flex items-center gap-2 bg-ot-charade hover:bg-ot-primary-dark text-white font-bold px-6 py-3 rounded-ot-btn transition-colors text-sm"
-        >
-          Explore restaurants
-        </Link>
-      </div>
+    <div className="bg-white rounded-xl border border-ot-iron text-center py-16 px-6 shadow-sm">
+      <svg className="w-14 h-14 text-ot-iron mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+      </svg>
+      <h3 className="text-base font-bold text-ot-charade mb-1">No reviews yet</h3>
+      <p className="text-sm text-ot-pale-sky mb-6">
+        After dining at a restaurant, you can share your experience here.
+      </p>
+      <Link
+        to="/search"
+        className="inline-flex items-center gap-2 bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-6 py-3 rounded-lg transition-colors text-sm"
+      >
+        Find restaurants to review
+      </Link>
     </div>
-  );
-};
+  </div>
+);
 
 
-const TransactionsSection: React.FC = () => {
-  return (
-    <div>
-      <h2 className="text-xl font-bold text-ot-charade mb-6">Transaction History</h2>
+const SavedVenuesSection: React.FC = () => (
+  <div>
+    <h2 className="text-xl font-bold text-ot-charade mb-6">Saved Venues</h2>
 
-      <div className="bg-white rounded-ot-card border border-ot-iron text-center py-16 px-6">
-        <svg className="w-14 h-14 text-ot-iron mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-        </svg>
-        <h3 className="text-base font-bold text-ot-charade mb-1">No transactions</h3>
-        <p className="text-sm text-ot-pale-sky">
-          Your booking receipts and invoices will appear here once payments are enabled.
-        </p>
-      </div>
+    <div className="bg-white rounded-xl border border-ot-iron text-center py-16 px-6 shadow-sm">
+      <svg className="w-14 h-14 text-ot-iron mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+      </svg>
+      <h3 className="text-base font-bold text-ot-charade mb-1">No saved venues</h3>
+      <p className="text-sm text-ot-pale-sky mb-6">
+        Save your favorite restaurants so you can easily find them later.
+      </p>
+      <Link
+        to="/search"
+        className="inline-flex items-center gap-2 bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-6 py-3 rounded-lg transition-colors text-sm"
+      >
+        Explore restaurants
+      </Link>
     </div>
-  );
-};
+  </div>
+);
+
+
+const TransactionsSection: React.FC = () => (
+  <div>
+    <h2 className="text-xl font-bold text-ot-charade mb-6">Transaction History</h2>
+
+    <div className="bg-white rounded-xl border border-ot-iron text-center py-16 px-6 shadow-sm">
+      <svg className="w-14 h-14 text-ot-iron mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+      </svg>
+      <h3 className="text-base font-bold text-ot-charade mb-1">No transactions</h3>
+      <p className="text-sm text-ot-pale-sky">
+        Your booking receipts and invoices will appear here once payments are enabled.
+      </p>
+    </div>
+  </div>
+);
 
 
 const SettingsSection: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [firstName, setFirstName] = useState(user?.first_name ?? '');
   const [lastName, setLastName] = useState(user?.last_name ?? '');
+  const [phoneNumber, setPhoneNumber] = useState(user?.phone_number ?? '');
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMsg, setProfileMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -492,7 +761,10 @@ const SettingsSection: React.FC = () => {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordMsg, setPasswordMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const profileChanged = firstName !== (user?.first_name ?? '') || lastName !== (user?.last_name ?? '');
+  const profileChanged =
+    firstName !== (user?.first_name ?? '') ||
+    lastName !== (user?.last_name ?? '') ||
+    phoneNumber !== (user?.phone_number ?? '');
 
   const handleProfileSave = async () => {
     if (!firstName.trim() || !lastName.trim()) {
@@ -502,10 +774,15 @@ const SettingsSection: React.FC = () => {
     setProfileSaving(true);
     setProfileMsg(null);
     try {
-      await apiFetch('/authentication/me', {
+      const updated = await apiFetch<User>('/authentication/me', {
         method: 'PUT',
-        body: JSON.stringify({ first_name: firstName.trim(), last_name: lastName.trim() }),
+        body: JSON.stringify({
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          phone_number: phoneNumber.trim(),
+        }),
       });
+      updateUser(updated);
       setProfileMsg({ type: 'success', text: 'Profile updated successfully.' });
     } catch (err: unknown) {
       setProfileMsg({ type: 'error', text: err instanceof ApiError ? err.message : 'Failed to update profile.' });
@@ -546,11 +823,13 @@ const SettingsSection: React.FC = () => {
     }
   };
 
+  const inputClass = 'w-full px-3 py-2.5 text-sm border border-ot-iron rounded-lg bg-white text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-primary/20 focus:border-ot-primary transition-colors';
+
   return (
     <div>
       <h2 className="text-xl font-bold text-ot-charade mb-6">Account Settings</h2>
 
-      <div className="bg-white rounded-ot-card border border-ot-iron overflow-hidden mb-6">
+      <div className="bg-white rounded-xl border border-ot-iron overflow-hidden mb-6 shadow-sm">
         <div className="px-6 py-4 border-b border-ot-iron">
           <h3 className="text-sm font-bold text-ot-charade">Personal Details</h3>
         </div>
@@ -562,8 +841,7 @@ const SettingsSection: React.FC = () => {
                 type="text"
                 value={firstName}
                 onChange={e => setFirstName(e.target.value)}
-
-                className="w-full px-3 py-2.5 text-sm border border-ot-iron rounded-ot-btn bg-white text-ot-charade focus:outline-none focus:border-ot-charade transition-colors"
+                className={inputClass}
               />
             </div>
             <div>
@@ -572,8 +850,7 @@ const SettingsSection: React.FC = () => {
                 type="text"
                 value={lastName}
                 onChange={e => setLastName(e.target.value)}
-
-                className="w-full px-3 py-2.5 text-sm border border-ot-iron rounded-ot-btn bg-white text-ot-charade focus:outline-none focus:border-ot-charade transition-colors"
+                className={inputClass}
               />
             </div>
           </div>
@@ -583,7 +860,17 @@ const SettingsSection: React.FC = () => {
               type="email"
               defaultValue={user?.user_email}
               disabled
-              className="w-full px-3 py-2.5 text-sm border border-ot-iron rounded-ot-btn bg-ot-athens-gray text-ot-charade disabled:opacity-60"
+              className="w-full px-3 py-2.5 text-sm border border-ot-iron rounded-lg bg-ot-athens-gray text-ot-charade disabled:opacity-60"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-ot-pale-sky mb-1.5">Phone Number</label>
+            <input
+              type="tel"
+              value={phoneNumber}
+              onChange={e => setPhoneNumber(e.target.value)}
+              placeholder="+421 123 456 789"
+              className={inputClass}
             />
           </div>
 
@@ -597,7 +884,7 @@ const SettingsSection: React.FC = () => {
             <button
               onClick={handleProfileSave}
               disabled={!profileChanged || profileSaving}
-              className="text-sm font-bold text-white bg-ot-charade hover:bg-ot-primary-dark px-5 py-2.5 rounded-ot-btn transition-colors disabled:opacity-40"
+              className="text-sm font-bold text-white bg-ot-primary hover:bg-ot-primary-dark px-5 py-2.5 rounded-lg transition-colors disabled:opacity-40"
             >
               {profileSaving ? 'Saving...' : 'Save Changes'}
             </button>
@@ -605,7 +892,7 @@ const SettingsSection: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-ot-card border border-ot-iron overflow-hidden">
+      <div className="bg-white rounded-xl border border-ot-iron overflow-hidden shadow-sm">
         <div className="px-6 py-4 border-b border-ot-iron">
           <h3 className="text-sm font-bold text-ot-charade">Security</h3>
         </div>
@@ -618,7 +905,7 @@ const SettingsSection: React.FC = () => {
               </div>
               <button
                 onClick={() => { setShowPasswordForm(true); setPasswordMsg(null); }}
-                className="text-xs font-bold text-ot-charade border border-ot-iron px-4 py-2 rounded-ot-btn hover:bg-ot-athens-gray transition-colors"
+                className="text-xs font-bold text-ot-charade border border-ot-iron px-4 py-2 rounded-lg hover:bg-ot-athens-gray transition-colors"
               >
                 Change Password
               </button>
@@ -631,7 +918,7 @@ const SettingsSection: React.FC = () => {
                   type="password"
                   value={currentPassword}
                   onChange={e => setCurrentPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm border border-ot-iron rounded-ot-btn bg-white text-ot-charade focus:outline-none focus:border-ot-charade transition-colors"
+                  className={inputClass}
                 />
               </div>
               <div>
@@ -640,7 +927,7 @@ const SettingsSection: React.FC = () => {
                   type="password"
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm border border-ot-iron rounded-ot-btn bg-white text-ot-charade focus:outline-none focus:border-ot-charade transition-colors"
+                  className={inputClass}
                 />
                 <p className="text-xs text-ot-manatee mt-1">Min. 8 characters, 1 uppercase, 1 lowercase, 1 number</p>
               </div>
@@ -650,7 +937,7 @@ const SettingsSection: React.FC = () => {
                   type="password"
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm border border-ot-iron rounded-ot-btn bg-white text-ot-charade focus:outline-none focus:border-ot-charade transition-colors"
+                  className={inputClass}
                 />
                 {confirmPassword && newPassword !== confirmPassword && (
                   <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
@@ -679,7 +966,7 @@ const SettingsSection: React.FC = () => {
                 <button
                   onClick={handlePasswordChange}
                   disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword || newPassword !== confirmPassword}
-                  className="text-sm font-bold text-white bg-ot-charade hover:bg-ot-primary-dark px-5 py-2.5 rounded-ot-btn transition-colors disabled:opacity-40"
+                  className="text-sm font-bold text-white bg-ot-primary hover:bg-ot-primary-dark px-5 py-2.5 rounded-lg transition-colors disabled:opacity-40"
                 >
                   {passwordSaving ? 'Changing...' : 'Update Password'}
                 </button>

@@ -4,7 +4,9 @@
       "Bash(npx tsc:*)",
       "Bash(python:*)",
       "Bash(where:*)",
-      "Bash(py:*)"
+      "Bash(py:*)",
+      "Bash(npx react-scripts build)",
+      "Bash(xargs cat)"
     ]
   }
 }

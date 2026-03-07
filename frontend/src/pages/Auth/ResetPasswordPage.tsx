@@ -70,7 +70,6 @@ const ResetPasswordPage: React.FC = () => {
 
       setSuccess(true);
 
-      // redirect
       setTimeout(() => {
         navigate('/login');
       }, 3000);
@@ -85,30 +84,20 @@ const ResetPasswordPage: React.FC = () => {
     return (
       <div>
         <NavbarComponent />
-        <div className="min-h-screen flex items-center justify-center bg-white p-6">
-          <div className="w-full max-w-md bg-white border border-gray-200 rounded-2xl shadow-xl p-8 sm:p-10 text-center">
+        <div className="min-h-screen flex items-center justify-center bg-ot-athens-gray p-6">
+          <div className="w-full max-w-md bg-white border border-ot-iron rounded-ot-card shadow-lg p-8 sm:p-10 text-center">
             <div className="mb-6 flex justify-center">
-              <svg
-                className="h-16 w-16 text-red-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
+              <svg className="h-16 w-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Invalid Reset Link</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="text-2xl font-extrabold text-ot-charade mb-4">Invalid Reset Link</h2>
+            <p className="text-sm text-ot-pale-sky mb-6">
               The password reset link is invalid or missing. Please request a new one.
             </p>
             <Link
               to="/forgot-password"
-              className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3 px-8 rounded-xl transition-all shadow-md"
+              className="inline-block bg-ot-red hover:bg-ot-red-dark text-white font-bold py-3 px-8 rounded-ot-btn transition-colors"
             >
               Request New Link
             </Link>
@@ -121,13 +110,13 @@ const ResetPasswordPage: React.FC = () => {
   return (
     <div>
       <NavbarComponent />
-      <div className="min-h-screen flex items-center justify-center bg-white p-6">
-        <div className="w-full max-w-md bg-white border border-gray-200 rounded-2xl shadow-xl p-8 sm:p-10">
+      <div className="min-h-screen flex items-center justify-center bg-ot-athens-gray p-6">
+        <div className="w-full max-w-md bg-white border border-ot-iron rounded-ot-card shadow-lg p-8 sm:p-10">
           {!success ? (
             <>
               <div className="text-center mb-8">
-                <h2 className="text-4xl font-extrabold text-gray-800">Reset Password</h2>
-                <p className="mt-2 text-gray-500">Enter your new password below.</p>
+                <h2 className="text-2xl font-extrabold text-ot-charade">Reset Password</h2>
+                <p className="mt-2 text-sm text-ot-pale-sky">Enter your new password below.</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -140,8 +129,8 @@ const ResetPasswordPage: React.FC = () => {
                       if (errors.password) setErrors({ ...errors, password: '' });
                     }}
                     placeholder="New Password"
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
-                      errors.password ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-red text-sm text-ot-charade placeholder-ot-manatee ${
+                      errors.password ? 'border-red-500' : 'border-ot-iron'
                     }`}
                     required
                   />
@@ -159,8 +148,8 @@ const ResetPasswordPage: React.FC = () => {
                       if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' });
                     }}
                     placeholder="Confirm New Password"
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
-                      errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-red text-sm text-ot-charade placeholder-ot-manatee ${
+                      errors.confirmPassword ? 'border-red-500' : 'border-ot-iron'
                     }`}
                     required
                   />
@@ -170,7 +159,7 @@ const ResetPasswordPage: React.FC = () => {
                 </div>
 
                 {errors.form && (
-                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-ot-btn text-sm">
                     {errors.form}
                   </div>
                 )}
@@ -178,45 +167,32 @@ const ResetPasswordPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3 rounded-xl transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-ot-red hover:bg-ot-red-dark text-white font-bold py-3 rounded-ot-btn transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Resetting Password...' : 'Reset Password'}
                 </button>
               </form>
 
-              <p className="text-center text-sm text-gray-500 mt-6">
+              <p className="text-center text-sm text-ot-pale-sky mt-6">
                 Remember your password?{' '}
-                <Link to="/login" className="text-blue-600 font-semibold hover:underline">
+                <Link to="/login" className="text-ot-red font-bold hover:underline">
                   Log In
                 </Link>
               </p>
             </>
           ) : (
-            <>
-              <div className="text-center">
-                <div className="mb-6 flex justify-center">
-                  <svg
-                    className="h-16 w-16 text-green-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Password Reset Successful!</h2>
-                <p className="text-gray-600 mb-6">
-                  Your password has been reset successfully. You can now log in with your new
-                  password.
-                </p>
-                <p className="text-sm text-gray-500">Redirecting to login page...</p>
+            <div className="text-center">
+              <div className="mb-6 flex justify-center">
+                <svg className="h-16 w-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
-            </>
+              <h2 className="text-2xl font-extrabold text-ot-charade mb-4">Password Reset Successful!</h2>
+              <p className="text-sm text-ot-pale-sky mb-6">
+                Your password has been reset successfully. You can now log in with your new password.
+              </p>
+              <p className="text-xs text-ot-manatee">Redirecting to login page...</p>
+            </div>
           )}
         </div>
       </div>

@@ -56,5 +56,5 @@ export function formatTime(apiTime: string): string {
 }
 
 export const PRICE_SYMBOLS: Record<number, string> = {
-  1: '$', 2: '$$', 3: '$$$', 4: '$$$$',
+  1: '\u20AC', 2: '\u20AC\u20AC', 3: '\u20AC\u20AC\u20AC', 4: '\u20AC\u20AC\u20AC\u20AC',
 };

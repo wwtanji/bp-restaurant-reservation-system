@@ -53,22 +53,22 @@ const REVIEWS: Review[] = [
   {
     id: 1, author: 'Sarah M.', initials: 'SM', dined: 'Dined on February 18, 2026',
     rating: 5, text: 'Absolutely magical atmosphere! The food was fantastic and the staff was very attentive. Perfect for a special occasion dinner.',
-    avatarColor: 'from-rose-400 to-red-500',
+    avatarColor: 'from-gray-600 to-gray-800',
   },
   {
     id: 2, author: 'Thomas K.', initials: 'TK', dined: 'Dined on February 14, 2026',
     rating: 4, text: 'Great food, truly unique interior design. One downside is the noise level during peak hours. The menu is also a bit complicated at first, but the staff was very helpful.',
-    avatarColor: 'from-blue-400 to-indigo-500',
+    avatarColor: 'from-gray-400 to-gray-600',
   },
   {
     id: 3, author: 'Julia W.', initials: 'JW', dined: 'Dined on January 30, 2026',
     rating: 4, text: 'Booked the private room for our office team of 12 — worked out perfectly! Great selection and the vegetarian options were surprisingly good.',
-    avatarColor: 'from-purple-400 to-pink-500',
+    avatarColor: 'from-gray-500 to-gray-700',
   },
   {
     id: 4, author: 'Marco B.', initials: 'MB', dined: 'Dined on January 22, 2026',
     rating: 3, text: 'Beautiful restaurant with jaw-dropping decor. Food quality is genuinely high, but prices are on the steeper side. Overall a 3/5 experience.',
-    avatarColor: 'from-amber-400 to-orange-500',
+    avatarColor: 'from-gray-300 to-gray-500',
   },
 ];
 
@@ -98,7 +98,7 @@ const StarRating: React.FC<{ rating: number; size?: 'sm' | 'md' | 'lg' }> = ({
       {[1, 2, 3, 4, 5].map(i => (
         <svg
           key={i}
-          className={`${dim} ${i <= Math.round(rating) ? 'text-yellow-400' : 'text-gray-200'}`}
+          className={`${dim} ${i <= Math.round(rating) ? 'text-ot-red' : 'text-ot-iron'}`}
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -110,9 +110,9 @@ const StarRating: React.FC<{ rating: number; size?: 'sm' | 'md' | 'lg' }> = ({
 };
 
 const RatingBar: React.FC<{ score: number }> = ({ score }) => (
-  <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+  <div className="flex-1 h-1.5 bg-ot-iron rounded-full overflow-hidden">
     <div
-      className="h-full bg-[#2563eb] rounded-full transition-all duration-700"
+      className="h-full bg-ot-red rounded-full transition-all duration-700"
       style={{ width: `${(score / 5) * 100}%` }}
     />
   </div>
@@ -124,7 +124,7 @@ const NoiseBar: React.FC<{ level: number }> = ({ level }) => (
       <div
         key={i}
         className={`w-1.5 rounded-sm transition-all ${
-          i <= level ? 'bg-[#2563eb]' : 'bg-gray-200'
+          i <= level ? 'bg-ot-red' : 'bg-ot-iron'
         }`}
         style={{ height: `${8 + i * 3}px` }}
       />
@@ -138,9 +138,9 @@ const createPinIcon = () =>
     html: `
       <div style="position:relative;width:36px;height:46px;">
         <svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 28 18 28s18-14.5 18-28C36 8.06 27.94 0 18 0z" fill="#2563eb"/>
+          <path d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 28 18 28s18-14.5 18-28C36 8.06 27.94 0 18 0z" fill="#2D333F"/>
           <circle cx="18" cy="18" r="8" fill="white"/>
-          <circle cx="18" cy="18" r="4" fill="#2563eb"/>
+          <circle cx="18" cy="18" r="4" fill="#2D333F"/>
         </svg>
       </div>
     `,
@@ -282,7 +282,7 @@ const RestaurantDetailPage: React.FC = () => {
   if (restaurantLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500" />
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-ot-red" />
       </div>
     );
   }
@@ -290,8 +290,8 @@ const RestaurantDetailPage: React.FC = () => {
   if (restaurantError || !restaurant) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-gray-600">{restaurantError ?? 'Restaurant not found'}</p>
-        <button onClick={() => navigate('/search')} className="text-[#2563eb] font-semibold hover:underline">
+        <p className="text-ot-pale-sky">{restaurantError ?? 'Restaurant not found'}</p>
+        <button onClick={() => navigate('/search')} className="text-ot-red font-bold hover:underline">
           Back to search
         </button>
       </div>
@@ -302,7 +302,7 @@ const RestaurantDetailPage: React.FC = () => {
   const overallRating = restaurant.rating ?? 4.5;
 
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: "'Montserrat', 'Open Sans', sans-serif" }}>
+    <div className="min-h-screen bg-white">
 
       <div className="relative">
         <div className="md:hidden h-64 overflow-hidden">
@@ -329,7 +329,7 @@ const RestaurantDetailPage: React.FC = () => {
 
         <button
           onClick={() => setShowAllPhotos(true)}
-          className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm text-gray-800 text-sm font-semibold px-4 py-2 rounded-xl shadow-lg hover:bg-white hover:shadow-xl transition-all flex items-center gap-2 border border-gray-200"
+          className="absolute bottom-4 right-4 bg-white text-ot-charade text-sm font-bold px-4 py-2 rounded-ot-btn shadow-md hover:shadow-lg transition-all flex items-center gap-2 border border-ot-iron"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -338,16 +338,16 @@ const RestaurantDetailPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
+      <div className="sticky top-0 z-30 bg-white border-b border-ot-iron">
         <div className="max-w-6xl mx-auto px-4 flex items-center overflow-x-auto scrollbar-hide">
           {NAV_TABS.map(tab => (
             <button
               key={tab}
               onClick={() => scrollToSection(tab)}
-              className={`flex-shrink-0 px-4 py-4 text-sm font-semibold transition-all border-b-2 whitespace-nowrap ${
+              className={`flex-shrink-0 px-4 py-4 text-sm font-bold transition-all border-b-2 whitespace-nowrap ${
                 activeTab === tab
-                  ? 'border-[#2563eb] text-[#2563eb]'
-                  : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300'
+                  ? 'border-ot-red text-ot-red'
+                  : 'border-transparent text-ot-pale-sky hover:text-ot-charade hover:border-ot-iron'
               }`}
             >
               {tab}
@@ -362,28 +362,26 @@ const RestaurantDetailPage: React.FC = () => {
           <div className="flex-1 min-w-0">
 
             <div ref={overviewRef} className="mb-8 scroll-mt-20">
-              <div className="flex items-start gap-3 flex-wrap mb-2">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
-                  {restaurant.name}
-                </h1>
-              </div>
+              <h1 className="text-2xl md:text-3xl font-extrabold text-ot-charade leading-tight mb-2">
+                {restaurant.name}
+              </h1>
 
-              <div className="flex items-center gap-2 flex-wrap text-sm text-gray-600 mb-3">
+              <div className="flex items-center gap-2 flex-wrap text-sm text-ot-pale-sky mb-3">
                 <div className="flex items-center gap-1.5">
                   <StarRating rating={overallRating} size="sm" />
-                  <span className="font-bold text-gray-900">{ratingLabel(restaurant.rating)}</span>
-                  <span className="text-gray-400">({restaurant.review_count} reviews)</span>
+                  <span className="font-bold text-ot-charade">{ratingLabel(restaurant.rating)}</span>
+                  <span className="text-ot-manatee">({restaurant.review_count} reviews)</span>
                 </div>
-                <span className="text-gray-300 hidden sm:block">|</span>
+                <span className="text-ot-iron hidden sm:block">|</span>
                 <span className="font-medium">{priceLabel}</span>
-                <span className="text-gray-300">&middot;</span>
+                <span className="text-ot-iron">&middot;</span>
                 <span>{restaurant.cuisine}</span>
-                <span className="text-gray-300">&middot;</span>
+                <span className="text-ot-iron">&middot;</span>
                 <span>{restaurant.city}</span>
               </div>
 
-              <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <div className="flex items-center gap-1.5 text-sm text-ot-pale-sky">
+                <svg className="w-4 h-4 text-ot-manatee" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
@@ -391,52 +389,52 @@ const RestaurantDetailPage: React.FC = () => {
               </div>
             </div>
 
-            <hr className="border-gray-100 mb-8" />
+            <hr className="border-ot-iron/50 mb-8" />
 
             {restaurant.description && (
               <>
                 <div className="mb-10">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">About this restaurant</h2>
+                  <h2 className="text-lg font-extrabold text-ot-charade mb-4">About this restaurant</h2>
                   <div className="flex flex-wrap gap-2 mb-5">
                     {TAGS.map(tag => (
                       <span
                         key={tag}
-                        className="px-3 py-1.5 bg-gray-50 text-gray-700 text-sm rounded-full border border-gray-200 hover:bg-gray-100 transition cursor-default flex items-center gap-1.5"
+                        className="px-3 py-1.5 bg-ot-athens-gray text-ot-charade text-sm rounded-ot-btn border border-ot-iron cursor-default flex items-center gap-1.5"
                       >
-                        <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className="w-3.5 h-3.5 text-ot-manatee" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                         {tag}
                       </span>
                     ))}
                   </div>
-                  <p className="text-gray-600 text-sm leading-relaxed">{restaurant.description}</p>
+                  <p className="text-ot-pale-sky text-sm leading-relaxed">{restaurant.description}</p>
                 </div>
-                <hr className="border-gray-100 mb-10" />
+                <hr className="border-ot-iron/50 mb-10" />
               </>
             )}
 
             <div ref={conciergeRef} className="mb-10 scroll-mt-20">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xl">{'\u2728'}</span>
-                <h2 className="text-lg font-bold text-gray-900">Concierge</h2>
-                <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold border border-amber-200">
+                <h2 className="text-lg font-extrabold text-ot-charade">Concierge</h2>
+                <span className="text-xs bg-ot-athens-gray text-ot-pale-sky px-2 py-0.5 rounded-ot-btn font-bold border border-ot-iron">
                   AI-Powered
                 </span>
               </div>
-              <p className="text-sm text-gray-400 mb-5">Ask me anything about this restaurant</p>
+              <p className="text-sm text-ot-manatee mb-5">Ask me anything about this restaurant</p>
 
-              <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 rounded-2xl p-5 border border-amber-100">
+              <div className="bg-ot-athens-gray rounded-ot-card p-5 border border-ot-iron">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
                   {CONCIERGE_SUGGESTIONS.map((card, i) => (
                     <button
                       key={i}
                       onClick={() => setConciergeQuery(card.text)}
-                      className="flex items-center gap-3 bg-white p-3.5 rounded-xl border border-amber-200/70 text-left hover:shadow-md hover:border-amber-300 hover:-translate-y-0.5 transition-all group"
+                      className="flex items-center gap-3 bg-white p-3.5 rounded-ot-card border border-ot-iron text-left hover:shadow-md hover:border-ot-red/30 transition-all group"
                     >
                       <span className="text-xl flex-shrink-0">{card.emoji}</span>
-                      <span className="text-sm text-gray-700 group-hover:text-gray-900 flex-1">{card.text}</span>
-                      <svg className="w-4 h-4 text-gray-300 flex-shrink-0 group-hover:text-[#2563eb] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <span className="text-sm text-ot-charade group-hover:text-ot-charade flex-1">{card.text}</span>
+                      <svg className="w-4 h-4 text-ot-iron flex-shrink-0 group-hover:text-ot-red transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                       </svg>
                     </button>
@@ -449,9 +447,9 @@ const RestaurantDetailPage: React.FC = () => {
                     value={conciergeQuery}
                     onChange={e => setConciergeQuery(e.target.value)}
                     placeholder="Ask a question about this restaurant..."
-                    className="flex-1 text-sm border border-amber-200 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-amber-300 placeholder-gray-400"
+                    className="flex-1 text-sm border border-ot-iron rounded-ot-btn px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-ot-red placeholder-ot-manatee"
                   />
-                  <button className="bg-[#2563eb] text-white p-3 rounded-xl hover:bg-[#1d4ed8] active:scale-95 transition-all shadow-sm">
+                  <button className="bg-ot-red text-white p-3 rounded-ot-btn hover:bg-ot-red-dark transition-colors">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
@@ -460,39 +458,39 @@ const RestaurantDetailPage: React.FC = () => {
               </div>
             </div>
 
-            <hr className="border-gray-100 mb-10" />
+            <hr className="border-ot-iron/50 mb-10" />
 
             <div ref={reviewsRef} className="scroll-mt-20">
-              <h2 className="text-lg font-bold text-gray-900 mb-6">Overall ratings and reviews</h2>
+              <h2 className="text-lg font-extrabold text-ot-charade mb-6">Overall ratings and reviews</h2>
 
-              <div className="bg-gray-50 rounded-2xl p-6 mb-6 border border-gray-100">
+              <div className="bg-ot-athens-gray rounded-ot-card p-6 mb-6 border border-ot-iron">
                 <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
                   <div className="flex flex-col items-center justify-center sm:w-32 flex-shrink-0 text-center">
-                    <span className="text-5xl font-bold text-gray-900 tracking-tight mb-1">{overallRating.toFixed(1)}</span>
+                    <span className="text-5xl font-extrabold text-ot-charade tracking-tight mb-1">{overallRating.toFixed(1)}</span>
                     <StarRating rating={overallRating} size="lg" />
-                    <span className="text-sm font-bold text-gray-800 mt-1.5">{ratingLabel(restaurant.rating)}</span>
-                    <span className="text-xs text-gray-400 mt-0.5">{restaurant.review_count} reviews</span>
+                    <span className="text-sm font-bold text-ot-charade mt-1.5">{ratingLabel(restaurant.rating)}</span>
+                    <span className="text-xs text-ot-manatee mt-0.5">{restaurant.review_count} reviews</span>
                   </div>
 
                   <div className="flex-1">
                     <div className="space-y-3 mb-5">
                       {RATING_CATEGORIES.map(cat => (
                         <div key={cat.label} className="flex items-center gap-3">
-                          <span className="text-sm text-gray-500 w-16 flex-shrink-0">{cat.label}</span>
+                          <span className="text-sm text-ot-pale-sky w-16 flex-shrink-0">{cat.label}</span>
                           <RatingBar score={cat.score} />
-                          <span className="text-sm font-bold text-gray-900 w-8 text-right flex-shrink-0">
+                          <span className="text-sm font-bold text-ot-charade w-8 text-right flex-shrink-0">
                             {cat.score}
                           </span>
                         </div>
                       ))}
                     </div>
 
-                    <div className="flex items-center gap-3 pt-3 border-t border-gray-200">
-                      <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <div className="flex items-center gap-3 pt-3 border-t border-ot-iron">
+                      <svg className="w-4 h-4 text-ot-manatee flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
                       </svg>
-                      <span className="text-sm text-gray-600">
-                        Noise: <span className="font-bold text-gray-900">Energetic</span>
+                      <span className="text-sm text-ot-pale-sky">
+                        Noise: <span className="font-bold text-ot-charade">Energetic</span>
                       </span>
                       <NoiseBar level={4} />
                     </div>
@@ -501,7 +499,7 @@ const RestaurantDetailPage: React.FC = () => {
               </div>
 
               <div className="relative mb-6">
-                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ot-manatee" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input
@@ -509,10 +507,10 @@ const RestaurantDetailPage: React.FC = () => {
                   value={reviewSearch}
                   onChange={e => setReviewSearch(e.target.value)}
                   placeholder="Search reviews..."
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 bg-white placeholder-gray-400"
+                  className="w-full pl-10 pr-4 py-3 border border-ot-iron rounded-ot-btn text-sm focus:outline-none focus:ring-2 focus:ring-ot-red bg-white placeholder-ot-manatee"
                 />
                 {reviewSearch && (
-                  <button onClick={() => setReviewSearch('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <button onClick={() => setReviewSearch('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ot-manatee hover:text-ot-charade">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -521,7 +519,7 @@ const RestaurantDetailPage: React.FC = () => {
               </div>
 
               {reviewSearch && (
-                <p className="text-sm text-gray-500 mb-4">
+                <p className="text-sm text-ot-pale-sky mb-4">
                   Showing {filteredReviews.length} of {REVIEWS.length} reviews
                 </p>
               )}
@@ -529,24 +527,24 @@ const RestaurantDetailPage: React.FC = () => {
               <div className="space-y-7">
                 {filteredReviews.length > 0 ? (
                   filteredReviews.map(review => (
-                    <div key={review.id} className="border-b border-gray-100 pb-7 last:border-0">
+                    <div key={review.id} className="border-b border-ot-iron/50 pb-7 last:border-0">
                       <div className="flex items-start gap-3 mb-3">
-                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${review.avatarColor} flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${review.avatarColor} flex items-center justify-center flex-shrink-0`}>
                           <span className="text-white font-bold text-xs">{review.initials}</span>
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                            <span className="text-sm font-bold text-gray-900">{review.author}</span>
+                            <span className="text-sm font-bold text-ot-charade">{review.author}</span>
                             <StarRating rating={review.rating} size="sm" />
-                            <span className="text-xs font-semibold text-gray-700">
+                            <span className="text-xs font-bold text-ot-charade">
                               {review.rating === 5 ? 'Exceptional' : review.rating === 4 ? 'Awesome' : 'Good'}
                             </span>
                           </div>
-                          <span className="text-xs text-gray-400">{review.dined}</span>
+                          <span className="text-xs text-ot-manatee">{review.dined}</span>
                         </div>
                       </div>
-                      <p className="text-sm text-gray-600 leading-relaxed">{review.text}</p>
-                      <button className="mt-2 text-xs text-[#006AFF] hover:underline flex items-center gap-1">
+                      <p className="text-sm text-ot-pale-sky leading-relaxed">{review.text}</p>
+                      <button className="mt-2 text-xs text-ot-red hover:underline flex items-center gap-1">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
                         </svg>
@@ -556,10 +554,10 @@ const RestaurantDetailPage: React.FC = () => {
                   ))
                 ) : (
                   <div className="text-center py-12">
-                    <svg className="w-10 h-10 text-gray-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <svg className="w-10 h-10 text-ot-iron mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    <p className="text-gray-400 text-sm">No reviews match your search.</p>
+                    <p className="text-ot-manatee text-sm">No reviews match your search.</p>
                   </div>
                 )}
               </div>
@@ -569,29 +567,29 @@ const RestaurantDetailPage: React.FC = () => {
           <div className="lg:w-80 xl:w-[22rem] flex-shrink-0">
             <div className="lg:sticky lg:top-20 space-y-4">
 
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
-                <div className="bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] px-5 py-4">
+              <div className="bg-white rounded-ot-card border border-ot-iron shadow-lg overflow-hidden">
+                <div className="bg-ot-red px-5 py-4">
                   <h3 className="text-base font-bold text-white">Make a reservation</h3>
-                  <p className="text-blue-200 text-xs mt-0.5">No credit card required</p>
+                  <p className="text-white/60 text-xs mt-0.5">No credit card required</p>
                 </div>
 
                 <div className="p-5">
                     <div className="mb-4">
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                      <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">
                         Party size
                       </label>
                       <div className="relative">
-                        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ot-manatee pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                         <select
                           value={partySize}
                           onChange={e => setPartySize(e.target.value)}
-                          className="w-full pl-9 pr-8 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white cursor-pointer font-medium"
+                          className="w-full pl-9 pr-8 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade appearance-none focus:outline-none focus:ring-2 focus:ring-ot-red bg-white cursor-pointer font-medium"
                         >
                           {PARTY_SIZES.map(s => <option key={s}>{s}</option>)}
                         </select>
-                        <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ot-manatee pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                         </svg>
                       </div>
@@ -599,11 +597,11 @@ const RestaurantDetailPage: React.FC = () => {
 
                     <div className="grid grid-cols-2 gap-3 mb-5">
                       <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                        <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">
                           Date
                         </label>
                         <div className="relative">
-                          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ot-manatee pointer-events-none z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
                           <input
@@ -611,27 +609,27 @@ const RestaurantDetailPage: React.FC = () => {
                             value={selectedDate}
                             min={todayISO()}
                             onChange={e => setSelectedDate(e.target.value)}
-                            className="w-full pl-8 pr-2 py-3 border border-gray-200 rounded-xl text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white cursor-pointer font-medium"
+                            className="w-full pl-8 pr-2 py-3 border border-ot-iron rounded-ot-btn text-xs text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-red bg-white cursor-pointer font-medium"
                           />
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                        <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">
                           Time
                         </label>
                         <div className="relative">
-                          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ot-manatee pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           <select
                             value={selectedTime}
                             onChange={e => handleTimeDropdownChange(e.target.value)}
-                            className="w-full pl-8 pr-6 py-3 border border-gray-200 rounded-xl text-xs text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white cursor-pointer font-medium"
+                            className="w-full pl-8 pr-6 py-3 border border-ot-iron rounded-ot-btn text-xs text-ot-charade appearance-none focus:outline-none focus:ring-2 focus:ring-ot-red bg-white cursor-pointer font-medium"
                           >
                             {TIME_OPTIONS.map(t => <option key={t}>{t}</option>)}
                           </select>
-                          <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ot-manatee pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                           </svg>
                         </div>
@@ -639,7 +637,7 @@ const RestaurantDetailPage: React.FC = () => {
                     </div>
 
                     {availability && !availabilityLoading && (
-                      <div className={`mb-4 px-3 py-2 rounded-lg text-xs font-medium ${
+                      <div className={`mb-4 px-3 py-2 rounded-ot-btn text-xs font-medium ${
                         availability.available_seats === 0
                           ? 'bg-red-50 text-red-600 border border-red-200'
                           : availability.available_seats <= 3
@@ -654,7 +652,7 @@ const RestaurantDetailPage: React.FC = () => {
                       </div>
                     )}
 
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+                    <p className="text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-2">
                       Quick-select a time
                     </p>
                     <div className="grid grid-cols-3 gap-2 mb-5">
@@ -662,10 +660,10 @@ const RestaurantDetailPage: React.FC = () => {
                         <button
                           key={slot}
                           onClick={() => handleSlotClick(slot)}
-                          className={`py-2.5 text-xs font-bold rounded-xl transition-all active:scale-95 ${
+                          className={`py-2 text-xs font-bold rounded-ot-btn transition-all ${
                             selectedSlot === slot
-                              ? 'bg-gray-900 text-white shadow-lg ring-2 ring-gray-900 ring-offset-1'
-                              : 'bg-[#2563eb] text-white hover:bg-[#1d4ed8] shadow-sm hover:shadow-md'
+                              ? 'bg-ot-charade text-white ring-2 ring-ot-charade ring-offset-1'
+                              : 'bg-ot-red text-white hover:bg-ot-red-dark'
                           }`}
                         >
                           {slot}
@@ -676,45 +674,44 @@ const RestaurantDetailPage: React.FC = () => {
                     <button
                       onClick={handleBook}
                       disabled={availability?.available_seats === 0}
-                      className="w-full py-3.5 text-sm font-bold text-white bg-[#2563eb] rounded-xl hover:bg-[#1d4ed8] active:scale-95 transition-all shadow-sm hover:shadow-md mb-3 disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full py-3.5 text-sm font-bold text-white bg-ot-red rounded-ot-btn hover:bg-ot-red-dark transition-colors mb-3 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {availability?.available_seats === 0
                         ? 'Fully booked'
                         : `Book a Table \u00B7 ${selectedTime}`}
                     </button>
 
-                    <button className="w-full py-3 text-sm font-semibold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                    <button className="w-full py-3 text-sm font-medium text-ot-charade border border-ot-iron rounded-ot-btn hover:bg-ot-athens-gray transition-colors flex items-center justify-center gap-2">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                       </svg>
                       Notify me
                     </button>
 
-                    <p className="text-xs text-gray-400 text-center mt-3">
+                    <p className="text-xs text-ot-manatee text-center mt-3">
                       You won't be charged until after your visit
                     </p>
                   </div>
               </div>
 
-              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+              <div className="bg-white rounded-ot-card border border-ot-iron overflow-hidden">
                 <div className="relative h-44 overflow-hidden">
                   <LocationMiniMap
                     lat={restaurant.latitude}
                     lng={restaurant.longitude}
                     name={restaurant.name}
                   />
-                  <div className="absolute inset-0 pointer-events-none rounded-t-2xl ring-1 ring-inset ring-black/5" />
                 </div>
                 <div className="px-4 py-3.5">
-                  <p className="text-sm font-semibold text-gray-900">{restaurant.address}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{restaurant.city}, {restaurant.country}</p>
+                  <p className="text-sm font-bold text-ot-charade">{restaurant.address}</p>
+                  <p className="text-xs text-ot-pale-sky mt-0.5">{restaurant.city}, {restaurant.country}</p>
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                       `${restaurant.address}, ${restaurant.city}, ${restaurant.country}`
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#2563eb] mt-2 hover:underline"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-ot-red mt-2 hover:underline"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -725,8 +722,8 @@ const RestaurantDetailPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                <h4 className="text-sm font-bold text-gray-900 mb-3">Good to know</h4>
+              <div className="bg-ot-athens-gray rounded-ot-card p-4 border border-ot-iron">
+                <h4 className="text-sm font-bold text-ot-charade mb-3">Good to know</h4>
                 <div className="space-y-2">
                   {[
                     { icon: '\u{1F550}', text: 'Open until 11:00 PM today' },
@@ -734,7 +731,7 @@ const RestaurantDetailPage: React.FC = () => {
                     { icon: '\u{1F17F}\u{FE0F}', text: 'Parking nearby' },
                     { icon: '\u{267F}', text: 'Wheelchair accessible' },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-2.5 text-sm text-gray-600">
+                    <div key={i} className="flex items-center gap-2.5 text-sm text-ot-pale-sky">
                       <span className="text-base">{item.icon}</span>
                       <span>{item.text}</span>
                     </div>
@@ -749,8 +746,8 @@ const RestaurantDetailPage: React.FC = () => {
       {showAllPhotos && (
         <div className="fixed inset-0 z-50 bg-black/95 flex flex-col" onClick={() => setShowAllPhotos(false)}>
           <div className="flex items-center justify-between px-6 py-4">
-            <h3 className="text-white font-semibold text-lg">All photos</h3>
-            <button onClick={() => setShowAllPhotos(false)} className="text-white hover:text-gray-300 transition-colors">
+            <h3 className="text-white font-bold text-lg">All photos</h3>
+            <button onClick={() => setShowAllPhotos(false)} className="text-white hover:text-ot-iron transition-colors">
               <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -758,7 +755,7 @@ const RestaurantDetailPage: React.FC = () => {
           </div>
           <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-1 p-4 overflow-y-auto" onClick={e => e.stopPropagation()}>
             {HERO_IMAGES.map((src, i) => (
-              <div key={i} className={`overflow-hidden rounded-lg ${i === 0 ? 'col-span-2 md:col-span-1' : ''}`}>
+              <div key={i} className={`overflow-hidden rounded-ot-card ${i === 0 ? 'col-span-2 md:col-span-1' : ''}`}>
                 <img src={src} alt={`Gallery view ${i + 1}`} className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300" />
               </div>
             ))}

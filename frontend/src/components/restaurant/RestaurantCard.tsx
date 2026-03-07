@@ -20,7 +20,7 @@ interface RestaurantCardProps {
 
 const StarIcon: React.FC<{ filled: boolean }> = ({ filled }) => (
   <svg
-    className={`w-3.5 h-3.5 ${filled ? 'text-ot-red' : 'text-ot-iron'}`}
+    className={`w-3.5 h-3.5 ${filled ? 'text-ot-primary' : 'text-ot-iron'}`}
     fill="currentColor"
     viewBox="0 0 20 20"
   >
@@ -58,7 +58,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, isActive, o
 
       <div className="flex flex-col justify-between min-w-0 flex-1">
         <div>
-          <h3 className="font-bold text-ot-red text-sm hover:underline truncate">
+          <h3 className="font-bold text-ot-primary text-sm hover:underline truncate">
             {restaurant.name}
           </h3>
 

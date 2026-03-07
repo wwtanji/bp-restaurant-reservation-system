@@ -20,20 +20,20 @@ const JoinComponent: React.FC = () => {
 
         <div className="grid grid-cols-3 gap-4 mb-8 max-w-md mx-auto">
           <div>
-            <div className="text-2xl font-extrabold text-ot-red">+40%</div>
+            <div className="text-2xl font-extrabold text-ot-primary">+40%</div>
             <div className="text-xs text-ot-iron">Revenue</div>
           </div>
           <div>
-            <div className="text-2xl font-extrabold text-ot-red">24/7</div>
+            <div className="text-2xl font-extrabold text-ot-primary">24/7</div>
             <div className="text-xs text-ot-iron">Bookings</div>
           </div>
           <div>
-            <div className="text-2xl font-extrabold text-ot-red">Free</div>
+            <div className="text-2xl font-extrabold text-ot-primary">Free</div>
             <div className="text-xs text-ot-iron">Setup</div>
           </div>
         </div>
 
-        <button className="bg-ot-red hover:bg-ot-red-dark text-white font-bold text-sm px-8 py-3 rounded-ot-btn transition-colors">
+        <button className="bg-ot-primary hover:bg-ot-primary-dark text-white font-bold text-sm px-8 py-3 rounded-ot-btn transition-colors">
           Join as Restaurant Partner
         </button>
       </div>

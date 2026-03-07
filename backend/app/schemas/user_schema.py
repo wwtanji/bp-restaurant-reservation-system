@@ -159,3 +159,38 @@ class ResetPasswordRequest(BaseModel):
 
 class EmailVerificationRequest(BaseModel):
     token: str
+
+
+class UserProfileUpdate(BaseModel):
+    first_name: Annotated[str, constr(min_length=1)]
+    last_name: Annotated[str, constr(min_length=1)]
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: Annotated[str, constr(min_length=8)]
+    new_password: Annotated[str, constr(min_length=8, max_length=80)]
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password_strength(cls, value: str) -> str:
+        if len(value) < 8:
+            raise HTTPException(
+                status_code=422,
+                detail="Password must be at least 8 characters long"
+            )
+        if not re.search(r"[A-Z]", value):
+            raise HTTPException(
+                status_code=422,
+                detail="Password must contain at least one uppercase letter"
+            )
+        if not re.search(r"[a-z]", value):
+            raise HTTPException(
+                status_code=422,
+                detail="Password must contain at least one lowercase letter"
+            )
+        if not re.search(r"\d", value):
+            raise HTTPException(
+                status_code=422,
+                detail="Password must contain at least one number"
+            )
+        return value

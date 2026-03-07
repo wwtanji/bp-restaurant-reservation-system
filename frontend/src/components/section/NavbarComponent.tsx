@@ -9,6 +9,7 @@ import NotificationComponent from "../notification/NotificationComponent";
 const navigation = [
   { name: "Search", href: "/search" },
   { name: "My Reservations", href: "/my-reservations" },
+  { name: "Profile", href: "/profile" },
 ];
 
 const NavbarComponent: React.FC = () => {
@@ -39,7 +40,7 @@ const NavbarComponent: React.FC = () => {
           <div className="flex items-center gap-8">
             <Link to="/" className="flex items-center gap-1">
               <span className="sr-only">Reservelt</span>
-              <span className="text-xl font-extrabold text-ot-red tracking-tight">
+              <span className="text-xl font-extrabold text-ot-primary tracking-tight">
                 Reservelt
               </span>
             </Link>
@@ -48,7 +49,7 @@ const NavbarComponent: React.FC = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="text-sm font-medium text-ot-charade hover:text-ot-red transition-colors"
+                  className="text-sm font-medium text-ot-charade hover:text-ot-primary transition-colors"
                 >
                   {item.name}
                 </Link>
@@ -72,13 +73,13 @@ const NavbarComponent: React.FC = () => {
               <>
                 <button
                   onClick={handleLoginClick}
-                  className="text-sm font-medium text-ot-charade hover:text-ot-red transition-colors"
+                  className="text-sm font-medium text-ot-charade hover:text-ot-primary transition-colors"
                 >
                   Sign in
                 </button>
                 <Link
                   to="/signup"
-                  className="text-sm font-bold text-white bg-ot-charade hover:bg-ot-red-dark px-4 py-2 rounded-ot-btn transition-colors"
+                  className="text-sm font-bold text-white bg-ot-charade hover:bg-ot-primary-dark px-4 py-2 rounded-ot-btn transition-colors"
                 >
                   Sign up
                 </Link>
@@ -86,7 +87,7 @@ const NavbarComponent: React.FC = () => {
             ) : (
               <button
                 onClick={handleLogout}
-                className="text-sm font-medium text-ot-charade hover:text-ot-red transition-colors"
+                className="text-sm font-medium text-ot-charade hover:text-ot-primary transition-colors"
               >
                 Sign out
               </button>
@@ -104,7 +105,7 @@ const NavbarComponent: React.FC = () => {
             <div className="flex items-center justify-between">
               <Link to="/" className="flex items-center gap-1">
                 <span className="sr-only">Reservelt</span>
-                <span className="text-xl font-extrabold text-ot-red tracking-tight">
+                <span className="text-xl font-extrabold text-ot-primary tracking-tight">
                   Reservelt
                 </span>
               </Link>
@@ -143,7 +144,7 @@ const NavbarComponent: React.FC = () => {
                       <Link
                         to="/signup"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="block text-center text-sm font-bold text-white bg-ot-charade hover:bg-ot-red-dark px-4 py-2.5 rounded-ot-btn transition-colors"
+                        className="block text-center text-sm font-bold text-white bg-ot-charade hover:bg-ot-primary-dark px-4 py-2.5 rounded-ot-btn transition-colors"
                       >
                         Sign up
                       </Link>

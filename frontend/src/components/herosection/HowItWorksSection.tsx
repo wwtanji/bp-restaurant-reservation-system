@@ -53,7 +53,7 @@ const HowItWorksSection: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
           {STEPS.map(step => (
             <div key={step.number} className="text-center">
-              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-ot-red text-white flex items-center justify-center">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-ot-primary text-white flex items-center justify-center">
                 {step.icon}
               </div>
               <h3 className="text-base font-bold text-ot-charade mb-2">
@@ -69,7 +69,7 @@ const HowItWorksSection: React.FC = () => {
         <div className="mt-12 text-center">
           <Link
             to="/search"
-            className="inline-block bg-ot-red hover:bg-ot-red-dark text-white font-bold text-sm px-8 py-3 rounded-ot-btn transition-colors"
+            className="inline-block bg-ot-primary hover:bg-ot-primary-dark text-white font-bold text-sm px-8 py-3 rounded-ot-btn transition-colors"
           >
             Start Booking
           </Link>

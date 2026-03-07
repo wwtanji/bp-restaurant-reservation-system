@@ -12,6 +12,7 @@ import SearchPage from './pages/SearchPage';
 import RestaurantDetailPage from './pages/RestaurantDetailPage';
 import BookingPage from './pages/BookingPage';
 import MyReservationsPage from './pages/MyReservationsPage';
+import ProfilePage from './pages/ProfilePage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -85,6 +86,11 @@ const AppRoutes = () => {
       <Route path="/my-reservations" element={
         <ProtectedRoute>
           <MyReservationsPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <ProfilePage />
         </ProtectedRoute>
       } />
     </Routes>

@@ -6,7 +6,8 @@
       "Bash(where:*)",
       "Bash(py:*)",
       "Bash(npx react-scripts build)",
-      "Bash(xargs cat)"
+      "Bash(xargs cat)",
+      "Bash(find .:*)"
     ]
   }
 }

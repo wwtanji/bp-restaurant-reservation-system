@@ -30,7 +30,7 @@ const Stars: React.FC<{ rating: number | null }> = ({ rating }) => {
       {[1, 2, 3, 4, 5].map(i => (
         <svg
           key={i}
-          className={`w-4 h-4 ${i <= filled ? 'text-ot-red' : 'text-[#E1E1E1]'}`}
+          className={`w-4 h-4 ${i <= filled ? 'text-ot-primary' : 'text-[#E1E1E1]'}`}
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -98,7 +98,7 @@ const RestaurantCard: React.FC<{
                 e.stopPropagation();
                 onClick();
               }}
-              className="flex items-center justify-center w-[70px] h-8 bg-ot-red rounded-ot-btn text-white font-bold text-[13.8px] leading-8 hover:bg-ot-red-dark transition-colors"
+              className="flex items-center justify-center w-[70px] h-8 bg-ot-primary rounded-ot-btn text-white font-bold text-[13.8px] leading-8 hover:bg-ot-primary-dark transition-colors"
             >
               {slot}
             </button>
@@ -215,7 +215,7 @@ const TopRatedSection: React.FC = () => {
       <div className="py-12">
         <div className="max-w-ot mx-auto px-4">
           <div className="flex items-center justify-center py-10">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-ot-red" />
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-ot-primary" />
           </div>
         </div>
       </div>

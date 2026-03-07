@@ -55,7 +55,7 @@ const ForgotPasswordPage: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email"
-                  className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-red text-sm text-ot-charade placeholder-ot-manatee"
+                  className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-primary text-sm text-ot-charade placeholder-ot-manatee"
                   required
                 />
 
@@ -68,7 +68,7 @@ const ForgotPasswordPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-ot-red hover:bg-ot-red-dark text-white font-bold py-3 rounded-ot-btn transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-ot-primary hover:bg-ot-primary-dark text-white font-bold py-3 rounded-ot-btn transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Sending...' : 'Send Reset Link'}
                 </button>
@@ -76,7 +76,7 @@ const ForgotPasswordPage: React.FC = () => {
 
               <p className="text-center text-sm text-ot-pale-sky mt-6">
                 Remember your password?{' '}
-                <Link to="/login" className="text-ot-red font-bold hover:underline">
+                <Link to="/login" className="text-ot-primary font-bold hover:underline">
                   Log In
                 </Link>
               </p>
@@ -95,7 +95,7 @@ const ForgotPasswordPage: React.FC = () => {
               </p>
               <Link
                 to="/login"
-                className="inline-block bg-ot-red hover:bg-ot-red-dark text-white font-bold py-3 px-8 rounded-ot-btn transition-colors"
+                className="inline-block bg-ot-primary hover:bg-ot-primary-dark text-white font-bold py-3 px-8 rounded-ot-btn transition-colors"
               >
                 Back to Login
               </Link>

@@ -98,7 +98,7 @@ const StarRating: React.FC<{ rating: number; size?: 'sm' | 'md' | 'lg' }> = ({
       {[1, 2, 3, 4, 5].map(i => (
         <svg
           key={i}
-          className={`${dim} ${i <= Math.round(rating) ? 'text-ot-red' : 'text-ot-iron'}`}
+          className={`${dim} ${i <= Math.round(rating) ? 'text-ot-primary' : 'text-ot-iron'}`}
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -112,7 +112,7 @@ const StarRating: React.FC<{ rating: number; size?: 'sm' | 'md' | 'lg' }> = ({
 const RatingBar: React.FC<{ score: number }> = ({ score }) => (
   <div className="flex-1 h-1.5 bg-ot-iron rounded-full overflow-hidden">
     <div
-      className="h-full bg-ot-red rounded-full transition-all duration-700"
+      className="h-full bg-ot-primary rounded-full transition-all duration-700"
       style={{ width: `${(score / 5) * 100}%` }}
     />
   </div>
@@ -124,7 +124,7 @@ const NoiseBar: React.FC<{ level: number }> = ({ level }) => (
       <div
         key={i}
         className={`w-1.5 rounded-sm transition-all ${
-          i <= level ? 'bg-ot-red' : 'bg-ot-iron'
+          i <= level ? 'bg-ot-primary' : 'bg-ot-iron'
         }`}
         style={{ height: `${8 + i * 3}px` }}
       />
@@ -282,7 +282,7 @@ const RestaurantDetailPage: React.FC = () => {
   if (restaurantLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-ot-red" />
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-ot-primary" />
       </div>
     );
   }
@@ -291,7 +291,7 @@ const RestaurantDetailPage: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <p className="text-ot-pale-sky">{restaurantError ?? 'Restaurant not found'}</p>
-        <button onClick={() => navigate('/search')} className="text-ot-red font-bold hover:underline">
+        <button onClick={() => navigate('/search')} className="text-ot-primary font-bold hover:underline">
           Back to search
         </button>
       </div>
@@ -346,7 +346,7 @@ const RestaurantDetailPage: React.FC = () => {
               onClick={() => scrollToSection(tab)}
               className={`flex-shrink-0 px-4 py-4 text-sm font-bold transition-all border-b-2 whitespace-nowrap ${
                 activeTab === tab
-                  ? 'border-ot-red text-ot-red'
+                  ? 'border-ot-primary text-ot-primary'
                   : 'border-transparent text-ot-pale-sky hover:text-ot-charade hover:border-ot-iron'
               }`}
             >
@@ -430,11 +430,11 @@ const RestaurantDetailPage: React.FC = () => {
                     <button
                       key={i}
                       onClick={() => setConciergeQuery(card.text)}
-                      className="flex items-center gap-3 bg-white p-3.5 rounded-ot-card border border-ot-iron text-left hover:shadow-md hover:border-ot-red/30 transition-all group"
+                      className="flex items-center gap-3 bg-white p-3.5 rounded-ot-card border border-ot-iron text-left hover:shadow-md hover:border-ot-primary/30 transition-all group"
                     >
                       <span className="text-xl flex-shrink-0">{card.emoji}</span>
                       <span className="text-sm text-ot-charade group-hover:text-ot-charade flex-1">{card.text}</span>
-                      <svg className="w-4 h-4 text-ot-iron flex-shrink-0 group-hover:text-ot-red transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <svg className="w-4 h-4 text-ot-iron flex-shrink-0 group-hover:text-ot-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                       </svg>
                     </button>
@@ -447,9 +447,9 @@ const RestaurantDetailPage: React.FC = () => {
                     value={conciergeQuery}
                     onChange={e => setConciergeQuery(e.target.value)}
                     placeholder="Ask a question about this restaurant..."
-                    className="flex-1 text-sm border border-ot-iron rounded-ot-btn px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-ot-red placeholder-ot-manatee"
+                    className="flex-1 text-sm border border-ot-iron rounded-ot-btn px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-ot-primary placeholder-ot-manatee"
                   />
-                  <button className="bg-ot-red text-white p-3 rounded-ot-btn hover:bg-ot-red-dark transition-colors">
+                  <button className="bg-ot-primary text-white p-3 rounded-ot-btn hover:bg-ot-primary-dark transition-colors">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
@@ -507,7 +507,7 @@ const RestaurantDetailPage: React.FC = () => {
                   value={reviewSearch}
                   onChange={e => setReviewSearch(e.target.value)}
                   placeholder="Search reviews..."
-                  className="w-full pl-10 pr-4 py-3 border border-ot-iron rounded-ot-btn text-sm focus:outline-none focus:ring-2 focus:ring-ot-red bg-white placeholder-ot-manatee"
+                  className="w-full pl-10 pr-4 py-3 border border-ot-iron rounded-ot-btn text-sm focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white placeholder-ot-manatee"
                 />
                 {reviewSearch && (
                   <button onClick={() => setReviewSearch('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ot-manatee hover:text-ot-charade">
@@ -544,7 +544,7 @@ const RestaurantDetailPage: React.FC = () => {
                         </div>
                       </div>
                       <p className="text-sm text-ot-pale-sky leading-relaxed">{review.text}</p>
-                      <button className="mt-2 text-xs text-ot-red hover:underline flex items-center gap-1">
+                      <button className="mt-2 text-xs text-ot-primary hover:underline flex items-center gap-1">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
                         </svg>
@@ -568,7 +568,7 @@ const RestaurantDetailPage: React.FC = () => {
             <div className="lg:sticky lg:top-20 space-y-4">
 
               <div className="bg-white rounded-ot-card border border-ot-iron shadow-lg overflow-hidden">
-                <div className="bg-ot-red px-5 py-4">
+                <div className="bg-ot-primary px-5 py-4">
                   <h3 className="text-base font-bold text-white">Make a reservation</h3>
                   <p className="text-white/60 text-xs mt-0.5">No credit card required</p>
                 </div>
@@ -585,7 +585,7 @@ const RestaurantDetailPage: React.FC = () => {
                         <select
                           value={partySize}
                           onChange={e => setPartySize(e.target.value)}
-                          className="w-full pl-9 pr-8 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade appearance-none focus:outline-none focus:ring-2 focus:ring-ot-red bg-white cursor-pointer font-medium"
+                          className="w-full pl-9 pr-8 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade appearance-none focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white cursor-pointer font-medium"
                         >
                           {PARTY_SIZES.map(s => <option key={s}>{s}</option>)}
                         </select>
@@ -609,7 +609,7 @@ const RestaurantDetailPage: React.FC = () => {
                             value={selectedDate}
                             min={todayISO()}
                             onChange={e => setSelectedDate(e.target.value)}
-                            className="w-full pl-8 pr-2 py-3 border border-ot-iron rounded-ot-btn text-xs text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-red bg-white cursor-pointer font-medium"
+                            className="w-full pl-8 pr-2 py-3 border border-ot-iron rounded-ot-btn text-xs text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white cursor-pointer font-medium"
                           />
                         </div>
                       </div>
@@ -625,7 +625,7 @@ const RestaurantDetailPage: React.FC = () => {
                           <select
                             value={selectedTime}
                             onChange={e => handleTimeDropdownChange(e.target.value)}
-                            className="w-full pl-8 pr-6 py-3 border border-ot-iron rounded-ot-btn text-xs text-ot-charade appearance-none focus:outline-none focus:ring-2 focus:ring-ot-red bg-white cursor-pointer font-medium"
+                            className="w-full pl-8 pr-6 py-3 border border-ot-iron rounded-ot-btn text-xs text-ot-charade appearance-none focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white cursor-pointer font-medium"
                           >
                             {TIME_OPTIONS.map(t => <option key={t}>{t}</option>)}
                           </select>
@@ -663,7 +663,7 @@ const RestaurantDetailPage: React.FC = () => {
                           className={`py-2 text-xs font-bold rounded-ot-btn transition-all ${
                             selectedSlot === slot
                               ? 'bg-ot-charade text-white ring-2 ring-ot-charade ring-offset-1'
-                              : 'bg-ot-red text-white hover:bg-ot-red-dark'
+                              : 'bg-ot-primary text-white hover:bg-ot-primary-dark'
                           }`}
                         >
                           {slot}
@@ -674,7 +674,7 @@ const RestaurantDetailPage: React.FC = () => {
                     <button
                       onClick={handleBook}
                       disabled={availability?.available_seats === 0}
-                      className="w-full py-3.5 text-sm font-bold text-white bg-ot-red rounded-ot-btn hover:bg-ot-red-dark transition-colors mb-3 disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full py-3.5 text-sm font-bold text-white bg-ot-primary rounded-ot-btn hover:bg-ot-primary-dark transition-colors mb-3 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {availability?.available_seats === 0
                         ? 'Fully booked'
@@ -711,7 +711,7 @@ const RestaurantDetailPage: React.FC = () => {
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-ot-red mt-2 hover:underline"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-ot-primary mt-2 hover:underline"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />

@@ -10,14 +10,14 @@ module.exports = {
       },
       colors: {
         ot: {
-          red: '#2D333F',
-          'red-dark': '#1A1F28',
-          charade: '#2D333F',
-          'pale-sky': '#6B7280',
-          iron: '#E5E7EB',
-          'athens-gray': '#F9FAFB',
-          manatee: '#9CA3AF',
-          teal: '#4B5563',
+          primary: '#4F46E5',
+          'primary-dark': '#3730A3',
+          charade: '#1E293B',
+          'pale-sky': '#64748B',
+          iron: '#E2E8F0',
+          'athens-gray': '#F1F5F9',
+          manatee: '#94A3B8',
+          teal: '#475569',
         },
       },
       maxWidth: {

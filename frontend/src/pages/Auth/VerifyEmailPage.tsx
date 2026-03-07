@@ -55,7 +55,7 @@ const VerifyEmailPage: React.FC = () => {
           {status === 'verifying' && (
             <>
               <div className="mb-6 flex justify-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-ot-red" />
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-ot-primary" />
               </div>
               <h2 className="text-2xl font-extrabold text-ot-charade mb-4">Verifying Email</h2>
               <p className="text-sm text-ot-pale-sky">{message}</p>
@@ -86,7 +86,7 @@ const VerifyEmailPage: React.FC = () => {
               <p className="text-sm text-ot-pale-sky mb-6">{message}</p>
               <Link
                 to="/login"
-                className="inline-block bg-ot-red hover:bg-ot-red-dark text-white font-bold py-3 px-8 rounded-ot-btn transition-colors"
+                className="inline-block bg-ot-primary hover:bg-ot-primary-dark text-white font-bold py-3 px-8 rounded-ot-btn transition-colors"
               >
                 Go to Login
               </Link>

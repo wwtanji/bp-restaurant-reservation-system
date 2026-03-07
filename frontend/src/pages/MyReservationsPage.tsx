@@ -100,7 +100,7 @@ const MyReservationsPage: React.FC = () => {
               onClick={() => setTab(t)}
               className={`flex-1 py-2.5 text-sm font-bold rounded-ot-btn transition-all ${
                 tab === t
-                  ? 'bg-ot-red text-white'
+                  ? 'bg-ot-primary text-white'
                   : 'text-ot-pale-sky hover:text-ot-charade'
               }`}
             >
@@ -117,7 +117,7 @@ const MyReservationsPage: React.FC = () => {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-ot-red" />
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-ot-primary" />
           </div>
         ) : displayed.length === 0 ? (
           <div className="text-center py-20">
@@ -135,7 +135,7 @@ const MyReservationsPage: React.FC = () => {
             {tab === 'upcoming' && (
               <Link
                 to="/search"
-                className="inline-flex items-center gap-2 bg-ot-red hover:bg-ot-red-dark text-white font-bold px-6 py-3 rounded-ot-btn transition-colors text-sm"
+                className="inline-flex items-center gap-2 bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-6 py-3 rounded-ot-btn transition-colors text-sm"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -160,7 +160,7 @@ const MyReservationsPage: React.FC = () => {
                       <div className="min-w-0">
                         <Link
                           to={`/restaurant/${reservation.restaurant.slug}`}
-                          className="text-base font-bold text-ot-charade hover:text-ot-red transition-colors"
+                          className="text-base font-bold text-ot-charade hover:text-ot-primary transition-colors"
                         >
                           {reservation.restaurant.name}
                         </Link>
@@ -212,7 +212,7 @@ const MyReservationsPage: React.FC = () => {
                       <button
                         onClick={() => handleCancel(reservation.id)}
                         disabled={isCancelling}
-                        className="text-sm font-bold text-ot-red hover:text-ot-red-dark hover:bg-red-50 px-4 py-2 rounded-ot-btn transition-colors disabled:opacity-50"
+                        className="text-sm font-bold text-ot-primary hover:text-ot-primary-dark hover:bg-indigo-50 px-4 py-2 rounded-ot-btn transition-colors disabled:opacity-50"
                       >
                         {isCancelling ? 'Cancelling...' : 'Cancel reservation'}
                       </button>

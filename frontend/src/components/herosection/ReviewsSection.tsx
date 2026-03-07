@@ -98,7 +98,7 @@ const Stars: React.FC<{ rating: number; size?: string }> = ({ rating, size = 'w-
       {[1, 2, 3, 4, 5].map(i => (
         <svg
           key={i}
-          className={`${size} ${i <= filled ? 'text-ot-red' : 'text-[#E1E1E1]'}`}
+          className={`${size} ${i <= filled ? 'text-ot-primary' : 'text-[#E1E1E1]'}`}
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -147,7 +147,7 @@ const ReviewCard: React.FC<{ review: MockReview }> = ({ review }) => {
       </div>
 
       <div className="px-4 pb-3 text-right">
-        <span className="text-[15.8px] font-medium text-ot-red cursor-pointer hover:underline">
+        <span className="text-[15.8px] font-medium text-ot-primary cursor-pointer hover:underline">
           More info
         </span>
       </div>
@@ -164,13 +164,13 @@ const ReviewCard: React.FC<{ review: MockReview }> = ({ review }) => {
             <span className="mx-0.5">&middot;</span>
             {review.city}
             <span className="mx-0.5">&middot;</span>
-            <svg className="w-2.5 h-2.5 text-ot-red inline-block mb-[1px]" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-2.5 h-2.5 text-ot-primary inline-block mb-[1px]" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z" />
             </svg>
             {' '}{review.restaurantRating}
           </span>
         </div>
-        <button className="flex-shrink-0 ml-4 text-ot-red hover:text-ot-red-dark">
+        <button className="flex-shrink-0 ml-4 text-ot-primary hover:text-ot-primary-dark">
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
           </svg>

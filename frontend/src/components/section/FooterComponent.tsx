@@ -24,7 +24,7 @@ const FooterComponent: React.FC = () => {
           </div>
 
           <div className="text-left md:text-right">
-            <span className="text-2xl font-extrabold text-ot-red tracking-tight">Reservelt</span>
+            <span className="text-2xl font-extrabold text-ot-primary tracking-tight">Reservelt</span>
             <p className="text-xs text-ot-manatee mt-2">&copy;2025 Reservelt. All rights reserved.</p>
           </div>
         </div>

@@ -24,6 +24,8 @@ from app.schemas.user_schema import (
     UserRegister,
     UserLogin,
     UserProfile,
+    UserProfileUpdate,
+    ChangePasswordRequest,
     ForgotPasswordRequest,
     ResetPasswordRequest,
     EmailVerificationRequest,
@@ -270,6 +272,53 @@ def get_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
             status_code=401, detail="Invalid authentication credentials"
         )
     return user
+
+
+@AUTH_CONTROLLER.put("/me", response_model=UserProfile)
+def update_me(
+    update: UserProfileUpdate,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    payload = verify_token(token)
+    user_email = payload.get("sub")
+    user = db.query(User).filter(User.user_email == user_email).first()
+    if not user:
+        raise HTTPException(
+            status_code=401, detail="Invalid authentication credentials"
+        )
+
+    user.first_name = update.first_name
+    user.last_name = update.last_name
+    db.commit()
+    db.refresh(user)
+
+    logger.info(f"Profile updated for user '{user_email}'")
+    return user
+
+
+@AUTH_CONTROLLER.put("/change-password")
+def change_password(
+    request: ChangePasswordRequest,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    payload = verify_token(token)
+    user_email = payload.get("sub")
+    user = db.query(User).filter(User.user_email == user_email).first()
+    if not user:
+        raise HTTPException(
+            status_code=401, detail="Invalid authentication credentials"
+        )
+
+    if not verify_password(request.current_password, user.user_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    user.user_password = get_password_hash(request.new_password)
+    db.commit()
+
+    logger.info(f"Password changed for user '{user_email}'")
+    return {"message": "Password changed successfully"}
 
 
 @AUTH_CONTROLLER.post("/verify-email")

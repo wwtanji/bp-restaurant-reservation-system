@@ -97,7 +97,7 @@ const ResetPasswordPage: React.FC = () => {
             </p>
             <Link
               to="/forgot-password"
-              className="inline-block bg-ot-red hover:bg-ot-red-dark text-white font-bold py-3 px-8 rounded-ot-btn transition-colors"
+              className="inline-block bg-ot-primary hover:bg-ot-primary-dark text-white font-bold py-3 px-8 rounded-ot-btn transition-colors"
             >
               Request New Link
             </Link>
@@ -129,7 +129,7 @@ const ResetPasswordPage: React.FC = () => {
                       if (errors.password) setErrors({ ...errors, password: '' });
                     }}
                     placeholder="New Password"
-                    className={`w-full px-4 py-3 border rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-red text-sm text-ot-charade placeholder-ot-manatee ${
+                    className={`w-full px-4 py-3 border rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-primary text-sm text-ot-charade placeholder-ot-manatee ${
                       errors.password ? 'border-red-500' : 'border-ot-iron'
                     }`}
                     required
@@ -148,7 +148,7 @@ const ResetPasswordPage: React.FC = () => {
                       if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' });
                     }}
                     placeholder="Confirm New Password"
-                    className={`w-full px-4 py-3 border rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-red text-sm text-ot-charade placeholder-ot-manatee ${
+                    className={`w-full px-4 py-3 border rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-primary text-sm text-ot-charade placeholder-ot-manatee ${
                       errors.confirmPassword ? 'border-red-500' : 'border-ot-iron'
                     }`}
                     required
@@ -167,7 +167,7 @@ const ResetPasswordPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-ot-red hover:bg-ot-red-dark text-white font-bold py-3 rounded-ot-btn transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-ot-primary hover:bg-ot-primary-dark text-white font-bold py-3 rounded-ot-btn transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Resetting Password...' : 'Reset Password'}
                 </button>
@@ -175,7 +175,7 @@ const ResetPasswordPage: React.FC = () => {
 
               <p className="text-center text-sm text-ot-pale-sky mt-6">
                 Remember your password?{' '}
-                <Link to="/login" className="text-ot-red font-bold hover:underline">
+                <Link to="/login" className="text-ot-primary font-bold hover:underline">
                   Log In
                 </Link>
               </p>

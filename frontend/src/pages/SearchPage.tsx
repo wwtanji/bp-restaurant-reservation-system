@@ -36,7 +36,7 @@ const CATEGORIES = [
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
 const StarIcon: React.FC = () => (
-  <svg className="w-3 h-3 text-ot-red flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+  <svg className="w-3 h-3 text-ot-primary flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z" />
   </svg>
 );
@@ -46,7 +46,7 @@ const Stars: React.FC<{ rating: number | null }> = ({ rating }) => (
     {[1, 2, 3, 4, 5].map(i => (
       <svg
         key={i}
-        className={`w-3.5 h-3.5 ${i <= Math.round(rating ?? 0) ? 'text-ot-red' : 'text-ot-iron'}`}
+        className={`w-3.5 h-3.5 ${i <= Math.round(rating ?? 0) ? 'text-ot-primary' : 'text-ot-iron'}`}
         fill="currentColor" viewBox="0 0 20 20"
       >
         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z" />
@@ -69,7 +69,7 @@ const ShowcaseCard: React.FC<{
     onMouseEnter={() => onHover(restaurant.id)}
     onMouseLeave={() => onHover(null)}
     className={`group rounded-[28px] overflow-hidden bg-white cursor-pointer transition-all duration-200 ${
-      isActive ? 'shadow-2xl ring-2 ring-ot-red/30' : 'shadow-md hover:shadow-xl'
+      isActive ? 'shadow-2xl ring-2 ring-ot-primary/30' : 'shadow-md hover:shadow-xl'
     }`}
   >
     <div className="relative h-44 overflow-hidden">
@@ -88,11 +88,11 @@ const ShowcaseCard: React.FC<{
 
     <div className="p-4">
       <div className="flex items-start justify-between gap-1 mb-1">
-        <h3 className="font-semibold text-ot-charade text-sm leading-snug line-clamp-1 group-hover:text-ot-red transition-colors">
+        <h3 className="font-semibold text-ot-charade text-sm leading-snug line-clamp-1 group-hover:text-ot-primary transition-colors">
           {restaurant.name}
         </h3>
         <svg
-          className="w-4 h-4 text-ot-iron flex-shrink-0 mt-0.5 group-hover:text-ot-red group-hover:translate-x-0.5 transition-all"
+          className="w-4 h-4 text-ot-iron flex-shrink-0 mt-0.5 group-hover:text-ot-primary group-hover:translate-x-0.5 transition-all"
           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -182,7 +182,7 @@ const EmptyState: React.FC<{ query: string; onReset: () => void }> = ({ query, o
     <div className="flex items-center gap-3">
       <button
         onClick={onReset}
-        className="bg-ot-red hover:bg-ot-red-dark active:scale-95 text-white font-semibold px-6 py-2.5 rounded-2xl transition-all shadow-sm hover:shadow-md text-sm"
+        className="bg-ot-primary hover:bg-ot-primary-dark active:scale-95 text-white font-semibold px-6 py-2.5 rounded-2xl transition-all shadow-sm hover:shadow-md text-sm"
       >
         Clear filters
       </button>
@@ -207,7 +207,7 @@ const ErrorState: React.FC<{ message: string; onRetry: () => void }> = ({ messag
     <p className="text-sm text-red-500 mb-4">{message}</p>
     <button
       onClick={onRetry}
-      className="bg-ot-red hover:bg-ot-red-dark text-white font-semibold px-6 py-2.5 rounded-2xl text-sm"
+      className="bg-ot-primary hover:bg-ot-primary-dark text-white font-semibold px-6 py-2.5 rounded-2xl text-sm"
     >
       Retry
     </button>
@@ -493,7 +493,7 @@ const SearchPage: React.FC = () => {
       <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
         <button
           onClick={() => setShowMap(v => !v)}
-          className="pointer-events-auto flex items-center gap-2 bg-ot-charade hover:bg-ot-red-dark active:scale-95 text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl transition-all"
+          className="pointer-events-auto flex items-center gap-2 bg-ot-charade hover:bg-ot-primary-dark active:scale-95 text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl transition-all"
         >
           {showMap ? (
             <>

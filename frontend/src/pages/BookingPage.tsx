@@ -180,7 +180,7 @@ const BookingPage: React.FC = () => {
           <div className="flex flex-col gap-2">
             <Link
               to="/my-reservations"
-              className="w-full py-3 text-sm font-bold text-white bg-ot-red rounded-ot-btn hover:bg-ot-red-dark transition-colors text-center"
+              className="w-full py-3 text-sm font-bold text-white bg-ot-primary rounded-ot-btn hover:bg-ot-primary-dark transition-colors text-center"
             >
               View my reservations
             </Link>
@@ -254,13 +254,13 @@ const BookingPage: React.FC = () => {
                       value={guestName}
                       onChange={e => setGuestName(e.target.value)}
                       placeholder="Full name"
-                      className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-red bg-white placeholder-ot-manatee"
+                      className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white placeholder-ot-manatee"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">
-                      Phone number <span className="text-ot-red">*</span>
+                      Phone number <span className="text-ot-primary">*</span>
                     </label>
                     <input
                       type="tel"
@@ -269,7 +269,7 @@ const BookingPage: React.FC = () => {
                       placeholder="+421 900 000 000"
                       required
                       pattern="^\+?[\d\s\-()]{6,20}$"
-                      className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-red bg-white placeholder-ot-manatee"
+                      className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white placeholder-ot-manatee"
                     />
                     <p className="mt-1 text-xs text-ot-manatee">
                       We'll only use this to contact you about your reservation
@@ -297,7 +297,7 @@ const BookingPage: React.FC = () => {
                         <select
                           value={partySize}
                           onChange={e => setPartySize(e.target.value)}
-                          className="w-full pl-9 pr-8 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade appearance-none focus:outline-none focus:ring-2 focus:ring-ot-red bg-white"
+                          className="w-full pl-9 pr-8 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade appearance-none focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white"
                         >
                           {(availableSeats !== null && !availabilityLoading
                             ? PARTY_SIZES.slice(0, availableSeats)
@@ -325,7 +325,7 @@ const BookingPage: React.FC = () => {
                         value={selectedDate}
                         min={todayISO()}
                         onChange={e => { setSelectedDate(e.target.value); setError(null); }}
-                        className="w-full pl-9 pr-2 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-red bg-white"
+                        className="w-full pl-9 pr-2 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white"
                       />
                     </div>
                   </div>
@@ -339,7 +339,7 @@ const BookingPage: React.FC = () => {
                       <select
                         value={selectedTime}
                         onChange={e => setSelectedTime(e.target.value)}
-                        className="w-full pl-9 pr-8 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade appearance-none focus:outline-none focus:ring-2 focus:ring-ot-red bg-white"
+                        className="w-full pl-9 pr-8 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade appearance-none focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white"
                       >
                         {TIME_OPTIONS.map(t => <option key={t}>{t}</option>)}
                       </select>
@@ -359,7 +359,7 @@ const BookingPage: React.FC = () => {
                     placeholder="Allergies, anniversary, high chair needed..."
                     rows={3}
                     maxLength={500}
-                    className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-red bg-white resize-none placeholder-ot-manatee"
+                    className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white resize-none placeholder-ot-manatee"
                   />
                   <p className="mt-1 text-xs text-ot-manatee text-right">
                     {specialRequests.length}/500
@@ -379,7 +379,7 @@ const BookingPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting || !guestPhone || availableSeats === 0}
-                className="w-full py-4 text-sm font-bold text-white bg-ot-red rounded-ot-btn hover:bg-ot-red-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-4 text-sm font-bold text-white bg-ot-primary rounded-ot-btn hover:bg-ot-primary-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <>

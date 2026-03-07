@@ -113,7 +113,7 @@ export default function MainText() {
 
             <button
               type="submit"
-              className="bg-ot-red hover:bg-ot-red-dark text-white font-bold text-sm px-8 py-3 rounded-ot-btn transition-colors whitespace-nowrap"
+              className="bg-ot-primary hover:bg-ot-primary-dark text-white font-bold text-sm px-8 py-3 rounded-ot-btn transition-colors whitespace-nowrap"
             >
               Let's go
             </button>

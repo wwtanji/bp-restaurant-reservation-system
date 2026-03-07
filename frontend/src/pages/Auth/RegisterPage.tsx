@@ -83,7 +83,7 @@ const RegisterPage: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-ot-athens-gray p-6">
       <div className="w-full max-w-md bg-white border border-ot-iron rounded-ot-card shadow-lg p-8 sm:p-10">
         <div className="text-center mb-8">
-          <Link to="/" className="text-2xl font-extrabold text-ot-red tracking-tight">
+          <Link to="/" className="text-2xl font-extrabold text-ot-primary tracking-tight">
             Reservelt
           </Link>
           <h2 className="text-2xl font-extrabold text-ot-charade mt-4">Sign Up</h2>
@@ -99,7 +99,7 @@ const RegisterPage: React.FC = () => {
                 value={formData.first_name}
                 onChange={handleChange}
                 placeholder="First Name"
-                className={`w-full px-4 py-3 border rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-red text-sm text-ot-charade placeholder-ot-manatee ${
+                className={`w-full px-4 py-3 border rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-primary text-sm text-ot-charade placeholder-ot-manatee ${
                   errors.first_name ? 'border-red-500' : 'border-ot-iron'
                 }`}
                 required
@@ -115,7 +115,7 @@ const RegisterPage: React.FC = () => {
                 value={formData.last_name}
                 onChange={handleChange}
                 placeholder="Last Name"
-                className={`w-full px-4 py-3 border rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-red text-sm text-ot-charade placeholder-ot-manatee ${
+                className={`w-full px-4 py-3 border rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-primary text-sm text-ot-charade placeholder-ot-manatee ${
                   errors.last_name ? 'border-red-500' : 'border-ot-iron'
                 }`}
                 required
@@ -132,7 +132,7 @@ const RegisterPage: React.FC = () => {
             value={formData.user_email}
             onChange={handleChange}
             placeholder="Email"
-            className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-red text-sm text-ot-charade placeholder-ot-manatee"
+            className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-primary text-sm text-ot-charade placeholder-ot-manatee"
             required
           />
 
@@ -148,7 +148,7 @@ const RegisterPage: React.FC = () => {
                 className={`w-full px-4 py-3 pr-10 border rounded-ot-btn focus:outline-none focus:ring-2 text-sm text-ot-charade placeholder-ot-manatee transition-colors ${
                   showPasswordError
                     ? 'border-red-500 focus:ring-red-200'
-                    : 'border-ot-iron focus:ring-ot-red'
+                    : 'border-ot-iron focus:ring-ot-primary'
                 }`}
                 required
               />
@@ -183,7 +183,7 @@ const RegisterPage: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-ot-red hover:bg-ot-red-dark text-white font-bold py-3 rounded-ot-btn transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-ot-primary hover:bg-ot-primary-dark text-white font-bold py-3 rounded-ot-btn transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Creating Account...' : 'Create Account'}
           </button>
@@ -191,7 +191,7 @@ const RegisterPage: React.FC = () => {
 
         <p className="text-center text-sm text-ot-pale-sky mt-6">
           Already have an account?{' '}
-          <Link to="/login" className="text-ot-red font-bold hover:underline">
+          <Link to="/login" className="text-ot-primary font-bold hover:underline">
             Log In
           </Link>
         </p>

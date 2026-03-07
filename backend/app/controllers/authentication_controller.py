@@ -290,6 +290,8 @@ def update_me(
 
     user.first_name = update.first_name
     user.last_name = update.last_name
+    if update.phone_number is not None:
+        user.phone_number = update.phone_number if update.phone_number else None
     db.commit()
     db.refresh(user)
 

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, EmailStr, constr, field_validator, ConfigDict
 from typing import Optional, Annotated
 from email_validator import validate_email, EmailNotValidError
@@ -108,6 +110,7 @@ class UserProfile(BaseModel):
     phone_number: Optional[str] = None
     role: UserRole
     email_verified: bool = False
+    registered_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -164,6 +167,7 @@ class EmailVerificationRequest(BaseModel):
 class UserProfileUpdate(BaseModel):
     first_name: Annotated[str, constr(min_length=1)]
     last_name: Annotated[str, constr(min_length=1)]
+    phone_number: Optional[Annotated[str, constr(max_length=20)]] = None
 
 
 class ChangePasswordRequest(BaseModel):

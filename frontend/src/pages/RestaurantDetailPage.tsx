@@ -8,6 +8,8 @@ import { SlotAvailability } from '../interfaces/reservation';
 import { Review } from '../interfaces/review';
 import { apiFetch, ApiError } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import PhotoGalleryModal from '../components/restaurant/PhotoGalleryModal';
+
 import {
   TIME_OPTIONS,
   QUICK_TIME_SLOTS,
@@ -70,7 +72,7 @@ const HERO_IMAGES = [
   'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=450&h=300&fit=crop',
   'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=450&h=300&fit=crop',
   'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=450&h=300&fit=crop',
-  'https://images.unsplash.com/photo-1550966871-3ed3cfd06327?w=450&h=300&fit=crop',
+  'https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=450&h=300&fit=crop',
 ];
 
 function ratingLabel(rating: number | null): string {
@@ -183,7 +185,7 @@ const RestaurantDetailPage: React.FC = () => {
 
   const [activeTab, setActiveTab]       = useState('Overview');
   const [reviewSearch, setReviewSearch] = useState('');
-  const [showAllPhotos, setShowAllPhotos] = useState(false);
+  const [galleryPhotoIndex, setGalleryPhotoIndex] = useState<number | null>(null);
   const [conciergeQuery, setConciergeQuery] = useState('');
 
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -346,37 +348,20 @@ const RestaurantDetailPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white">
 
-      <div className="relative">
-        <div className="md:hidden h-64 overflow-hidden">
-          <img src={restaurant.cover_image ?? HERO_IMAGES[0]} alt={restaurant.name} className="w-full h-full object-cover" />
-        </div>
-
-        <div className="hidden md:grid md:grid-cols-[2fr_1fr] md:grid-rows-2 h-[480px] gap-0.5 overflow-hidden">
-          <img
-            src={restaurant.cover_image ?? HERO_IMAGES[0]}
-            alt={restaurant.name}
-            className="row-span-2 w-full h-full object-cover hover:brightness-95 transition-all cursor-pointer"
-            onClick={() => setShowAllPhotos(true)}
-          />
-          {HERO_IMAGES.slice(1).map((src, i) => (
-            <img
-              key={i}
-              src={src}
-              alt={`Interior view ${i + 2}`}
-              className="w-full h-full object-cover hover:brightness-95 transition-all cursor-pointer"
-              onClick={() => setShowAllPhotos(true)}
-            />
-          ))}
-        </div>
-
+      <div className="relative h-64 md:h-[420px] overflow-hidden cursor-pointer" onClick={() => setGalleryPhotoIndex(0)}>
+        <img
+          src={restaurant.cover_image || HERO_IMAGES[0]}
+          alt={restaurant.name}
+          className="w-full h-full object-cover"
+        />
         <button
-          onClick={() => setShowAllPhotos(true)}
-          className="absolute bottom-4 right-4 bg-white text-ot-charade text-sm font-bold px-4 py-2 rounded-ot-btn shadow-md hover:shadow-lg transition-all flex items-center gap-2 border border-ot-iron"
+          onClick={() => setGalleryPhotoIndex(0)}
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm text-ot-charade text-sm font-bold px-5 py-2.5 rounded-full shadow-md hover:shadow-lg hover:bg-white transition-all flex items-center gap-2"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          View all photos
+          See all {HERO_IMAGES.length} photos
         </button>
       </div>
 
@@ -854,25 +839,12 @@ const RestaurantDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {showAllPhotos && (
-        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col" onClick={() => setShowAllPhotos(false)}>
-          <div className="flex items-center justify-between px-6 py-4">
-            <h3 className="text-white font-bold text-lg">All photos</h3>
-            <button onClick={() => setShowAllPhotos(false)} className="text-white hover:text-ot-iron transition-colors">
-              <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-1 p-4 overflow-y-auto" onClick={e => e.stopPropagation()}>
-            {HERO_IMAGES.map((src, i) => (
-              <div key={i} className={`overflow-hidden rounded-ot-card ${i === 0 ? 'col-span-2 md:col-span-1' : ''}`}>
-                <img src={src} alt={`Gallery view ${i + 1}`} className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300" />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <PhotoGalleryModal
+        images={HERO_IMAGES}
+        restaurantName={restaurant.name}
+        isOpen={galleryPhotoIndex !== null}
+        onClose={() => setGalleryPhotoIndex(null)}
+      />
     </div>
   );
 };

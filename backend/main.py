@@ -1,7 +1,7 @@
 import fastapi as fa
 from fastapi.middleware.cors import CORSMiddleware
 from app.controllers import ALL_CONTROLLERS
-import app.models  # noqa: F401 — registers all models with SQLAlchemy's mapper
+import app.models
 
 API = fa.FastAPI(title="API", version="0.1.0", root_path="/api")
 
@@ -11,7 +11,7 @@ origins = [
 
 API.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # TODO: z env
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -19,6 +19,7 @@ API.add_middleware(
 
 for router in ALL_CONTROLLERS:
     API.include_router(router)
+
 
 @API.get("/")
 async def root():

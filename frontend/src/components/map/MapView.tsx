@@ -13,8 +13,8 @@ const createMarkerIcon = (isActive: boolean) =>
       <div style="
         width: ${isActive ? '18px' : '14px'};
         height: ${isActive ? '18px' : '14px'};
-        background: ${isActive ? '#D4111E' : 'white'};
-        border: 2.5px solid ${isActive ? '#D4111E' : '#6b7280'};
+        background: ${isActive ? '#2D333F' : 'white'};
+        border: 2.5px solid ${isActive ? '#2D333F' : '#9CA3AF'};
         border-radius: 50%;
         box-shadow: 0 2px 6px rgba(0,0,0,${isActive ? '0.35' : '0.2'});
         transition: all 0.15s ease;
@@ -64,11 +64,11 @@ const RestaurantMarker: React.FC<RestaurantMarkerProps> = ({ restaurant, isActiv
     >
       <Popup>
         <div className="text-sm">
-          <p className="font-semibold text-gray-800">{restaurant.name}</p>
-          <p className="text-gray-500 text-xs mt-0.5">
+          <p className="font-semibold text-ot-charade">{restaurant.name}</p>
+          <p className="text-ot-pale-sky text-xs mt-0.5">
             {restaurant.cuisine} · {PRICE_SYMBOL[restaurant.price_range] ?? ''}
           </p>
-          <p className="text-yellow-500 text-xs mt-0.5">★ {restaurant.rating ?? '—'}</p>
+          <p className="text-ot-charade text-xs mt-0.5">★ {restaurant.rating ?? '—'}</p>
         </div>
       </Popup>
     </Marker>

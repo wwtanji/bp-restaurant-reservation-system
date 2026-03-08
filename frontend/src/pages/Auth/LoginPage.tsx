@@ -24,59 +24,62 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div>
-      <div className="min-h-screen flex items-center justify-center bg-white p-6">
-        <div className="w-full max-w-md bg-white border border-gray-200 rounded-2xl shadow-xl p-8 sm:p-10">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl font-extrabold text-gray-800">Sign In</h2>
-            <p className="mt-2 text-gray-500">Welcome back! Please log in to your account.</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              name="user_email"
-              type="email"
-              value={formData.user_email}
-              onChange={handleChange}
-              placeholder="Email"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              required
-            />
-            <input
-              name="user_password"
-              type="password"
-              value={formData.user_password}
-              onChange={handleChange}
-              placeholder="Password"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              required
-            />
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3 rounded-xl transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Logging in...' : 'Log In'}
-            </button>
-          </form>
-
-          <div className="text-center text-sm text-gray-500 mt-4">
-            <Link to="/forgot-password" className="text-blue-600 hover:underline">
-              Forgot password?
-            </Link>
-          </div>
-
-          <p className="text-center text-sm text-gray-500 mt-4">
-            Don't have an account?{' '}
-            <Link to="/signup" className="text-blue-600 font-semibold hover:underline">
-              Sign Up
-            </Link>
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-ot-athens-gray p-6">
+      <div className="w-full max-w-md bg-white border border-ot-iron rounded-ot-card shadow-lg p-8 sm:p-10">
+        <div className="text-center mb-8">
+          <Link to="/" className="text-2xl font-extrabold text-ot-primary tracking-tight">
+            Reservelt
+          </Link>
+          <h2 className="text-2xl font-extrabold text-ot-charade mt-4">Sign In</h2>
+          <p className="mt-2 text-sm text-ot-pale-sky">Welcome back! Please log in to your account.</p>
         </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            name="user_email"
+            type="email"
+            autoComplete="email"
+            value={formData.user_email}
+            onChange={handleChange}
+            placeholder="Email"
+            className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-primary text-sm text-ot-charade placeholder-ot-manatee"
+            required
+          />
+          <input
+            name="user_password"
+            type="password"
+            autoComplete="current-password"
+            value={formData.user_password}
+            onChange={handleChange}
+            placeholder="Password"
+            className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-primary text-sm text-ot-charade placeholder-ot-manatee"
+            required
+          />
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-ot-primary hover:bg-ot-primary-dark text-white font-bold py-3 rounded-ot-btn transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Logging in...' : 'Log In'}
+          </button>
+        </form>
+
+        <div className="text-center text-sm text-ot-pale-sky mt-4">
+          <Link to="/forgot-password" className="text-ot-primary hover:underline">
+            Forgot password?
+          </Link>
+        </div>
+
+        <p className="text-center text-sm text-ot-pale-sky mt-4">
+          Don't have an account?{' '}
+          <Link to="/signup" className="text-ot-primary font-bold hover:underline">
+            Sign Up
+          </Link>
+        </p>
       </div>
     </div>
   );
 };
 
-export default LoginPage; 
+export default LoginPage;

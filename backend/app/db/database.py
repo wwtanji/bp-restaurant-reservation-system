@@ -1,6 +1,9 @@
 import os
+from collections.abc import Generator
+from datetime import datetime, timezone
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.orm import sessionmaker, DeclarativeBase, Session
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -17,7 +20,11 @@ class Base(DeclarativeBase):
     pass
 
 
-def get_db():
+def get_utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
     try:
         yield db

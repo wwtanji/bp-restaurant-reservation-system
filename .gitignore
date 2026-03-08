@@ -175,3 +175,9 @@ cython_debug/
 # PyPI configuration file
 .pypircnode_modules/
 node_modules/
+
+#
+
+CLAUDE.md
+.vscode/
+.claude/

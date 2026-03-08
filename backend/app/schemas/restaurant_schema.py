@@ -21,13 +21,12 @@ class RestaurantOut(BaseModel):
     review_count: int
     max_capacity: int
     is_active: bool
+    opening_hours: Optional[dict] = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class RestaurantBrief(BaseModel):
-    """Minimal restaurant info embedded in reservation responses."""
-
     id: int
     name: str
     slug: str

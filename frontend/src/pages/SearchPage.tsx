@@ -2,10 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MapView from '../components/map/MapView';
 import { Restaurant } from '../interfaces/restaurant';
-
-const API_URL = 'http://localhost:8000/api';
-
-const PRICE_SYMBOL: Record<number, string> = { 1: '$', 2: '$$', 3: '$$$', 4: '$$$$' };
+import { apiFetch } from '../utils/api';
+import { PRICE_SYMBOLS, todayISO, formatDate } from '../constants/reservation';
 
 function ratingLabel(rating: number | null): string {
   if (!rating) return '';
@@ -38,7 +36,7 @@ const CATEGORIES = [
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
 const StarIcon: React.FC = () => (
-  <svg className="w-3 h-3 text-yellow-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+  <svg className="w-3 h-3 text-ot-primary flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z" />
   </svg>
 );
@@ -48,7 +46,7 @@ const Stars: React.FC<{ rating: number | null }> = ({ rating }) => (
     {[1, 2, 3, 4, 5].map(i => (
       <svg
         key={i}
-        className={`w-3.5 h-3.5 ${i <= Math.round(rating ?? 0) ? 'text-yellow-400' : 'text-gray-200'}`}
+        className={`w-3.5 h-3.5 ${i <= Math.round(rating ?? 0) ? 'text-ot-primary' : 'text-ot-iron'}`}
         fill="currentColor" viewBox="0 0 20 20"
       >
         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z" />
@@ -71,7 +69,7 @@ const ShowcaseCard: React.FC<{
     onMouseEnter={() => onHover(restaurant.id)}
     onMouseLeave={() => onHover(null)}
     className={`group rounded-[28px] overflow-hidden bg-white cursor-pointer transition-all duration-200 ${
-      isActive ? 'shadow-2xl ring-2 ring-blue-500/30' : 'shadow-md hover:shadow-xl'
+      isActive ? 'shadow-2xl ring-2 ring-ot-primary/30' : 'shadow-md hover:shadow-xl'
     }`}
   >
     <div className="relative h-44 overflow-hidden">
@@ -82,7 +80,7 @@ const ShowcaseCard: React.FC<{
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
-      <div className="absolute top-3 right-3 flex items-center gap-1 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full shadow text-xs font-bold text-gray-900">
+      <div className="absolute top-3 right-3 flex items-center gap-1 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full shadow text-xs font-bold text-ot-charade">
         <StarIcon />
         {restaurant.rating ?? '—'}
       </div>
@@ -90,24 +88,24 @@ const ShowcaseCard: React.FC<{
 
     <div className="p-4">
       <div className="flex items-start justify-between gap-1 mb-1">
-        <h3 className="font-semibold text-gray-900 text-sm leading-snug line-clamp-1 group-hover:text-blue-600 transition-colors">
+        <h3 className="font-semibold text-ot-charade text-sm leading-snug line-clamp-1 group-hover:text-ot-primary transition-colors">
           {restaurant.name}
         </h3>
         <svg
-          className="w-4 h-4 text-gray-300 flex-shrink-0 mt-0.5 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all"
+          className="w-4 h-4 text-ot-iron flex-shrink-0 mt-0.5 group-hover:text-ot-primary group-hover:translate-x-0.5 transition-all"
           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         </svg>
       </div>
 
-      <div className="flex items-center gap-1 text-xs text-gray-500 flex-wrap">
-        <span className="font-semibold text-gray-700">{ratingLabel(restaurant.rating)}</span>
-        <span className="text-gray-300">·</span>
+      <div className="flex items-center gap-1 text-xs text-ot-pale-sky flex-wrap">
+        <span className="font-semibold text-ot-charade">{ratingLabel(restaurant.rating)}</span>
+        <span className="text-ot-iron">·</span>
         <span>({restaurant.review_count})</span>
-        <span className="text-gray-300">·</span>
-        <span>{PRICE_SYMBOL[restaurant.price_range]}</span>
-        <span className="text-gray-300">·</span>
+        <span className="text-ot-iron">·</span>
+        <span>{PRICE_SYMBOLS[restaurant.price_range]}</span>
+        <span className="text-ot-iron">·</span>
         <span>{restaurant.cuisine}</span>
       </div>
     </div>
@@ -126,10 +124,10 @@ const ListCard: React.FC<{
     onMouseEnter={() => onHover(restaurant.id)}
     onMouseLeave={() => onHover(null)}
     className={`group flex gap-4 py-5 cursor-pointer transition-colors ${
-      isActive ? 'bg-blue-50/40' : 'hover:bg-slate-50'
+      isActive ? 'bg-ot-athens-gray' : 'hover:bg-ot-athens-gray'
     }`}
   >
-    <div className="relative w-36 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
+    <div className="relative w-36 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-ot-athens-gray">
       <img
         src={restaurant.cover_image ?? ''}
         alt={restaurant.name}
@@ -139,26 +137,26 @@ const ListCard: React.FC<{
 
     <div className="flex flex-col justify-between flex-1 min-w-0">
       <div className="space-y-1">
-        <h3 className="font-semibold text-blue-600 text-[15px] leading-snug group-hover:underline">
+        <h3 className="font-semibold text-ot-charade text-[15px] leading-snug group-hover:underline">
           {restaurant.name}
         </h3>
 
         <div className="flex items-center gap-1.5">
           <Stars rating={restaurant.rating} />
-          <span className="text-sm font-semibold text-gray-800">{ratingLabel(restaurant.rating)}</span>
-          <span className="text-sm text-gray-500">({restaurant.review_count})</span>
+          <span className="text-sm font-semibold text-ot-charade">{ratingLabel(restaurant.rating)}</span>
+          <span className="text-sm text-ot-pale-sky">({restaurant.review_count})</span>
         </div>
 
-        <p className="text-sm text-gray-500">
-          {PRICE_SYMBOL[restaurant.price_range]}
-          <span className="mx-1.5 text-gray-300">·</span>
+        <p className="text-sm text-ot-pale-sky">
+          {PRICE_SYMBOLS[restaurant.price_range]}
+          <span className="mx-1.5 text-ot-iron">·</span>
           {restaurant.cuisine}
-          <span className="mx-1.5 text-gray-300">·</span>
+          <span className="mx-1.5 text-ot-iron">·</span>
           {restaurant.city}
         </p>
 
         {restaurant.address && (
-          <p className="text-xs text-gray-400 truncate">{restaurant.address}</p>
+          <p className="text-xs text-ot-manatee truncate">{restaurant.address}</p>
         )}
       </div>
     </div>
@@ -170,13 +168,13 @@ const ListCard: React.FC<{
 
 const EmptyState: React.FC<{ query: string; onReset: () => void }> = ({ query, onReset }) => (
   <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-    <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-5 shadow-inner">
-      <svg className="w-9 h-9 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <div className="w-20 h-20 rounded-full bg-ot-athens-gray flex items-center justify-center mb-5 shadow-inner">
+      <svg className="w-9 h-9 text-ot-manatee" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
       </svg>
     </div>
-    <h3 className="text-lg font-semibold text-gray-900 mb-2">No restaurants found</h3>
-    <p className="text-sm text-gray-500 mb-6 max-w-xs leading-relaxed">
+    <h3 className="text-lg font-semibold text-ot-charade mb-2">No restaurants found</h3>
+    <p className="text-sm text-ot-pale-sky mb-6 max-w-xs leading-relaxed">
       {query
         ? `No results for "${query}". Try adjusting your search or clearing the filters.`
         : 'No restaurants match the selected category. Try a different filter.'}
@@ -184,13 +182,13 @@ const EmptyState: React.FC<{ query: string; onReset: () => void }> = ({ query, o
     <div className="flex items-center gap-3">
       <button
         onClick={onReset}
-        className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-semibold px-6 py-2.5 rounded-2xl transition-all shadow-sm hover:shadow-md text-sm"
+        className="bg-ot-primary hover:bg-ot-primary-dark active:scale-95 text-white font-semibold px-6 py-2.5 rounded-2xl transition-all shadow-sm hover:shadow-md text-sm"
       >
         Clear filters
       </button>
       <button
         onClick={() => window.history.back()}
-        className="border border-slate-200 hover:border-blue-300 hover:text-blue-600 text-gray-600 font-semibold px-6 py-2.5 rounded-2xl transition-all text-sm"
+        className="border border-ot-iron hover:border-ot-charade hover:text-ot-charade text-ot-pale-sky font-semibold px-6 py-2.5 rounded-2xl transition-all text-sm"
       >
         Back to Home
       </button>
@@ -200,7 +198,7 @@ const EmptyState: React.FC<{ query: string; onReset: () => void }> = ({ query, o
 
 const LoadingSpinner: React.FC = () => (
   <div className="flex items-center justify-center py-20">
-    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500" />
+    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-ot-charade" />
   </div>
 );
 
@@ -209,7 +207,7 @@ const ErrorState: React.FC<{ message: string; onRetry: () => void }> = ({ messag
     <p className="text-sm text-red-500 mb-4">{message}</p>
     <button
       onClick={onRetry}
-      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-2xl text-sm"
+      className="bg-ot-primary hover:bg-ot-primary-dark text-white font-semibold px-6 py-2.5 rounded-2xl text-sm"
     >
       Retry
     </button>
@@ -240,9 +238,7 @@ const SearchPage: React.FC = () => {
     return () => clearTimeout(id);
   }, [searchQuery]);
 
-  // Fetch restaurants from backend
   useEffect(() => {
-    const token = localStorage.getItem('token');
     const params = new URLSearchParams({ limit: '50' });
 
     if (debouncedQuery) params.set('q', debouncedQuery);
@@ -253,15 +249,9 @@ const SearchPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
 
-    fetch(`${API_URL}/restaurants/?${params}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => {
-        if (!r.ok) throw new Error('Failed to load restaurants. Is the backend running?');
-        return r.json() as Promise<Restaurant[]>;
-      })
+    apiFetch<Restaurant[]>(`/restaurants/?${params}`)
       .then(setRestaurants)
-      .catch(err => setError(err instanceof Error ? err.message : 'Unknown error'))
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load restaurants'))
       .finally(() => setIsLoading(false));
   }, [debouncedQuery, activeCategory, fetchKey]);
 
@@ -279,10 +269,10 @@ const SearchPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-slate-50">
+    <div className="flex flex-col h-screen overflow-hidden bg-ot-athens-gray">
 
       {/* ── Top App Bar ───────────────────────────────────────────── */}
-      <div className="flex-shrink-0 bg-gradient-to-r from-blue-600 to-indigo-700 px-4 pt-4 pb-4 shadow-lg">
+      <div className="flex-shrink-0 bg-ot-charade px-4 pt-4 pb-4 shadow-lg">
         <div className="max-w-7xl mx-auto space-y-3">
 
           <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
@@ -290,34 +280,32 @@ const SearchPage: React.FC = () => {
               Reservelt
             </span>
             <div className="flex items-center gap-2 flex-wrap">
-              {(
-                [
-                  {
-                    label: 'Mar 12, 2026',
-                    icon: (
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    ),
-                  },
-                  {
-                    label: '7:00 PM',
-                    icon: (
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    ),
-                  },
-                  {
-                    label: '2 people',
-                    icon: (
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    ),
-                  },
-                ] as { label: string; icon: React.ReactNode }[]
-              ).map(({ label, icon }) => (
+              {[
+                {
+                  label: formatDate(todayISO()),
+                  icon: (
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  ),
+                },
+                {
+                  label: '7:00 PM',
+                  icon: (
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  ),
+                },
+                {
+                  label: '2 people',
+                  icon: (
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  ),
+                },
+              ].map(({ label, icon }) => (
                 <button
                   key={label}
                   className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white text-xs font-medium px-3 py-1.5 rounded-full transition-colors"
@@ -334,7 +322,7 @@ const SearchPage: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <div className="flex-1 flex items-center gap-2 bg-white rounded-2xl px-4 py-2.5 shadow-md">
-              <svg className="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-4 h-4 text-ot-manatee flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
@@ -342,17 +330,17 @@ const SearchPage: React.FC = () => {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Location, Restaurant or Cuisine"
-                className="flex-1 text-sm text-gray-700 bg-transparent outline-none placeholder-gray-400 min-w-0"
+                className="flex-1 text-sm text-ot-charade bg-transparent outline-none placeholder-ot-manatee min-w-0"
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
+                <button onClick={() => setSearchQuery('')} className="text-ot-manatee hover:text-ot-pale-sky flex-shrink-0">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               )}
             </div>
-            <button className="flex-shrink-0 bg-white text-blue-600 font-bold text-sm px-5 py-2.5 rounded-2xl shadow-md hover:bg-blue-50 hover:shadow-lg active:scale-95 transition-all whitespace-nowrap">
+            <button className="flex-shrink-0 bg-white text-ot-charade font-bold text-sm px-5 py-2.5 rounded-2xl shadow-md hover:bg-ot-athens-gray hover:shadow-lg active:scale-95 transition-all whitespace-nowrap">
               Find a table
             </button>
           </div>
@@ -360,7 +348,7 @@ const SearchPage: React.FC = () => {
       </div>
 
       {/* ── Category chips ────────────────────────────────────────── */}
-      <div className="flex-shrink-0 bg-white border-b border-slate-200 shadow-sm">
+      <div className="flex-shrink-0 bg-white border-b border-ot-iron shadow-sm">
         <div className="max-w-7xl mx-auto px-4 flex items-center gap-2 py-2.5 overflow-x-auto scrollbar-hide">
           {CATEGORIES.map(label => {
             const active = activeCategory === label;
@@ -370,8 +358,8 @@ const SearchPage: React.FC = () => {
                 onClick={() => setActiveCategory(label)}
                 className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                   active
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                    : 'bg-white text-gray-600 border-slate-200 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50'
+                    ? 'bg-ot-charade text-white border-ot-charade shadow-sm'
+                    : 'bg-white text-ot-pale-sky border-ot-iron hover:border-ot-charade hover:text-ot-charade hover:bg-ot-athens-gray'
                 }`}
               >
                 {active && (
@@ -392,14 +380,14 @@ const SearchPage: React.FC = () => {
         <div className={`${showMap ? 'hidden' : 'flex'} md:flex flex-col flex-1 overflow-hidden`}>
 
           {/* Sort / view controls */}
-          <div className="flex-shrink-0 bg-white border-b border-slate-100 px-4 py-2.5">
+          <div className="flex-shrink-0 bg-white border-b border-ot-iron/50 px-4 py-2.5">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-gray-900">
+                <p className="text-sm font-semibold text-ot-charade">
                   {isLoading ? '…' : displayedRestaurants.length}{' '}
                   {displayedRestaurants.length === 1 ? 'restaurant' : 'restaurants'}
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-ot-manatee">
                   Slovakia · {activeCategory}
                   {debouncedQuery && ` · "${debouncedQuery}"`}
                 </p>
@@ -410,23 +398,23 @@ const SearchPage: React.FC = () => {
                   <select
                     value={sortBy}
                     onChange={e => setSortBy(e.target.value as SortKey)}
-                    className="appearance-none text-xs font-medium border border-slate-200 rounded-xl pl-3 pr-7 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                    className="appearance-none text-xs font-medium border border-ot-iron rounded-xl pl-3 pr-7 py-1.5 bg-white text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-charade/30 cursor-pointer"
                   >
                     <option value="relevance">Relevance</option>
                     <option value="rating">Highest Rated</option>
                     <option value="reviews">Most Reviewed</option>
                   </select>
-                  <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ot-manatee pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
 
-                <div className="flex bg-slate-100 rounded-xl p-0.5 gap-0.5">
+                <div className="flex bg-ot-athens-gray rounded-xl p-0.5 gap-0.5">
                   <button
                     onClick={() => setViewMode('grid')}
                     title="Grid view"
                     className={`p-1.5 rounded-lg transition-colors ${
-                      viewMode === 'grid' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-400 hover:text-gray-600'
+                      viewMode === 'grid' ? 'bg-white shadow-sm text-ot-charade' : 'text-ot-manatee hover:text-ot-pale-sky'
                     }`}
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -437,7 +425,7 @@ const SearchPage: React.FC = () => {
                     onClick={() => setViewMode('list')}
                     title="List view"
                     className={`p-1.5 rounded-lg transition-colors ${
-                      viewMode === 'list' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-400 hover:text-gray-600'
+                      viewMode === 'list' ? 'bg-white shadow-sm text-ot-charade' : 'text-ot-manatee hover:text-ot-pale-sky'
                     }`}
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -470,7 +458,7 @@ const SearchPage: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-100">
+                  <div className="divide-y divide-ot-iron/50">
                     {displayedRestaurants.map(r => (
                       <ListCard
                         key={r.id}
@@ -505,7 +493,7 @@ const SearchPage: React.FC = () => {
       <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
         <button
           onClick={() => setShowMap(v => !v)}
-          className="pointer-events-auto flex items-center gap-2 bg-gray-900 hover:bg-gray-800 active:scale-95 text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl transition-all"
+          className="pointer-events-auto flex items-center gap-2 bg-ot-charade hover:bg-ot-primary-dark active:scale-95 text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl transition-all"
         >
           {showMap ? (
             <>

@@ -27,6 +27,25 @@ module.exports = {
         'ot-card': '8px',
         'ot-btn': '4px',
       },
+      keyframes: {
+        'fade-in-up': {
+          '0%': { opacity: '0', transform: 'translateY(16px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'scale-in': {
+          '0%': { opacity: '0', transform: 'scale(0.5)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'check-draw': {
+          '0%': { 'stroke-dashoffset': '30' },
+          '100%': { 'stroke-dashoffset': '0' },
+        },
+      },
+      animation: {
+        'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
+        'scale-in': 'scale-in 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards',
+        'check-draw': 'check-draw 0.5s ease-out 0.3s forwards',
+      },
     },
   },
   plugins: [],

@@ -1,27 +1,28 @@
 import smtplib
 import secrets
+import os
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Optional
-import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
 
 class EmailService:
-    """Email service for sending verification and password reset emails"""
-
-    def __init__(self):
-        self.smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
-        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.smtp_user = os.getenv("SMTP_USER")
-        self.smtp_password = os.getenv("SMTP_PASSWORD")
-        self.from_email = os.getenv("FROM_EMAIL", self.smtp_user)
-        self.frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    def __init__(self) -> None:
+        self.smtp_host: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
+        self.smtp_port: int = int(os.getenv("SMTP_PORT", "587"))
+        self.smtp_user: str | None = os.getenv("SMTP_USER")
+        self.smtp_password: str | None = os.getenv("SMTP_PASSWORD")
+        self.from_email: str = os.getenv("FROM_EMAIL", self.smtp_user or "")
+        self.frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
     def generate_verification_token(self) -> str:
-        """Generate a secure random token for email verification or password reset"""
         return secrets.token_urlsafe(32)
 
     def send_email(
@@ -29,28 +30,14 @@ class EmailService:
         to_email: str,
         subject: str,
         html_content: str,
-        text_content: Optional[str] = None
+        text_content: Optional[str] = None,
     ) -> bool:
-        """
-        Send an email using SMTP
-
-        Args:
-            to_email: Recipient email address
-            subject: Email subject
-            html_content: HTML version of the email
-            text_content: Plain text version of the email (optional)
-
-        Returns:
-            bool: True if email sent successfully, False otherwise
-        """
         try:
-            # Create message
             message = MIMEMultipart("alternative")
             message["Subject"] = subject
             message["From"] = self.from_email
             message["To"] = to_email
 
-            # Add text and HTML parts
             if text_content:
                 text_part = MIMEText(text_content, "plain")
                 message.attach(text_part)
@@ -58,7 +45,6 @@ class EmailService:
             html_part = MIMEText(html_content, "html")
             message.attach(html_part)
 
-            # Send email
             with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
                 server.starttls()
                 server.login(self.smtp_user, self.smtp_password)
@@ -67,21 +53,15 @@ class EmailService:
             return True
 
         except Exception as e:
-            print(f"Failed to send email to {to_email}: {str(e)}")
+            logger.error(f"Failed to send email to {to_email}: {e}")
             return False
 
-    def send_verification_email(self, to_email: str, verification_token: str) -> bool:
-        """
-        Send email verification link to user
-
-        Args:
-            to_email: User's email address
-            verification_token: Verification token
-
-        Returns:
-            bool: True if email sent successfully
-        """
-        verification_link = f"{self.frontend_url}/verify-email?token={verification_token}"
+    def send_verification_email(
+        self, to_email: str, verification_token: str
+    ) -> bool:
+        verification_link = (
+            f"{self.frontend_url}/verify-email?token={verification_token}"
+        )
 
         subject = "Verify Your Email - Restaurant Reservation"
 
@@ -173,16 +153,6 @@ class EmailService:
         return self.send_email(to_email, subject, html_content, text_content)
 
     def send_password_reset_email(self, to_email: str, reset_token: str) -> bool:
-        """
-        Send password reset link to user
-
-        Args:
-            to_email: User's email address
-            reset_token: Password reset token
-
-        Returns:
-            bool: True if email sent successfully
-        """
         reset_link = f"{self.frontend_url}/reset-password?token={reset_token}"
 
         subject = "Reset Your Password - Restaurant Reservation"
@@ -283,5 +253,4 @@ class EmailService:
         return self.send_email(to_email, subject, html_content, text_content)
 
 
-# Singleton instance
 email_service = EmailService()

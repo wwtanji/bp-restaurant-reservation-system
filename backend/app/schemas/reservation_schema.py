@@ -1,4 +1,5 @@
 import re
+
 from pydantic import BaseModel, ConfigDict, field_validator
 from typing import Optional
 from datetime import date, time, datetime
@@ -34,7 +35,9 @@ class ReservationCreate(BaseModel):
     @classmethod
     def guest_name_length(cls, v: Optional[str]) -> Optional[str]:
         if v and len(v) > MAX_GUEST_NAME_LENGTH:
-            raise ValueError(f"Guest name cannot exceed {MAX_GUEST_NAME_LENGTH} characters")
+            raise ValueError(
+                f"Guest name cannot exceed {MAX_GUEST_NAME_LENGTH} characters"
+            )
         return v.strip() if v else v
 
     @field_validator("guest_phone")
@@ -51,7 +54,9 @@ class ReservationCreate(BaseModel):
     @classmethod
     def special_requests_length(cls, v: Optional[str]) -> Optional[str]:
         if v and len(v) > MAX_SPECIAL_REQUESTS_LENGTH:
-            raise ValueError(f"Special requests cannot exceed {MAX_SPECIAL_REQUESTS_LENGTH} characters")
+            raise ValueError(
+                f"Special requests cannot exceed {MAX_SPECIAL_REQUESTS_LENGTH} characters"
+            )
         return v.strip() if v else v
 
 
@@ -81,3 +86,8 @@ class ReservationStatusUpdate(BaseModel):
         if v not in valid:
             raise ValueError(f"Invalid status. Must be one of: {sorted(valid)}")
         return v
+
+
+class SlotAvailabilityResponse(BaseModel):
+    available_seats: int
+    max_capacity: int

@@ -1,15 +1,15 @@
 from datetime import datetime, timezone, timedelta
+
 from sqlalchemy import String, Integer, ForeignKey, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.db.database import Base
-from typing import Optional
+from app.db.database import Base, get_utc_now
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
-def get_utc_now():
-    return datetime.now(timezone.utc)
-
-
-def get_expiry_time():
+def get_expiry_time() -> datetime:
     return datetime.now(timezone.utc) + timedelta(hours=1)
 
 
@@ -30,5 +30,4 @@ class PasswordResetToken(Base):
     created_at: Mapped[datetime] = mapped_column(default=get_utc_now, nullable=False)
     used_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
-    # Relationship
-    user: Mapped["User"] = relationship("User", backref="password_reset_tokens")
+    user: Mapped["User"] = relationship("User", back_populates="password_reset_tokens")

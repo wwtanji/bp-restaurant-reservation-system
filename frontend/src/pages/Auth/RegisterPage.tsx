@@ -96,6 +96,7 @@ const RegisterPage: React.FC = () => {
               <input
                 name="first_name"
                 type="text"
+                autoComplete="given-name"
                 value={formData.first_name}
                 onChange={handleChange}
                 placeholder="First Name"
@@ -112,6 +113,7 @@ const RegisterPage: React.FC = () => {
               <input
                 name="last_name"
                 type="text"
+                autoComplete="family-name"
                 value={formData.last_name}
                 onChange={handleChange}
                 placeholder="Last Name"
@@ -129,6 +131,7 @@ const RegisterPage: React.FC = () => {
           <input
             name="user_email"
             type="email"
+            autoComplete="email"
             value={formData.user_email}
             onChange={handleChange}
             placeholder="Email"
@@ -141,6 +144,7 @@ const RegisterPage: React.FC = () => {
               <input
                 name="user_password"
                 type="password"
+                autoComplete="new-password"
                 value={formData.user_password}
                 onChange={handleChange}
                 onFocus={() => setPasswordTouched(true)}

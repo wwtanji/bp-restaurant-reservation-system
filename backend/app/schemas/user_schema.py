@@ -3,9 +3,9 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr, constr, field_validator, ConfigDict
 from typing import Optional, Annotated
 from email_validator import validate_email, EmailNotValidError
-from fastapi import HTTPException
 from enum import IntEnum
-import re
+
+from app.schemas.validators import validate_password_strength
 
 
 class UserRole(IntEnum):
@@ -28,46 +28,14 @@ class UserRegister(BaseModel):
         try:
             return UserRole(value)
         except ValueError:
-            raise HTTPException(
-                status_code=422,
-                detail=f"Invalid role. Must be one of: {[role.value for role in UserRole]}",
+            raise ValueError(
+                f"Invalid role. Must be one of: {[role.value for role in UserRole]}"
             )
 
     @field_validator("user_password")
     @classmethod
-    def validate_password_strength(cls, value: str) -> str:
-        """
-        Validate password strength:
-        - Minimum 8 characters
-        - At least one uppercase letter
-        - At least one lowercase letter
-        - At least one number
-        """
-        if len(value) < 8:
-            raise HTTPException(
-                status_code=422,
-                detail="Password must be at least 8 characters long"
-            )
-
-        if not re.search(r"[A-Z]", value):
-            raise HTTPException(
-                status_code=422,
-                detail="Password must contain at least one uppercase letter"
-            )
-
-        if not re.search(r"[a-z]", value):
-            raise HTTPException(
-                status_code=422,
-                detail="Password must contain at least one lowercase letter"
-            )
-
-        if not re.search(r"\d", value):
-            raise HTTPException(
-                status_code=422,
-                detail="Password must contain at least one number"
-            )
-
-        return value
+    def check_password_strength(cls, value: str) -> str:
+        return validate_password_strength(value)
 
 
 class UserLogin(BaseModel):
@@ -81,15 +49,13 @@ class UserLogin(BaseModel):
             valid = validate_email(value)
             return valid.email
         except EmailNotValidError as e:
-            raise HTTPException(status_code=422, detail=str(e)) from e
+            raise ValueError(str(e)) from e
 
     @field_validator("user_password")
     @classmethod
     def validate_password(cls, value: str) -> str:
         if len(value) < 8:
-            raise HTTPException(
-                status_code=422, detail="Password must be at least 8 characters long"
-            )
+            raise ValueError("Password must be at least 8 characters long")
         return value
 
 
@@ -125,39 +91,8 @@ class ResetPasswordRequest(BaseModel):
 
     @field_validator("new_password")
     @classmethod
-    def validate_password_strength(cls, value: str) -> str:
-        """
-        Validate password strength:
-        - Minimum 8 characters
-        - At least one uppercase letter
-        - At least one lowercase letter
-        - At least one number
-        """
-        if len(value) < 8:
-            raise HTTPException(
-                status_code=422,
-                detail="Password must be at least 8 characters long"
-            )
-
-        if not re.search(r"[A-Z]", value):
-            raise HTTPException(
-                status_code=422,
-                detail="Password must contain at least one uppercase letter"
-            )
-
-        if not re.search(r"[a-z]", value):
-            raise HTTPException(
-                status_code=422,
-                detail="Password must contain at least one lowercase letter"
-            )
-
-        if not re.search(r"\d", value):
-            raise HTTPException(
-                status_code=422,
-                detail="Password must contain at least one number"
-            )
-
-        return value
+    def check_password_strength(cls, value: str) -> str:
+        return validate_password_strength(value)
 
 
 class EmailVerificationRequest(BaseModel):
@@ -176,25 +111,14 @@ class ChangePasswordRequest(BaseModel):
 
     @field_validator("new_password")
     @classmethod
-    def validate_password_strength(cls, value: str) -> str:
-        if len(value) < 8:
-            raise HTTPException(
-                status_code=422,
-                detail="Password must be at least 8 characters long"
-            )
-        if not re.search(r"[A-Z]", value):
-            raise HTTPException(
-                status_code=422,
-                detail="Password must contain at least one uppercase letter"
-            )
-        if not re.search(r"[a-z]", value):
-            raise HTTPException(
-                status_code=422,
-                detail="Password must contain at least one lowercase letter"
-            )
-        if not re.search(r"\d", value):
-            raise HTTPException(
-                status_code=422,
-                detail="Password must contain at least one number"
-            )
-        return value
+    def check_password_strength(cls, value: str) -> str:
+        return validate_password_strength(value)
+
+
+class MessageResponse(BaseModel):
+    message: str
+
+
+class RegistrationResponse(BaseModel):
+    message: str
+    email: str

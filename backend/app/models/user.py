@@ -1,22 +1,18 @@
-from datetime import datetime, timezone
+from datetime import datetime
+
 from sqlalchemy import String, Boolean, Integer, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.db.database import Base
+from app.db.database import Base, get_utc_now
 from app.models.refresh_token import RefreshToken
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.restaurant import Restaurant
     from app.models.reservation import Reservation
-
-
-def get_utc_now():
-    return datetime.now(timezone.utc)
+    from app.models.password_reset_token import PasswordResetToken
 
 
 class UserRole:
-    """User role constants"""
-
     CUSTOMER = 0
     RESTAURANT_OWNER = 1
     ADMIN = 2
@@ -48,12 +44,14 @@ class User(Base):
         "RefreshToken", back_populates="user", cascade="all, delete-orphan"
     )
 
-    # Restaurants owned by this user (role=RESTAURANT_OWNER)
+    password_reset_tokens: Mapped[list["PasswordResetToken"]] = relationship(
+        "PasswordResetToken", back_populates="user", cascade="all, delete-orphan"
+    )
+
     restaurants: Mapped[list["Restaurant"]] = relationship(
         "Restaurant", back_populates="owner", cascade="all, delete-orphan"
     )
 
-    # Reservations made by this user (role=CUSTOMER)
     reservations: Mapped[list["Reservation"]] = relationship(
         "Reservation", back_populates="user", cascade="all, delete-orphan"
     )

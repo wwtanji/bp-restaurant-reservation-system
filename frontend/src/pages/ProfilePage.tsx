@@ -631,6 +631,7 @@ const ReservationsSection: React.FC<ReservationsSectionProps> = ({
                     {canCancel(reservation.status) && (
                       <Link
                         to={`/restaurant/${reservation.restaurant.slug}/book`}
+                        state={{ editReservation: reservation }}
                         className="text-xs font-bold text-ot-pale-sky hover:text-ot-charade px-3 py-1.5 rounded-lg border border-ot-iron transition-colors"
                       >
                         Edit Booking
@@ -839,6 +840,7 @@ const SettingsSection: React.FC = () => {
               <label className="block text-xs font-medium text-ot-pale-sky mb-1.5">First Name</label>
               <input
                 type="text"
+                autoComplete="given-name"
                 value={firstName}
                 onChange={e => setFirstName(e.target.value)}
                 className={inputClass}
@@ -848,6 +850,7 @@ const SettingsSection: React.FC = () => {
               <label className="block text-xs font-medium text-ot-pale-sky mb-1.5">Last Name</label>
               <input
                 type="text"
+                autoComplete="family-name"
                 value={lastName}
                 onChange={e => setLastName(e.target.value)}
                 className={inputClass}
@@ -867,6 +870,7 @@ const SettingsSection: React.FC = () => {
             <label className="block text-xs font-medium text-ot-pale-sky mb-1.5">Phone Number</label>
             <input
               type="tel"
+              autoComplete="tel"
               value={phoneNumber}
               onChange={e => setPhoneNumber(e.target.value)}
               placeholder="+421 123 456 789"

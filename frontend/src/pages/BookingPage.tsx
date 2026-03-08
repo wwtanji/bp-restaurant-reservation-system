@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../utils/api';
 import { Restaurant } from '../interfaces/restaurant';
@@ -40,15 +40,27 @@ const BookingPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
-  const [selectedDate, setSelectedDate] = useState(searchParams.get('date') || todayISO());
-  const [selectedTime, setSelectedTime] = useState(searchParams.get('time') || '7:00 PM');
-  const [partySize, setPartySize]       = useState(searchParams.get('party') || '2 people');
+  const editReservation = (location.state as { editReservation?: Reservation } | null)?.editReservation ?? null;
+  const isEditMode = editReservation !== null;
 
-  const [guestName, setGuestName]           = useState('');
-  const [guestPhone, setGuestPhone]         = useState('');
-  const [specialRequests, setSpecialRequests] = useState('');
+  const [selectedDate, setSelectedDate] = useState(
+    editReservation ? editReservation.reservation_date : (searchParams.get('date') || todayISO())
+  );
+  const [selectedTime, setSelectedTime] = useState(
+    editReservation ? fromApiTime(editReservation.reservation_time) : (searchParams.get('time') || '7:00 PM')
+  );
+  const [partySize, setPartySize] = useState(
+    editReservation
+      ? (editReservation.party_size === 1 ? '1 person' : `${editReservation.party_size} people`)
+      : (searchParams.get('party') || '2 people')
+  );
+
+  const [guestName, setGuestName]           = useState(editReservation?.guest_name || '');
+  const [guestPhone, setGuestPhone]         = useState(editReservation?.guest_phone || '');
+  const [specialRequests, setSpecialRequests] = useState(editReservation?.special_requests || '');
 
   const [restaurant, setRestaurant]       = useState<Restaurant | null>(null);
   const [isSubmitting, setIsSubmitting]   = useState(false);
@@ -58,8 +70,8 @@ const BookingPage: React.FC = () => {
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
   useEffect(() => {
-    if (user) setGuestName(`${user.first_name} ${user.last_name}`);
-  }, [user]);
+    if (user && !isEditMode) setGuestName(`${user.first_name} ${user.last_name}`);
+  }, [user, isEditMode]);
 
   useEffect(() => {
     if (!slug) return;
@@ -103,8 +115,13 @@ const BookingPage: React.FC = () => {
     setError(null);
 
     try {
-      const data = await apiFetch<Reservation>(`/reservations/${slug}`, {
-        method: 'POST',
+      const url = isEditMode
+        ? `/reservations/${editReservation.id}`
+        : `/reservations/${slug}`;
+      const method = isEditMode ? 'PUT' : 'POST';
+
+      const data = await apiFetch<Reservation>(url, {
+        method,
         body: JSON.stringify({
           party_size:       toApiPartySize(partySize),
           reservation_date: selectedDate,
@@ -124,31 +141,40 @@ const BookingPage: React.FC = () => {
 
   if (confirmation) {
     const isPending = confirmation.status === RESERVATION_STATUS_PENDING;
+    const iconColor = isEditMode ? 'bg-indigo-100' : isPending ? 'bg-amber-100' : 'bg-green-100';
+
     return (
       <div className="min-h-screen bg-ot-athens-gray flex items-center justify-center p-4">
-        <div className="bg-white rounded-ot-card shadow-lg border border-ot-iron p-8 max-w-md w-full text-center">
-          <div className={`w-16 h-16 ${isPending ? 'bg-amber-100' : 'bg-green-100'} rounded-full flex items-center justify-center mx-auto mb-5`}>
-            {isPending ? (
+        <div className="bg-white rounded-ot-card shadow-lg border border-ot-iron p-8 max-w-md w-full text-center opacity-0 animate-fade-in-up">
+
+          <div className={`w-16 h-16 ${iconColor} rounded-full flex items-center justify-center mx-auto mb-5 opacity-0 animate-scale-in`}>
+            {isEditMode ? (
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} style={{ strokeDasharray: 30, strokeDashoffset: 30 }} className="w-8 h-8 text-indigo-600 animate-check-draw">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            ) : isPending ? (
               <svg className="w-8 h-8 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             ) : (
-              <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} style={{ strokeDasharray: 30, strokeDashoffset: 30 }} className="w-8 h-8 text-green-600 animate-check-draw">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             )}
           </div>
 
-          <h2 className="text-xl font-extrabold text-ot-charade mb-1">
-            {isPending ? 'Reservation submitted!' : 'You\'re all set!'}
+          <h2 className="text-xl font-extrabold text-ot-charade mb-1 opacity-0 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+            {isEditMode ? 'Reservation updated!' : isPending ? 'Reservation submitted!' : 'You\'re all set!'}
           </h2>
-          <p className="text-sm text-ot-pale-sky mb-6">
-            {isPending
-              ? 'Your reservation is pending confirmation from the restaurant.'
-              : 'Your reservation is confirmed. See you there!'}
+          <p className="text-sm text-ot-pale-sky mb-6 opacity-0 animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
+            {isEditMode
+              ? 'Your reservation has been updated successfully.'
+              : isPending
+                ? 'Your reservation is pending confirmation from the restaurant.'
+                : 'Your reservation is confirmed. See you there!'}
           </p>
 
-          <div className="bg-ot-athens-gray rounded-ot-card p-4 text-left space-y-2.5 mb-6 border border-ot-iron">
+          <div className="bg-ot-athens-gray rounded-ot-card p-4 text-left space-y-2.5 mb-6 border border-ot-iron opacity-0 animate-fade-in-up" style={{ animationDelay: '0.35s' }}>
             {[
               ['Restaurant', confirmation.restaurant.name],
               ['Date',       formatDate(confirmation.reservation_date)],
@@ -177,7 +203,7 @@ const BookingPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 opacity-0 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
             <Link
               to="/my-reservations"
               className="w-full py-3 text-sm font-bold text-white bg-ot-primary rounded-ot-btn hover:bg-ot-primary-dark transition-colors text-center"
@@ -211,7 +237,7 @@ const BookingPage: React.FC = () => {
             </svg>
           </button>
           <span className="text-sm font-bold text-ot-charade truncate">
-            {restaurant?.name ?? 'Complete your reservation'}
+            {isEditMode ? 'Edit reservation' : (restaurant?.name ?? 'Complete your reservation')}
           </span>
         </div>
       </div>
@@ -387,10 +413,10 @@ const BookingPage: React.FC = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    Completing reservation...
+                    {isEditMode ? 'Updating reservation...' : 'Completing reservation...'}
                   </>
                 ) : (
-                  'Complete reservation'
+                  isEditMode ? 'Update reservation' : 'Complete reservation'
                 )}
               </button>
 

@@ -1,8 +1,9 @@
-from datetime import datetime, timezone
-from sqlalchemy import String, ForeignKey, Enum as SQLEnum
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.db.database import Base
 import enum
+from datetime import datetime
+
+from sqlalchemy import String, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.db.database import Base, get_utc_now
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -13,10 +14,6 @@ class TokenStatus(str, enum.Enum):
     ACTIVE = "active"
     REVOKED = "revoked"
     EXPIRED = "expired"
-
-
-def get_utc_now():
-    return datetime.now(timezone.utc)
 
 
 class RefreshToken(Base):
@@ -33,5 +30,4 @@ class RefreshToken(Base):
     created_at: Mapped[datetime] = mapped_column(default=get_utc_now)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
 
-    # Relationship using string reference
     user: Mapped["User"] = relationship("User", back_populates="refresh_tokens")

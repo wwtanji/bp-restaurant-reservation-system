@@ -29,7 +29,7 @@ def list_restaurants(
     db: Session = Depends(get_db),
     _=Depends(get_current_user),
 ):
-    query = db.query(Restaurant).filter(Restaurant.is_active == True)  # noqa: E712
+    query = db.query(Restaurant).filter(Restaurant.is_active.is_(True))
 
     if q:
         query = query.filter(

@@ -1,16 +1,13 @@
-from datetime import datetime, timezone
+from datetime import datetime
+
 from sqlalchemy import String, Integer, Float, Boolean, Text, ForeignKey, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.db.database import Base
+from app.db.database import Base, get_utc_now
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.user import User
     from app.models.reservation import Reservation
-
-
-def get_utc_now():
-    return datetime.now(timezone.utc)
 
 
 class Restaurant(Base):
@@ -54,7 +51,6 @@ class Restaurant(Base):
     updated_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime, onupdate=get_utc_now, nullable=True
     )
-
 
     owner: Mapped["User"] = relationship("User", back_populates="restaurants")
 

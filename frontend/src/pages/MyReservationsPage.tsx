@@ -208,11 +208,18 @@ const MyReservationsPage: React.FC = () => {
                   </div>
 
                   {canCancel(reservation.status) && (
-                    <div className="border-t border-ot-iron px-5 py-3 flex justify-end">
+                    <div className="border-t border-ot-iron px-5 py-3 flex justify-between items-center">
+                      <Link
+                        to={`/restaurant/${reservation.restaurant.slug}/book`}
+                        state={{ editReservation: reservation }}
+                        className="text-sm font-bold text-ot-primary hover:text-ot-primary-dark hover:bg-indigo-50 px-4 py-2 rounded-ot-btn transition-colors"
+                      >
+                        Edit reservation
+                      </Link>
                       <button
                         onClick={() => handleCancel(reservation.id)}
                         disabled={isCancelling}
-                        className="text-sm font-bold text-ot-primary hover:text-ot-primary-dark hover:bg-indigo-50 px-4 py-2 rounded-ot-btn transition-colors disabled:opacity-50"
+                        className="text-sm font-bold text-red-500 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-ot-btn transition-colors disabled:opacity-50"
                       >
                         {isCancelling ? 'Cancelling...' : 'Cancel reservation'}
                       </button>

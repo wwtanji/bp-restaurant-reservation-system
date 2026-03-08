@@ -38,6 +38,7 @@ const LoginPage: React.FC = () => {
           <input
             name="user_email"
             type="email"
+            autoComplete="email"
             value={formData.user_email}
             onChange={handleChange}
             placeholder="Email"
@@ -47,6 +48,7 @@ const LoginPage: React.FC = () => {
           <input
             name="user_password"
             type="password"
+            autoComplete="current-password"
             value={formData.user_password}
             onChange={handleChange}
             placeholder="Password"

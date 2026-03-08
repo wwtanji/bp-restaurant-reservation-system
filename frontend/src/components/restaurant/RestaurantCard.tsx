@@ -20,7 +20,7 @@ interface RestaurantCardProps {
 
 const StarIcon: React.FC<{ filled: boolean }> = ({ filled }) => (
   <svg
-    className={`w-3.5 h-3.5 ${filled ? 'text-yellow-400' : 'text-gray-300'}`}
+    className={`w-3.5 h-3.5 ${filled ? 'text-ot-primary' : 'text-ot-iron'}`}
     fill="currentColor"
     viewBox="0 0 20 20"
   >
@@ -44,11 +44,11 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, isActive, o
       onClick={() => navigate(`/restaurant/${restaurant.slug}`)}
       onMouseEnter={() => onHover(restaurant.id)}
       onMouseLeave={() => onHover(null)}
-      className={`flex gap-4 p-4 rounded-xl transition-shadow cursor-pointer ${
-        isActive ? 'shadow-md bg-gray-50' : 'hover:shadow-sm'
+      className={`flex gap-4 p-4 rounded-ot-card transition-shadow cursor-pointer ${
+        isActive ? 'shadow-md bg-ot-athens-gray' : 'hover:shadow-sm'
       }`}
     >
-      <div className="flex-shrink-0 w-36 h-28 rounded-lg overflow-hidden bg-gray-200">
+      <div className="flex-shrink-0 w-36 h-28 rounded-ot-card overflow-hidden bg-ot-iron">
         <img
           src={restaurant.cover_image ?? ''}
           alt={restaurant.name}
@@ -58,18 +58,18 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, isActive, o
 
       <div className="flex flex-col justify-between min-w-0 flex-1">
         <div>
-          <h3 className="font-semibold text-[#006AFF] text-sm hover:underline truncate">
+          <h3 className="font-bold text-ot-primary text-sm hover:underline truncate">
             {restaurant.name}
           </h3>
 
           <div className="flex items-center gap-1.5 mt-1">
             <Stars rating={restaurant.rating} />
-            <span className="text-xs font-semibold text-gray-700">{ratingLabel(restaurant.rating)}</span>
-            <span className="text-xs text-gray-400">({restaurant.review_count})</span>
+            <span className="text-xs font-bold text-ot-charade">{ratingLabel(restaurant.rating)}</span>
+            <span className="text-xs text-ot-manatee">({restaurant.review_count})</span>
           </div>
 
-          <p className="text-xs text-gray-500 mt-0.5">
-            {PRICE_SYMBOL[restaurant.price_range]} · {restaurant.cuisine} · {restaurant.city}
+          <p className="text-xs text-ot-pale-sky mt-0.5">
+            {PRICE_SYMBOL[restaurant.price_range]} &middot; {restaurant.cuisine} &middot; {restaurant.city}
           </p>
         </div>
       </div>

@@ -1,136 +1,93 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
-const API_URL = 'http://localhost:8000/api';
-
-const TIME_OPTIONS = [
-  '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM',
-  '1:00 PM',  '1:30 PM',  '2:00 PM',  '2:30 PM',
-  '5:00 PM',  '5:30 PM',  '6:00 PM',  '6:30 PM',
-  '7:00 PM',  '7:30 PM',  '8:00 PM',  '8:30 PM',  '9:00 PM',
-];
-
-const PARTY_SIZES = Array.from({ length: 10 }, (_, i) =>
-  i === 0 ? '1 person' : `${i + 1} people`
-);
-
-function toApiTime(display: string): string {
-  const [timePart, period] = display.split(' ');
-  let [hours, minutes] = timePart.split(':').map(Number);
-  if (period === 'PM' && hours !== 12) hours += 12;
-  if (period === 'AM' && hours === 12) hours = 0;
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
-}
-
-function toApiPartySize(display: string): number {
-  return parseInt(display, 10);
-}
-
-function todayISO(): string {
-  return new Date().toISOString().split('T')[0];
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso + 'T00:00:00').toLocaleDateString('en-US', {
-    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
-  });
-}
-
-interface RestaurantInfo {
-  name: string;
-  cuisine: string;
-  city: string;
-  address: string;
-  cover_image: string | null;
-}
-
-interface BookingOut {
-  id: number;
-  reservation_date: string;
-  reservation_time: string;
-  party_size: number;
-  status: string;
-  guest_name: string | null;
-  restaurant: { name: string; address: string; city: string };
-}
-
-// ── Shared icon components ─────────────────────────────────────────────────
+import { apiFetch } from '../utils/api';
+import { Restaurant } from '../interfaces/restaurant';
+import { Reservation, SlotAvailability } from '../interfaces/reservation';
+import {
+  TIME_OPTIONS,
+  PARTY_SIZES,
+  toApiTime,
+  toApiPartySize,
+  todayISO,
+  formatDate,
+  fromApiTime,
+  RESERVATION_STATUS_PENDING,
+} from '../constants/reservation';
 
 const CalendarIcon = () => (
-  <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+  <svg className="w-4 h-4 text-ot-manatee" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
   </svg>
 );
 const ClockIcon = () => (
-  <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+  <svg className="w-4 h-4 text-ot-manatee" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
 );
 const PersonIcon = () => (
-  <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+  <svg className="w-4 h-4 text-ot-manatee" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
   </svg>
 );
 const ChevronIcon = () => (
-  <svg className="w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+  <svg className="w-4 h-4 text-ot-manatee pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
   </svg>
 );
-
-// ── Main component ─────────────────────────────────────────────────────────
 
 const BookingPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
-  // Pre-filled from the detail page via query params
-  const [selectedDate, setSelectedDate] = useState(searchParams.get('date') || todayISO());
-  const [selectedTime, setSelectedTime] = useState(searchParams.get('time') || '7:00 PM');
-  const [partySize, setPartySize]       = useState(searchParams.get('party') || '2 people');
+  const editReservation = (location.state as { editReservation?: Reservation } | null)?.editReservation ?? null;
+  const isEditMode = editReservation !== null;
 
-  // Guest info
-  const [guestName, setGuestName]           = useState('');
-  const [guestPhone, setGuestPhone]         = useState('');
-  const [specialRequests, setSpecialRequests] = useState('');
+  const [selectedDate, setSelectedDate] = useState(
+    editReservation ? editReservation.reservation_date : (searchParams.get('date') || todayISO())
+  );
+  const [selectedTime, setSelectedTime] = useState(
+    editReservation ? fromApiTime(editReservation.reservation_time) : (searchParams.get('time') || '7:00 PM')
+  );
+  const [partySize, setPartySize] = useState(
+    editReservation
+      ? (editReservation.party_size === 1 ? '1 person' : `${editReservation.party_size} people`)
+      : (searchParams.get('party') || '2 people')
+  );
 
-  // Page state
-  const [restaurant, setRestaurant]       = useState<RestaurantInfo | null>(null);
+  const [guestName, setGuestName]           = useState(editReservation?.guest_name || '');
+  const [guestPhone, setGuestPhone]         = useState(editReservation?.guest_phone || '');
+  const [specialRequests, setSpecialRequests] = useState(editReservation?.special_requests || '');
+
+  const [restaurant, setRestaurant]       = useState<Restaurant | null>(null);
   const [isSubmitting, setIsSubmitting]   = useState(false);
   const [error, setError]                 = useState<string | null>(null);
-  const [confirmation, setConfirmation]   = useState<BookingOut | null>(null);
+  const [confirmation, setConfirmation]   = useState<Reservation | null>(null);
   const [availableSeats, setAvailableSeats]     = useState<number | null>(null);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
-  // Pre-fill name from auth
   useEffect(() => {
-    if (user) setGuestName(`${user.first_name} ${user.last_name}`);
-  }, [user]);
+    if (user && !isEditMode) setGuestName(`${user.first_name} ${user.last_name}`);
+  }, [user, isEditMode]);
 
-  // Fetch slot availability whenever date or time changes
   useEffect(() => {
     if (!slug) return;
     const controller = new AbortController();
     setAvailabilityLoading(true);
-    const token = localStorage.getItem('token');
     const params = new URLSearchParams({
       reservation_date: selectedDate,
       reservation_time: toApiTime(selectedTime),
     });
-    fetch(`${API_URL}/reservations/${slug}/availability?${params}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      signal: controller.signal,
-    })
-      .then(res => (res.ok ? res.json() : Promise.reject()))
-      .then((data: { available_seats: number }) => setAvailableSeats(data.available_seats))
+    apiFetch<SlotAvailability>(`/reservations/${slug}/availability?${params}`)
+      .then(data => setAvailableSeats(data.available_seats))
       .catch(() => {})
       .finally(() => setAvailabilityLoading(false));
     return () => controller.abort();
   }, [slug, selectedDate, selectedTime]);
 
-  // Clamp party size if the selected slot has fewer seats than currently chosen
   useEffect(() => {
     if (availableSeats === null || availableSeats === 0) return;
     if (toApiPartySize(partySize) > availableSeats) {
@@ -138,14 +95,9 @@ const BookingPage: React.FC = () => {
     }
   }, [availableSeats, partySize]);
 
-  // Fetch restaurant display info
   useEffect(() => {
     if (!slug) return;
-    const token = localStorage.getItem('token');
-    fetch(`${API_URL}/restaurants/${slug}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(res => (res.ok ? res.json() : Promise.reject()))
+    apiFetch<Restaurant>(`/restaurants/${slug}`)
       .then(setRestaurant)
       .catch(() => navigate(`/restaurant/${slug}`));
   }, [slug, navigate]);
@@ -163,13 +115,13 @@ const BookingPage: React.FC = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/reservations/${slug}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+      const url = isEditMode
+        ? `/reservations/${editReservation.id}`
+        : `/reservations/${slug}`;
+      const method = isEditMode ? 'PUT' : 'POST';
+
+      const data = await apiFetch<Reservation>(url, {
+        method,
         body: JSON.stringify({
           party_size:       toApiPartySize(partySize),
           reservation_date: selectedDate,
@@ -179,13 +131,7 @@ const BookingPage: React.FC = () => {
           special_requests: specialRequests || null,
         }),
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail ?? 'Reservation failed. Please try again.');
-      }
-
-      setConfirmation(await res.json());
+      setConfirmation(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.');
     } finally {
@@ -193,56 +139,82 @@ const BookingPage: React.FC = () => {
     }
   };
 
-  // ── Success view ─────────────────────────────────────────────────────────
-
   if (confirmation) {
+    const isPending = confirmation.status === RESERVATION_STATUS_PENDING;
+    const iconColor = isEditMode ? 'bg-indigo-100' : isPending ? 'bg-amber-100' : 'bg-green-100';
+
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4" style={{ fontFamily: "'Montserrat', 'Open Sans', sans-serif" }}>
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
-            <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
+      <div className="min-h-screen bg-ot-athens-gray flex items-center justify-center p-4">
+        <div className="bg-white rounded-ot-card shadow-lg border border-ot-iron p-8 max-w-md w-full text-center opacity-0 animate-fade-in-up">
+
+          <div className={`w-16 h-16 ${iconColor} rounded-full flex items-center justify-center mx-auto mb-5 opacity-0 animate-scale-in`}>
+            {isEditMode ? (
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} style={{ strokeDasharray: 30, strokeDashoffset: 30 }} className="w-8 h-8 text-indigo-600 animate-check-draw">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            ) : isPending ? (
+              <svg className="w-8 h-8 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} style={{ strokeDasharray: 30, strokeDashoffset: 30 }} className="w-8 h-8 text-green-600 animate-check-draw">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            )}
           </div>
 
-          <h2 className="text-xl font-bold text-gray-900 mb-1">You're all set!</h2>
-          <p className="text-sm text-gray-500 mb-6">
-            Your reservation is confirmed. See you there!
+          <h2 className="text-xl font-extrabold text-ot-charade mb-1 opacity-0 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+            {isEditMode ? 'Reservation updated!' : isPending ? 'Reservation submitted!' : 'You\'re all set!'}
+          </h2>
+          <p className="text-sm text-ot-pale-sky mb-6 opacity-0 animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
+            {isEditMode
+              ? 'Your reservation has been updated successfully.'
+              : isPending
+                ? 'Your reservation is pending confirmation from the restaurant.'
+                : 'Your reservation is confirmed. See you there!'}
           </p>
 
-          <div className="bg-gray-50 rounded-xl p-4 text-left space-y-2.5 mb-6">
+          <div className="bg-ot-athens-gray rounded-ot-card p-4 text-left space-y-2.5 mb-6 border border-ot-iron opacity-0 animate-fade-in-up" style={{ animationDelay: '0.35s' }}>
             {[
               ['Restaurant', confirmation.restaurant.name],
               ['Date',       formatDate(confirmation.reservation_date)],
-              ['Time',       selectedTime],
+              ['Time',       fromApiTime(confirmation.reservation_time)],
               ['Party',      `${confirmation.party_size} ${confirmation.party_size === 1 ? 'person' : 'people'}`],
               ...(confirmation.guest_name ? [['Name', confirmation.guest_name]] : []),
             ].map(([label, value]) => (
               <div key={label} className="flex justify-between text-sm">
-                <span className="text-gray-500">{label}</span>
-                <span className="font-semibold text-gray-900">{value}</span>
+                <span className="text-ot-pale-sky">{label}</span>
+                <span className="font-bold text-ot-charade">{value}</span>
               </div>
             ))}
-            <div className="flex justify-between text-sm pt-1 border-t border-gray-200">
-              <span className="text-gray-500">Confirmation #</span>
-              <span className="font-mono text-xs font-bold text-gray-900 bg-gray-200 px-2 py-0.5 rounded">
+            <div className="flex justify-between text-sm pt-1 border-t border-ot-iron">
+              <span className="text-ot-pale-sky">Confirmation #</span>
+              <span className="font-mono text-xs font-bold text-ot-charade bg-ot-iron px-2 py-0.5 rounded-ot-btn">
                 #{confirmation.id}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-ot-pale-sky">Status</span>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                isPending ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+              }`}>
+                {isPending ? 'Pending' : 'Confirmed'}
               </span>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 opacity-0 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
             <Link
-              to={`/restaurant/${slug}`}
-              className="w-full py-3 text-sm font-bold text-white bg-[#2563eb] rounded-xl hover:bg-[#1d4ed8] transition-colors text-center"
+              to="/my-reservations"
+              className="w-full py-3 text-sm font-bold text-white bg-ot-primary rounded-ot-btn hover:bg-ot-primary-dark transition-colors text-center"
             >
-              Back to Restaurant
+              View my reservations
             </Link>
             <Link
-              to="/search"
-              className="w-full py-3 text-sm font-semibold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-center"
+              to={`/restaurant/${slug}`}
+              className="w-full py-3 text-sm font-medium text-ot-charade border border-ot-iron rounded-ot-btn hover:bg-ot-athens-gray transition-colors text-center"
             >
-              Explore more restaurants
+              Back to Restaurant
             </Link>
           </div>
         </div>
@@ -250,25 +222,22 @@ const BookingPage: React.FC = () => {
     );
   }
 
-  // ── Booking form ─────────────────────────────────────────────────────────
-
   return (
-    <div className="min-h-screen bg-gray-50" style={{ fontFamily: "'Montserrat', 'Open Sans', sans-serif" }}>
+    <div className="min-h-screen bg-ot-athens-gray">
 
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4">
+      <div className="bg-white border-b border-ot-iron px-4 py-4">
         <div className="max-w-4xl mx-auto flex items-center gap-3">
           <button
             onClick={() => navigate(`/restaurant/${slug}`)}
-            className="text-gray-400 hover:text-gray-700 transition-colors"
+            className="text-ot-manatee hover:text-ot-charade transition-colors"
             aria-label="Back to restaurant"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <span className="text-sm font-semibold text-gray-700 truncate">
-            {restaurant?.name ?? 'Complete your reservation'}
+          <span className="text-sm font-bold text-ot-charade truncate">
+            {isEditMode ? 'Edit reservation' : (restaurant?.name ?? 'Complete your reservation')}
           </span>
         </div>
       </div>
@@ -276,37 +245,34 @@ const BookingPage: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
 
-          {/* ── Left: Form ──────────────────────────────────────────────── */}
           <div className="flex-1 min-w-0">
 
-            {/* Restaurant + booking summary strip */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 flex items-center gap-4">
+            <div className="bg-white rounded-ot-card border border-ot-iron p-4 mb-6 flex items-center gap-4">
               {restaurant?.cover_image ? (
                 <img
                   src={restaurant.cover_image}
                   alt={restaurant.name}
-                  className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
+                  className="w-14 h-14 rounded-ot-card object-cover flex-shrink-0"
                 />
               ) : (
-                <div className="w-14 h-14 rounded-lg bg-gray-200 flex-shrink-0" />
+                <div className="w-14 h-14 rounded-ot-card bg-ot-iron flex-shrink-0" />
               )}
               <div className="min-w-0">
-                <p className="font-bold text-gray-900 text-sm truncate">{restaurant?.name}</p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {formatDate(selectedDate)} · {selectedTime} · {partySize}
+                <p className="font-bold text-ot-charade text-sm truncate">{restaurant?.name}</p>
+                <p className="text-xs text-ot-pale-sky mt-0.5">
+                  {formatDate(selectedDate)} &middot; {selectedTime} &middot; {partySize}
                 </p>
               </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
 
-              {/* Your details */}
-              <div className="bg-white rounded-xl border border-gray-200 p-5">
-                <h2 className="text-sm font-bold text-gray-900 mb-4">Your details</h2>
+              <div className="bg-white rounded-ot-card border border-ot-iron p-5">
+                <h2 className="text-sm font-extrabold text-ot-charade mb-4">Your details</h2>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                    <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">
                       Name
                     </label>
                     <input
@@ -314,13 +280,13 @@ const BookingPage: React.FC = () => {
                       value={guestName}
                       onChange={e => setGuestName(e.target.value)}
                       placeholder="Full name"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white"
+                      className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white placeholder-ot-manatee"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
-                      Phone number <span className="text-[#2563eb]">*</span>
+                    <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">
+                      Phone number <span className="text-ot-primary">*</span>
                     </label>
                     <input
                       type="tel"
@@ -328,25 +294,27 @@ const BookingPage: React.FC = () => {
                       onChange={e => setGuestPhone(e.target.value)}
                       placeholder="+421 900 000 000"
                       required
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white"
+                      pattern="^\+?[\d\s\-()]{6,20}$"
+                      className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white placeholder-ot-manatee"
                     />
+                    <p className="mt-1 text-xs text-ot-manatee">
+                      We'll only use this to contact you about your reservation
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Reservation details */}
-              <div className="bg-white rounded-xl border border-gray-200 p-5">
-                <h2 className="text-sm font-bold text-gray-900 mb-4">Reservation details</h2>
+              <div className="bg-white rounded-ot-card border border-ot-iron p-5">
+                <h2 className="text-sm font-extrabold text-ot-charade mb-4">Reservation details</h2>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
 
-                  {/* Party size */}
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                    <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">
                       Party size
                     </label>
                     {availableSeats === 0 ? (
-                      <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 font-medium">
+                      <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-ot-btn text-sm text-red-600 font-medium">
                         Fully booked
                       </div>
                     ) : (
@@ -355,7 +323,7 @@ const BookingPage: React.FC = () => {
                         <select
                           value={partySize}
                           onChange={e => setPartySize(e.target.value)}
-                          className="w-full pl-9 pr-8 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white"
+                          className="w-full pl-9 pr-8 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade appearance-none focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white"
                         >
                           {(availableSeats !== null && !availabilityLoading
                             ? PARTY_SIZES.slice(0, availableSeats)
@@ -372,9 +340,8 @@ const BookingPage: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Date */}
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                    <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">
                       Date
                     </label>
                     <div className="relative">
@@ -384,14 +351,13 @@ const BookingPage: React.FC = () => {
                         value={selectedDate}
                         min={todayISO()}
                         onChange={e => { setSelectedDate(e.target.value); setError(null); }}
-                        className="w-full pl-9 pr-2 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white"
+                        className="w-full pl-9 pr-2 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white"
                       />
                     </div>
                   </div>
 
-                  {/* Time */}
                   <div className="col-span-2 sm:col-span-1">
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                    <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">
                       Time
                     </label>
                     <div className="relative">
@@ -399,7 +365,7 @@ const BookingPage: React.FC = () => {
                       <select
                         value={selectedTime}
                         onChange={e => setSelectedTime(e.target.value)}
-                        className="w-full pl-9 pr-8 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white"
+                        className="w-full pl-9 pr-8 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade appearance-none focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white"
                       >
                         {TIME_OPTIONS.map(t => <option key={t}>{t}</option>)}
                       </select>
@@ -408,34 +374,38 @@ const BookingPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Special requests */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                  <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">
                     Special requests{' '}
-                    <span className="font-normal text-gray-400 normal-case">(optional)</span>
+                    <span className="font-normal text-ot-manatee normal-case">(optional)</span>
                   </label>
                   <textarea
                     value={specialRequests}
                     onChange={e => setSpecialRequests(e.target.value)}
-                    placeholder="Allergies, anniversary, high chair needed…"
+                    placeholder="Allergies, anniversary, high chair needed..."
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2563eb] bg-white resize-none"
+                    maxLength={500}
+                    className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white resize-none placeholder-ot-manatee"
                   />
+                  <p className="mt-1 text-xs text-ot-manatee text-right">
+                    {specialRequests.length}/500
+                  </p>
                 </div>
               </div>
 
-              {/* Error banner */}
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
-                  {error}
+                <div className="bg-red-50 border border-red-200 rounded-ot-btn p-3 text-sm text-red-700 flex items-start gap-2">
+                  <svg className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{error}</span>
                 </div>
               )}
 
-              {/* Submit */}
               <button
                 type="submit"
                 disabled={isSubmitting || !guestPhone || availableSeats === 0}
-                className="w-full py-4 text-sm font-bold text-white bg-[#2563eb] rounded-xl hover:bg-[#1d4ed8] active:scale-95 transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-4 text-sm font-bold text-white bg-ot-primary rounded-ot-btn hover:bg-ot-primary-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <>
@@ -443,23 +413,22 @@ const BookingPage: React.FC = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    Completing reservation…
+                    {isEditMode ? 'Updating reservation...' : 'Completing reservation...'}
                   </>
                 ) : (
-                  'Complete reservation'
+                  isEditMode ? 'Update reservation' : 'Complete reservation'
                 )}
               </button>
 
-              <p className="text-xs text-gray-400 text-center">
+              <p className="text-xs text-ot-manatee text-center">
                 You won't be charged until after your visit
               </p>
             </form>
           </div>
 
-          {/* ── Right: Booking summary ───────────────────────────────────── */}
           <div className="lg:w-72 xl:w-80 flex-shrink-0">
-            <div className="bg-white rounded-xl border border-gray-200 p-5 lg:sticky lg:top-8">
-              <h3 className="text-sm font-bold text-gray-900 mb-4">Booking summary</h3>
+            <div className="bg-white rounded-ot-card border border-ot-iron p-5 lg:sticky lg:top-8">
+              <h3 className="text-sm font-extrabold text-ot-charade mb-4">Booking summary</h3>
 
               <div className="space-y-3.5">
                 {[
@@ -470,22 +439,22 @@ const BookingPage: React.FC = () => {
                   <div key={label} className="flex items-center gap-3">
                     <div className="flex-shrink-0">{icon}</div>
                     <div>
-                      <p className="text-xs text-gray-400">{label}</p>
-                      <p className="text-sm font-semibold text-gray-800">{value}</p>
+                      <p className="text-xs text-ot-manatee">{label}</p>
+                      <p className="text-sm font-bold text-ot-charade">{value}</p>
                     </div>
                   </div>
                 ))}
 
                 {restaurant && (
-                  <div className="flex items-start gap-3 pt-3 border-t border-gray-100">
-                    <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <div className="flex items-start gap-3 pt-3 border-t border-ot-iron">
+                    <svg className="w-4 h-4 text-ot-manatee flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                     <div className="min-w-0">
-                      <p className="text-xs text-gray-400">Location</p>
-                      <p className="text-sm font-semibold text-gray-800 truncate">{restaurant.name}</p>
-                      <p className="text-xs text-gray-500">{restaurant.address}, {restaurant.city}</p>
+                      <p className="text-xs text-ot-manatee">Location</p>
+                      <p className="text-sm font-bold text-ot-charade truncate">{restaurant.name}</p>
+                      <p className="text-xs text-ot-pale-sky">{restaurant.address}, {restaurant.city}</p>
                     </div>
                   </div>
                 )}

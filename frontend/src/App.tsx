@@ -11,13 +11,19 @@ import ResetPasswordPage from './pages/Auth/ResetPasswordPage';
 import SearchPage from './pages/SearchPage';
 import RestaurantDetailPage from './pages/RestaurantDetailPage';
 import BookingPage from './pages/BookingPage';
+import MyReservationsPage from './pages/MyReservationsPage';
+import ProfilePage from './pages/ProfilePage';
+import DashboardOverviewPage from './pages/Dashboard/DashboardOverviewPage';
+import DashboardRestaurantsPage from './pages/Dashboard/DashboardRestaurantsPage';
+import DashboardRestaurantFormPage from './pages/Dashboard/DashboardRestaurantFormPage';
+import OwnerRoute from './components/dashboard/OwnerRoute';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-ot-charade"></div>
     </div>;
   }
 
@@ -34,7 +40,7 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-ot-charade"></div>
     </div>;
   }
 
@@ -80,6 +86,36 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <BookingPage />
         </ProtectedRoute>
+      } />
+      <Route path="/my-reservations" element={
+        <ProtectedRoute>
+          <MyReservationsPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <ProfilePage />
+        </ProtectedRoute>
+      } />
+      <Route path="/dashboard" element={
+        <OwnerRoute>
+          <DashboardOverviewPage />
+        </OwnerRoute>
+      } />
+      <Route path="/dashboard/restaurants" element={
+        <OwnerRoute>
+          <DashboardRestaurantsPage />
+        </OwnerRoute>
+      } />
+      <Route path="/dashboard/restaurants/new" element={
+        <OwnerRoute>
+          <DashboardRestaurantFormPage />
+        </OwnerRoute>
+      } />
+      <Route path="/dashboard/restaurants/:id/edit" element={
+        <OwnerRoute>
+          <DashboardRestaurantFormPage />
+        </OwnerRoute>
       } />
     </Routes>
   );

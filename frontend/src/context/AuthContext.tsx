@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useRe
 import { useNavigate } from 'react-router-dom';
 import { User } from '../interfaces/user';
 import { useNotification } from './NotificationContext';
+import { API_URL } from '../utils/api';
 
 interface LoginData {
   user_email: string;
@@ -29,6 +30,7 @@ interface AuthContextType {
   login: (data: LoginData) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
+  updateUser: (updates: Partial<User>) => void;
 }
 
 export class FieldValidationError extends Error {
@@ -50,8 +52,6 @@ export const useAuth = () => {
 interface AuthProviderProps {
   children: ReactNode;
 }
-
-const API_URL = 'http://localhost:8000/api';
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -237,6 +237,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const updateUser = useCallback((updates: Partial<User>) => {
+    setUser(prev => prev ? { ...prev, ...updates } : null);
+  }, []);
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('token');
@@ -253,6 +257,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     register,
     logout,
+    updateUser,
   };
 
   return (

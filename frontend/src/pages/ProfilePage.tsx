@@ -6,6 +6,7 @@ import { useNotification } from '../context/NotificationContext';
 import { apiFetch, ApiError } from '../utils/api';
 import { User } from '../interfaces/user';
 import { Reservation } from '../interfaces/reservation';
+import { Review } from '../interfaces/review';
 import {
   formatDate,
   fromApiTime,
@@ -658,53 +659,254 @@ const ReservationsSection: React.FC<ReservationsSectionProps> = ({
 };
 
 
-const ReviewsSection: React.FC = () => (
-  <div>
-    <h2 className="text-xl font-bold text-ot-charade mb-6">Review Center</h2>
+const ReviewStarRating: React.FC<{ rating: number }> = ({ rating }) => (
+  <div className="flex items-center gap-0.5">
+    {[1, 2, 3, 4, 5].map(i => (
+      <svg
+        key={i}
+        className={`w-4 h-4 ${i <= rating ? 'text-ot-primary' : 'text-ot-iron'}`}
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z" />
+      </svg>
+    ))}
+  </div>
+);
 
-    <div className="bg-white rounded-xl border border-ot-iron p-6 mb-6 shadow-sm">
-      <div className="flex items-center gap-6">
-        <div className="text-center">
-          <p className="text-4xl font-bold text-ot-charade">0</p>
-          <p className="text-xs text-ot-pale-sky mt-1">Reviews</p>
+const ReviewStarSelector: React.FC<{
+  value: number;
+  onChange: (rating: number) => void;
+}> = ({ value, onChange }) => (
+  <div className="flex items-center gap-1">
+    {[1, 2, 3, 4, 5].map(i => (
+      <button
+        key={i}
+        type="button"
+        onClick={() => onChange(i)}
+        className="focus:outline-none"
+      >
+        <svg
+          className={`w-6 h-6 transition-colors ${i <= value ? 'text-ot-primary' : 'text-ot-iron hover:text-ot-manatee'}`}
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z" />
+        </svg>
+      </button>
+    ))}
+  </div>
+);
+
+const ReviewsSection: React.FC = () => {
+  const { show: showNotification } = useNotification();
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editRating, setEditRating] = useState(0);
+  const [editText, setEditText] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const fetchReviews = () => {
+    setLoading(true);
+    apiFetch<Review[]>('/reviews/my')
+      .then(setReviews)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchReviews(); }, []);
+
+  const avgRating = reviews.length > 0
+    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+    : null;
+
+  const startEdit = (review: Review) => {
+    setEditingId(review.id);
+    setEditRating(review.rating);
+    setEditText(review.text ?? '');
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditRating(0);
+    setEditText('');
+  };
+
+  const handleSaveEdit = async (reviewId: number) => {
+    setSaving(true);
+    try {
+      await apiFetch(`/reviews/${reviewId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ rating: editRating, text: editText.trim() || null }),
+      });
+      showNotification('Review updated', 'success');
+      cancelEdit();
+      fetchReviews();
+    } catch (err) {
+      if (err instanceof ApiError) showNotification(err.message, 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (reviewId: number) => {
+    if (!window.confirm('Are you sure you want to delete this review?')) return;
+    try {
+      await apiFetch(`/reviews/${reviewId}`, { method: 'DELETE' });
+      showNotification('Review deleted', 'success');
+      fetchReviews();
+    } catch (err) {
+      if (err instanceof ApiError) showNotification(err.message, 'error');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-16">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-ot-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h2 className="text-xl font-bold text-ot-charade mb-6">Review Center</h2>
+
+      <div className="bg-white rounded-xl border border-ot-iron p-6 mb-6 shadow-sm">
+        <div className="flex items-center gap-6">
+          <div className="text-center">
+            <p className="text-4xl font-bold text-ot-charade">{reviews.length}</p>
+            <p className="text-xs text-ot-pale-sky mt-1">Reviews</p>
+          </div>
+          <div className="h-12 w-px bg-ot-iron" />
+          <div className="text-center">
+            <p className="text-4xl font-bold text-ot-charade">{avgRating ?? '\u2014'}</p>
+            <p className="text-xs text-ot-pale-sky mt-1">Avg. Rating</p>
+          </div>
+          <div className="h-12 w-px bg-ot-iron" />
+          <div className="flex-1">
+            {[5, 4, 3, 2, 1].map(star => {
+              const count = reviews.filter(r => r.rating === star).length;
+              const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+              return (
+                <div key={star} className="flex items-center gap-2 mb-1">
+                  <span className="text-xs text-ot-pale-sky w-3">{star}</span>
+                  <div className="flex-1 h-2 bg-ot-athens-gray rounded-full overflow-hidden">
+                    <div className="h-full bg-ot-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="text-xs text-ot-manatee w-4">{count}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <div className="h-12 w-px bg-ot-iron" />
-        <div className="text-center">
-          <p className="text-4xl font-bold text-ot-charade">&mdash;</p>
-          <p className="text-xs text-ot-pale-sky mt-1">Avg. Rating</p>
+      </div>
+
+      {reviews.length === 0 ? (
+        <div className="bg-white rounded-xl border border-ot-iron text-center py-16 px-6 shadow-sm">
+          <svg className="w-14 h-14 text-ot-iron mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+          <h3 className="text-base font-bold text-ot-charade mb-1">No reviews yet</h3>
+          <p className="text-sm text-ot-pale-sky mb-6">
+            After dining at a restaurant, you can share your experience here.
+          </p>
+          <Link
+            to="/search"
+            className="inline-flex items-center gap-2 bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-6 py-3 rounded-lg transition-colors text-sm"
+          >
+            Find restaurants to review
+          </Link>
         </div>
-        <div className="h-12 w-px bg-ot-iron" />
-        <div className="flex-1">
-          {[5, 4, 3, 2, 1].map(star => (
-            <div key={star} className="flex items-center gap-2 mb-1">
-              <span className="text-xs text-ot-pale-sky w-3">{star}</span>
-              <div className="flex-1 h-2 bg-ot-athens-gray rounded-full overflow-hidden">
-                <div className="h-full bg-ot-primary rounded-full" style={{ width: '0%' }} />
-              </div>
-              <span className="text-xs text-ot-manatee w-4">0</span>
+      ) : (
+        <div className="space-y-4">
+          {reviews.map(review => (
+            <div key={review.id} className="bg-white rounded-xl border border-ot-iron p-5 shadow-sm">
+              {editingId === review.id ? (
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <Link
+                      to={`/restaurant/${review.restaurant.slug}`}
+                      className="text-sm font-bold text-ot-primary hover:underline"
+                    >
+                      {review.restaurant.name}
+                    </Link>
+                  </div>
+                  <div className="mb-3">
+                    <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">Rating</label>
+                    <ReviewStarSelector value={editRating} onChange={setEditRating} />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">Review</label>
+                    <textarea
+                      value={editText}
+                      onChange={e => setEditText(e.target.value)}
+                      maxLength={2000}
+                      rows={3}
+                      className="w-full border border-ot-iron rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white resize-none"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleSaveEdit(review.id)}
+                      disabled={editRating === 0 || saving}
+                      className="text-sm font-bold text-white bg-ot-primary hover:bg-ot-primary-dark px-4 py-2 rounded-lg transition-colors disabled:opacity-40"
+                    >
+                      {saving ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      className="text-sm text-ot-pale-sky hover:text-ot-charade transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Link
+                      to={`/restaurant/${review.restaurant.slug}`}
+                      className="text-sm font-bold text-ot-primary hover:underline"
+                    >
+                      {review.restaurant.name}
+                    </Link>
+                    <span className="text-xs text-ot-manatee">
+                      {new Date(review.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric', month: 'long', day: 'numeric',
+                      })}
+                    </span>
+                  </div>
+                  <div className="mb-2">
+                    <ReviewStarRating rating={review.rating} />
+                  </div>
+                  {review.text && (
+                    <p className="text-sm text-ot-pale-sky leading-relaxed mb-3">{review.text}</p>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => startEdit(review)}
+                      className="text-xs font-bold text-ot-charade hover:text-ot-primary transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(review.id)}
+                      className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
-      </div>
+      )}
     </div>
-
-    <div className="bg-white rounded-xl border border-ot-iron text-center py-16 px-6 shadow-sm">
-      <svg className="w-14 h-14 text-ot-iron mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-      </svg>
-      <h3 className="text-base font-bold text-ot-charade mb-1">No reviews yet</h3>
-      <p className="text-sm text-ot-pale-sky mb-6">
-        After dining at a restaurant, you can share your experience here.
-      </p>
-      <Link
-        to="/search"
-        className="inline-flex items-center gap-2 bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-6 py-3 rounded-lg transition-colors text-sm"
-      >
-        Find restaurants to review
-      </Link>
-    </div>
-  </div>
-);
+  );
+};
 
 
 const SavedVenuesSection: React.FC = () => (

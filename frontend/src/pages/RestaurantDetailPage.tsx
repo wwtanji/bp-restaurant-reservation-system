@@ -5,7 +5,9 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Restaurant } from '../interfaces/restaurant';
 import { SlotAvailability } from '../interfaces/reservation';
-import { apiFetch } from '../utils/api';
+import { Review } from '../interfaces/review';
+import { apiFetch, ApiError } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import {
   TIME_OPTIONS,
   QUICK_TIME_SLOTS,
@@ -14,16 +16,6 @@ import {
   toApiTime,
   PRICE_SYMBOLS,
 } from '../constants/reservation';
-
-interface Review {
-  id: number;
-  author: string;
-  initials: string;
-  dined: string;
-  rating: number;
-  text: string;
-  avatarColor: string;
-}
 
 const NAV_TABS = ['Overview', 'Concierge', 'Photos', 'Menu', 'Reviews', 'Details', 'FAQs'];
 
@@ -42,35 +34,36 @@ const CONCIERGE_SUGGESTIONS = [
   { emoji: '\u{1F465}', text: 'Can it accommodate large groups?' },
 ];
 
-const RATING_CATEGORIES = [
-  { label: 'Food',     score: 4.7 },
-  { label: 'Service',  score: 4.4 },
-  { label: 'Ambience', score: 4.6 },
-  { label: 'Value',    score: 4.3 },
+const AVATAR_COLORS = [
+  'from-gray-600 to-gray-800',
+  'from-gray-400 to-gray-600',
+  'from-gray-500 to-gray-700',
+  'from-gray-300 to-gray-500',
 ];
 
-const REVIEWS: Review[] = [
-  {
-    id: 1, author: 'Sarah M.', initials: 'SM', dined: 'Dined on February 18, 2026',
-    rating: 5, text: 'Absolutely magical atmosphere! The food was fantastic and the staff was very attentive. Perfect for a special occasion dinner.',
-    avatarColor: 'from-gray-600 to-gray-800',
-  },
-  {
-    id: 2, author: 'Thomas K.', initials: 'TK', dined: 'Dined on February 14, 2026',
-    rating: 4, text: 'Great food, truly unique interior design. One downside is the noise level during peak hours. The menu is also a bit complicated at first, but the staff was very helpful.',
-    avatarColor: 'from-gray-400 to-gray-600',
-  },
-  {
-    id: 3, author: 'Julia W.', initials: 'JW', dined: 'Dined on January 30, 2026',
-    rating: 4, text: 'Booked the private room for our office team of 12 — worked out perfectly! Great selection and the vegetarian options were surprisingly good.',
-    avatarColor: 'from-gray-500 to-gray-700',
-  },
-  {
-    id: 4, author: 'Marco B.', initials: 'MB', dined: 'Dined on January 22, 2026',
-    rating: 3, text: 'Beautiful restaurant with jaw-dropping decor. Food quality is genuinely high, but prices are on the steeper side. Overall a 3/5 experience.',
-    avatarColor: 'from-gray-300 to-gray-500',
-  },
-];
+const StarSelector: React.FC<{
+  value: number;
+  onChange: (rating: number) => void;
+}> = ({ value, onChange }) => (
+  <div className="flex items-center gap-1">
+    {[1, 2, 3, 4, 5].map(i => (
+      <button
+        key={i}
+        type="button"
+        onClick={() => onChange(i)}
+        className="focus:outline-none"
+      >
+        <svg
+          className={`w-7 h-7 transition-colors ${i <= value ? 'text-ot-primary' : 'text-ot-iron hover:text-ot-manatee'}`}
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z" />
+        </svg>
+      </button>
+    ))}
+  </div>
+);
 
 const HERO_IMAGES = [
   'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&h=600&fit=crop',
@@ -193,6 +186,16 @@ const RestaurantDetailPage: React.FC = () => {
   const [showAllPhotos, setShowAllPhotos] = useState(false);
   const [conciergeQuery, setConciergeQuery] = useState('');
 
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [userRating, setUserRating] = useState(0);
+  const [userReviewText, setUserReviewText] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+
+  const { user } = useAuth();
+
   const overviewRef  = useRef<HTMLDivElement>(null);
   const reviewsRef   = useRef<HTMLDivElement>(null);
   const conciergeRef = useRef<HTMLDivElement>(null);
@@ -227,6 +230,45 @@ const RestaurantDetailPage: React.FC = () => {
     return () => controller.abort();
   }, [slug, selectedDate, selectedTime]);
 
+  const fetchReviews = () => {
+    if (!restaurant) return;
+    setReviewsLoading(true);
+    apiFetch<Review[]>(`/reviews/restaurant/${restaurant.id}`)
+      .then(setReviews)
+      .catch(() => {})
+      .finally(() => setReviewsLoading(false));
+  };
+
+  useEffect(() => {
+    if (restaurant) fetchReviews();
+  }, [restaurant?.id]);
+
+  const handleSubmitReview = async () => {
+    if (!restaurant || userRating === 0) return;
+    setSubmittingReview(true);
+    setReviewError(null);
+    try {
+      await apiFetch(`/reviews/${restaurant.id}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          rating: userRating,
+          text: userReviewText.trim() || null,
+        }),
+      });
+      setShowReviewForm(false);
+      setUserRating(0);
+      setUserReviewText('');
+      fetchReviews();
+      apiFetch<Restaurant>(`/restaurants/${slug}`).then(setRestaurant);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setReviewError(err.message);
+      }
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   const scrollToSection = (tab: string) => {
     setActiveTab(tab);
     const ref = sectionRefs[tab];
@@ -252,11 +294,11 @@ const RestaurantDetailPage: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const filteredReviews = REVIEWS.filter(
+  const filteredReviews = reviews.filter(
     r =>
       reviewSearch === '' ||
-      r.text.toLowerCase().includes(reviewSearch.toLowerCase()) ||
-      r.author.toLowerCase().includes(reviewSearch.toLowerCase())
+      (r.text && r.text.toLowerCase().includes(reviewSearch.toLowerCase())) ||
+      r.author.first_name.toLowerCase().includes(reviewSearch.toLowerCase())
   );
 
   const handleSlotClick = (slot: string) => {
@@ -473,19 +515,24 @@ const RestaurantDetailPage: React.FC = () => {
                   </div>
 
                   <div className="flex-1">
-                    <div className="space-y-3 mb-5">
-                      {RATING_CATEGORIES.map(cat => (
-                        <div key={cat.label} className="flex items-center gap-3">
-                          <span className="text-sm text-ot-pale-sky w-16 flex-shrink-0">{cat.label}</span>
-                          <RatingBar score={cat.score} />
-                          <span className="text-sm font-bold text-ot-charade w-8 text-right flex-shrink-0">
-                            {cat.score}
-                          </span>
-                        </div>
-                      ))}
+                    <div className="space-y-2">
+                      {[5, 4, 3, 2, 1].map(star => {
+                        const count = reviews.filter(r => r.rating === star).length;
+                        const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+                        return (
+                          <div key={star} className="flex items-center gap-3">
+                            <span className="text-sm text-ot-pale-sky w-6 text-right flex-shrink-0">{star}</span>
+                            <svg className="w-4 h-4 text-ot-primary flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z" />
+                            </svg>
+                            <RatingBar score={pct / 20} />
+                            <span className="text-xs text-ot-manatee w-6 text-right flex-shrink-0">{count}</span>
+                          </div>
+                        );
+                      })}
                     </div>
 
-                    <div className="flex items-center gap-3 pt-3 border-t border-ot-iron">
+                    <div className="flex items-center gap-3 pt-3 mt-3 border-t border-ot-iron">
                       <svg className="w-4 h-4 text-ot-manatee flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
                       </svg>
@@ -518,49 +565,113 @@ const RestaurantDetailPage: React.FC = () => {
                 )}
               </div>
 
+              {user && (
+                <div className="mb-6">
+                  {!showReviewForm ? (
+                    <button
+                      onClick={() => setShowReviewForm(true)}
+                      className="inline-flex items-center gap-2 bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-5 py-2.5 rounded-ot-btn transition-colors text-sm"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Write a Review
+                    </button>
+                  ) : (
+                    <div className="bg-ot-athens-gray rounded-ot-card p-5 border border-ot-iron">
+                      <h3 className="text-sm font-bold text-ot-charade mb-3">Your Review</h3>
+                      <div className="mb-4">
+                        <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-2">Rating</label>
+                        <StarSelector value={userRating} onChange={setUserRating} />
+                      </div>
+                      <div className="mb-4">
+                        <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-2">Review (optional)</label>
+                        <textarea
+                          value={userReviewText}
+                          onChange={e => setUserReviewText(e.target.value)}
+                          placeholder="Share your experience..."
+                          maxLength={2000}
+                          rows={4}
+                          className="w-full border border-ot-iron rounded-ot-btn px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white placeholder-ot-manatee resize-none"
+                        />
+                      </div>
+                      {reviewError && (
+                        <p className="text-xs text-red-600 mb-3">{reviewError}</p>
+                      )}
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={handleSubmitReview}
+                          disabled={userRating === 0 || submittingReview}
+                          className="bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-5 py-2.5 rounded-ot-btn transition-colors text-sm disabled:opacity-40"
+                        >
+                          {submittingReview ? 'Submitting...' : 'Submit Review'}
+                        </button>
+                        <button
+                          onClick={() => { setShowReviewForm(false); setReviewError(null); }}
+                          className="text-sm text-ot-pale-sky hover:text-ot-charade transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {reviewSearch && (
                 <p className="text-sm text-ot-pale-sky mb-4">
-                  Showing {filteredReviews.length} of {REVIEWS.length} reviews
+                  Showing {filteredReviews.length} of {reviews.length} reviews
                 </p>
               )}
 
-              <div className="space-y-7">
-                {filteredReviews.length > 0 ? (
-                  filteredReviews.map(review => (
-                    <div key={review.id} className="border-b border-ot-iron/50 pb-7 last:border-0">
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${review.avatarColor} flex items-center justify-center flex-shrink-0`}>
-                          <span className="text-white font-bold text-xs">{review.initials}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                            <span className="text-sm font-bold text-ot-charade">{review.author}</span>
-                            <StarRating rating={review.rating} size="sm" />
-                            <span className="text-xs font-bold text-ot-charade">
-                              {review.rating === 5 ? 'Exceptional' : review.rating === 4 ? 'Awesome' : 'Good'}
-                            </span>
+              {reviewsLoading ? (
+                <div className="flex justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-ot-primary" />
+                </div>
+              ) : (
+                <div className="space-y-7">
+                  {filteredReviews.length > 0 ? (
+                    filteredReviews.map((review, index) => {
+                      const initials = review.author.first_name.charAt(0).toUpperCase();
+                      const avatarColor = AVATAR_COLORS[index % AVATAR_COLORS.length];
+                      const reviewDate = new Date(review.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric', month: 'long', day: 'numeric',
+                      });
+                      return (
+                        <div key={review.id} className="border-b border-ot-iron/50 pb-7 last:border-0">
+                          <div className="flex items-start gap-3 mb-3">
+                            <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${avatarColor} flex items-center justify-center flex-shrink-0`}>
+                              <span className="text-white font-bold text-xs">{initials}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                                <span className="text-sm font-bold text-ot-charade">{review.author.first_name}</span>
+                                <StarRating rating={review.rating} size="sm" />
+                                <span className="text-xs font-bold text-ot-charade">
+                                  {ratingLabel(review.rating)}
+                                </span>
+                              </div>
+                              <span className="text-xs text-ot-manatee">{reviewDate}</span>
+                            </div>
                           </div>
-                          <span className="text-xs text-ot-manatee">{review.dined}</span>
+                          {review.text && (
+                            <p className="text-sm text-ot-pale-sky leading-relaxed">{review.text}</p>
+                          )}
                         </div>
-                      </div>
-                      <p className="text-sm text-ot-pale-sky leading-relaxed">{review.text}</p>
-                      <button className="mt-2 text-xs text-ot-primary hover:underline flex items-center gap-1">
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                        </svg>
-                        Helpful
-                      </button>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-12">
+                      <svg className="w-10 h-10 text-ot-iron mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                      </svg>
+                      <p className="text-ot-manatee text-sm">
+                        {reviewSearch ? 'No reviews match your search.' : 'No reviews yet. Be the first to share your experience!'}
+                      </p>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    <svg className="w-10 h-10 text-ot-iron mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <p className="text-ot-manatee text-sm">No reviews match your search.</p>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

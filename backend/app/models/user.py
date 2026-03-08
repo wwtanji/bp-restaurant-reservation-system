@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from app.models.restaurant import Restaurant
     from app.models.reservation import Reservation
     from app.models.password_reset_token import PasswordResetToken
+    from app.models.review import Review
 
 
 class UserRole:
@@ -54,4 +55,8 @@ class User(Base):
 
     reservations: Mapped[list["Reservation"]] = relationship(
         "Reservation", back_populates="user", cascade="all, delete-orphan"
+    )
+
+    reviews: Mapped[list["Review"]] = relationship(
+        "Review", back_populates="user", cascade="all, delete-orphan"
     )

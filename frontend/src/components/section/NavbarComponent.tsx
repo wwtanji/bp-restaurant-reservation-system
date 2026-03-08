@@ -6,17 +6,20 @@ import { useNotification } from "../../context/NotificationContext";
 import { Link, useNavigate } from "react-router-dom";
 import NotificationComponent from "../notification/NotificationComponent";
 
-const navigation = [
-  { name: "Search", href: "/search" },
-  { name: "My Reservations", href: "/my-reservations" },
-  { name: "Profile", href: "/profile" },
-];
+const OWNER_ROLE = 1;
 
 const NavbarComponent: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, logout: authLogout } = useAuth();
   const { show } = useNotification();
   const navigate = useNavigate();
+
+  const navigation = [
+    { name: "Search", href: "/search" },
+    { name: "My Reservations", href: "/my-reservations" },
+    ...(user?.role === OWNER_ROLE ? [{ name: "Dashboard", href: "/dashboard" }] : []),
+    { name: "Profile", href: "/profile" },
+  ];
 
   const handleLogout = () => {
     authLogout();

@@ -13,6 +13,10 @@ import RestaurantDetailPage from './pages/RestaurantDetailPage';
 import BookingPage from './pages/BookingPage';
 import MyReservationsPage from './pages/MyReservationsPage';
 import ProfilePage from './pages/ProfilePage';
+import DashboardOverviewPage from './pages/Dashboard/DashboardOverviewPage';
+import DashboardRestaurantsPage from './pages/Dashboard/DashboardRestaurantsPage';
+import DashboardRestaurantFormPage from './pages/Dashboard/DashboardRestaurantFormPage';
+import OwnerRoute from './components/dashboard/OwnerRoute';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -92,6 +96,26 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <ProfilePage />
         </ProtectedRoute>
+      } />
+      <Route path="/dashboard" element={
+        <OwnerRoute>
+          <DashboardOverviewPage />
+        </OwnerRoute>
+      } />
+      <Route path="/dashboard/restaurants" element={
+        <OwnerRoute>
+          <DashboardRestaurantsPage />
+        </OwnerRoute>
+      } />
+      <Route path="/dashboard/restaurants/new" element={
+        <OwnerRoute>
+          <DashboardRestaurantFormPage />
+        </OwnerRoute>
+      } />
+      <Route path="/dashboard/restaurants/:id/edit" element={
+        <OwnerRoute>
+          <DashboardRestaurantFormPage />
+        </OwnerRoute>
       } />
     </Routes>
   );

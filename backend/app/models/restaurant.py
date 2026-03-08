@@ -8,6 +8,7 @@ from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.user import User
     from app.models.reservation import Reservation
+    from app.models.review import Review
 
 
 class Restaurant(Base):
@@ -57,4 +58,8 @@ class Restaurant(Base):
 
     reservations: Mapped[list["Reservation"]] = relationship(
         "Reservation", back_populates="restaurant", cascade="all, delete-orphan"
+    )
+
+    reviews: Mapped[list["Review"]] = relationship(
+        "Review", back_populates="restaurant", cascade="all, delete-orphan"
     )

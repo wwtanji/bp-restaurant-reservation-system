@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Restaurant } from '../../interfaces/restaurant';
+import { resolveImageUrl } from '../../utils/api';
 
 const PRICE_SYMBOL: Record<number, string> = { 1: '$', 2: '$$', 3: '$$$', 4: '$$$$' };
 
@@ -50,7 +51,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, isActive, o
     >
       <div className="flex-shrink-0 w-36 h-28 rounded-ot-card overflow-hidden bg-ot-iron">
         <img
-          src={restaurant.cover_image ?? ''}
+          src={resolveImageUrl(restaurant.cover_image)}
           alt={restaurant.name}
           className="w-full h-full object-cover"
         />

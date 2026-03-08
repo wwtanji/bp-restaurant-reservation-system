@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Restaurant } from '../../interfaces/restaurant';
-import { apiFetch } from '../../utils/api';
+import { apiFetch, resolveImageUrl } from '../../utils/api';
 import { PRICE_SYMBOLS, QUICK_TIME_SLOTS } from '../../constants/reservation';
 
 const FALLBACK_IMAGES = [
@@ -19,9 +19,6 @@ function getFallbackImage(id: number): string {
   return FALLBACK_IMAGES[id % FALLBACK_IMAGES.length];
 }
 
-function pseudoBookingCount(id: number): number {
-  return ((id * 7 + 3) % 40) + 1;
-}
 
 const Stars: React.FC<{ rating: number | null }> = ({ rating }) => {
   const filled = Math.round(rating ?? 0);
@@ -43,9 +40,9 @@ const Stars: React.FC<{ rating: number | null }> = ({ rating }) => {
 
 const RestaurantCard: React.FC<{
   restaurant: Restaurant;
+  bookedToday: number;
   onClick: () => void;
-}> = ({ restaurant, onClick }) => {
-  const bookingCount = pseudoBookingCount(restaurant.id);
+}> = ({ restaurant, bookedToday, onClick }) => {
 
   return (
     <div
@@ -54,26 +51,26 @@ const RestaurantCard: React.FC<{
     >
       <div className="h-[140px] overflow-hidden bg-ot-athens-gray">
         <img
-          src={restaurant.cover_image || getFallbackImage(restaurant.id)}
+          src={resolveImageUrl(restaurant.cover_image) || getFallbackImage(restaurant.id)}
           alt={restaurant.name}
           onError={e => { (e.target as HTMLImageElement).src = getFallbackImage(restaurant.id); }}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
       </div>
 
-      <div className="flex flex-col items-start p-3 bg-white">
-        <h3 className="w-full font-bold text-[17px] leading-6 text-ot-charade line-clamp-1 mb-1">
+      <div className="flex flex-col items-start p-2 h-[160px] bg-white">
+        <h3 className="w-full font-bold text-[17px] leading-6 text-ot-charade line-clamp-1 pb-1">
           {restaurant.name}
         </h3>
 
-        <div className="flex items-center gap-1 mb-1">
+        <div className="flex items-center pb-1">
           <Stars rating={restaurant.rating} />
-          <span className="text-[12.7px] font-medium leading-5 text-ot-charade">
+          <span className="text-[12.7px] font-medium leading-5 text-ot-charade pl-1">
             {restaurant.review_count} reviews
           </span>
         </div>
 
-        <p className="text-[13.8px] leading-5 text-ot-charade mb-2">
+        <p className="text-[13.8px] leading-5 text-ot-charade pb-2">
           {restaurant.cuisine}
           <span className="mx-1">&middot;</span>
           {PRICE_SYMBOLS[restaurant.price_range]}
@@ -81,16 +78,16 @@ const RestaurantCard: React.FC<{
           {restaurant.city}
         </p>
 
-        <div className="flex items-center gap-1 mb-2">
-          <svg className="w-5 h-5 text-ot-charade flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="flex items-center h-6">
+          <svg className="w-6 h-6 text-ot-charade flex-shrink-0 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           <span className="text-[13.5px] font-medium leading-5 text-ot-charade">
-            Booked {bookingCount} times today
+            Booked {bookedToday} {bookedToday === 1 ? 'time' : 'times'} today
           </span>
         </div>
 
-        <div className="flex flex-wrap gap-1">
+        <div className="flex gap-1 pt-2 self-stretch">
           {QUICK_TIME_SLOTS.slice(0, 3).map(slot => (
             <button
               key={slot}
@@ -98,7 +95,7 @@ const RestaurantCard: React.FC<{
                 e.stopPropagation();
                 onClick();
               }}
-              className="flex items-center justify-center w-[70px] h-8 bg-ot-primary rounded-ot-btn text-white font-bold text-[13.8px] leading-8 hover:bg-ot-primary-dark transition-colors"
+              className="flex items-center justify-center w-[70px] h-8 bg-ot-primary rounded text-white font-bold text-[13.8px] leading-8 hover:bg-ot-primary-dark transition-colors"
             >
               {slot}
             </button>
@@ -142,8 +139,9 @@ const ScrollArrow: React.FC<{
 const RestaurantRow: React.FC<{
   title: string;
   restaurants: Restaurant[];
+  bookedTodayMap: Record<number, number>;
   onCardClick: (slug: string) => void;
-}> = ({ title, restaurants, onCardClick }) => {
+}> = ({ title, restaurants, bookedTodayMap, onCardClick }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -188,6 +186,7 @@ const RestaurantRow: React.FC<{
             <RestaurantCard
               key={r.id}
               restaurant={r}
+              bookedToday={bookedTodayMap[r.id] ?? 0}
               onClick={() => onCardClick(r.slug)}
             />
           ))}
@@ -201,11 +200,18 @@ const RestaurantRow: React.FC<{
 const TopRatedSection: React.FC = () => {
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [bookedTodayMap, setBookedTodayMap] = useState<Record<number, number>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    apiFetch<Restaurant[]>('/restaurants/?limit=50')
-      .then(setRestaurants)
+    Promise.all([
+      apiFetch<Restaurant[]>('/restaurants/?limit=50'),
+      apiFetch<Record<number, number>>('/restaurants/booked-today').catch(() => ({})),
+    ])
+      .then(([restaurantData, bookedData]) => {
+        setRestaurants(restaurantData);
+        setBookedTodayMap(bookedData);
+      })
       .catch(() => {})
       .finally(() => setIsLoading(false));
   }, []);
@@ -248,6 +254,7 @@ const TopRatedSection: React.FC = () => {
           <RestaurantRow
             title="Top Rated Restaurants"
             restaurants={topRated}
+            bookedTodayMap={bookedTodayMap}
             onCardClick={handleClick}
           />
         )}
@@ -257,6 +264,7 @@ const TopRatedSection: React.FC = () => {
             key={cuisine}
             title={cuisine}
             restaurants={items}
+            bookedTodayMap={bookedTodayMap}
             onCardClick={handleClick}
           />
         ))}

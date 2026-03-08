@@ -1,3 +1,4 @@
+static/uploads/
 .envrc
 *.sqlite*
 .DS_Store

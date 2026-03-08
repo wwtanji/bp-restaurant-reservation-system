@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MapView from '../components/map/MapView';
 import { Restaurant } from '../interfaces/restaurant';
-import { apiFetch } from '../utils/api';
+import { apiFetch, resolveImageUrl } from '../utils/api';
 import { PRICE_SYMBOLS, todayISO, formatDate } from '../constants/reservation';
 
 function ratingLabel(rating: number | null): string {
@@ -74,7 +74,7 @@ const ShowcaseCard: React.FC<{
   >
     <div className="relative h-44 overflow-hidden">
       <img
-        src={restaurant.cover_image ?? ''}
+        src={resolveImageUrl(restaurant.cover_image)}
         alt={restaurant.name}
         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
       />
@@ -129,7 +129,7 @@ const ListCard: React.FC<{
   >
     <div className="relative w-36 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-ot-athens-gray">
       <img
-        src={restaurant.cover_image ?? ''}
+        src={resolveImageUrl(restaurant.cover_image)}
         alt={restaurant.name}
         className="w-full h-full object-cover"
       />
@@ -276,9 +276,9 @@ const SearchPage: React.FC = () => {
         <div className="max-w-7xl mx-auto space-y-3">
 
           <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-            <span className="text-white font-extrabold text-lg tracking-tight hidden sm:block mr-2 select-none">
+            <a href="/" className="text-white font-extrabold text-lg tracking-tight mr-2 select-none">
               Reservelt
-            </span>
+            </a>
             <div className="flex items-center gap-2 flex-wrap">
               {[
                 {

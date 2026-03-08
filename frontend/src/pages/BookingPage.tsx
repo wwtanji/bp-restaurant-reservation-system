@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { apiFetch } from '../utils/api';
+import { apiFetch, resolveImageUrl } from '../utils/api';
 import { Restaurant } from '../interfaces/restaurant';
 import { Reservation, SlotAvailability } from '../interfaces/reservation';
 import {
@@ -250,7 +250,7 @@ const BookingPage: React.FC = () => {
             <div className="bg-white rounded-ot-card border border-ot-iron p-4 mb-6 flex items-center gap-4">
               {restaurant?.cover_image ? (
                 <img
-                  src={restaurant.cover_image}
+                  src={resolveImageUrl(restaurant.cover_image)}
                   alt={restaurant.name}
                   className="w-14 h-14 rounded-ot-card object-cover flex-shrink-0"
                 />

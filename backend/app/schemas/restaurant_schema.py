@@ -17,6 +17,7 @@ class RestaurantOut(BaseModel):
     latitude: Optional[float]
     longitude: Optional[float]
     cover_image: Optional[str]
+    gallery_images: Optional[list[str]] = None
     rating: Optional[float]
     review_count: int
     max_capacity: int

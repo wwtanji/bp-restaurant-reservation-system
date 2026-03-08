@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import String, Integer, Float, Boolean, Text, ForeignKey, DateTime
+from sqlalchemy import String, Integer, Float, Boolean, Text, ForeignKey, DateTime, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.database import Base, get_utc_now
 from typing import Optional, TYPE_CHECKING
@@ -42,6 +42,7 @@ class Restaurant(Base):
     rating: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     review_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     max_capacity: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
+    opening_hours: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 

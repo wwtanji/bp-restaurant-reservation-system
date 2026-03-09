@@ -1,5 +1,7 @@
 import fastapi as fa
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from app.controllers import ALL_CONTROLLERS
 import app.models
 
@@ -16,6 +18,9 @@ API.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+Path("static/uploads").mkdir(parents=True, exist_ok=True)
+API.mount("/static", StaticFiles(directory="static"), name="static")
 
 for router in ALL_CONTROLLERS:
     API.include_router(router)

@@ -13,6 +13,7 @@ export interface Restaurant {
   latitude: number | null;
   longitude: number | null;
   cover_image: string | null;
+  gallery_images: string[] | null;
   rating: number | null;
   review_count: number;
   max_capacity: number;

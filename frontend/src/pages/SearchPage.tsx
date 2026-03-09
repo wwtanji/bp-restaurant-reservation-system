@@ -1,9 +1,11 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MapView from '../components/map/MapView';
 import { Restaurant } from '../interfaces/restaurant';
-import { apiFetch } from '../utils/api';
+import { resolveImageUrl } from '../utils/api';
 import { PRICE_SYMBOLS, todayISO, formatDate } from '../constants/reservation';
+import useFetch from '../hooks/useFetch';
+import useDebounce from '../hooks/useDebounce';
 
 function ratingLabel(rating: number | null): string {
   if (!rating) return '';
@@ -13,7 +15,6 @@ function ratingLabel(rating: number | null): string {
   return 'Good';
 }
 
-// Maps category chip labels to backend cuisine query param values
 const CATEGORY_CUISINE: Record<string, string | undefined> = {
   Italian:  'Italian',
   Mexican:  'Mexican',
@@ -31,9 +32,6 @@ const CATEGORIES = [
   'Featured', 'Romantic', 'Italian', 'Brunch', 'Mexican',
   'Pizza', 'Seafood', 'American', 'Japanese', 'Birthdays', 'Steak', 'Vegan',
 ];
-
-
-// ── Icons ─────────────────────────────────────────────────────────────────────
 
 const StarIcon: React.FC = () => (
   <svg className="w-3 h-3 text-ot-primary flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -55,17 +53,14 @@ const Stars: React.FC<{ rating: number | null }> = ({ rating }) => (
   </div>
 );
 
-
-// ── Cards ─────────────────────────────────────────────────────────────────────
-
-const ShowcaseCard: React.FC<{
+const ShowcaseCard = React.memo<{
   restaurant: Restaurant;
   isActive: boolean;
   onHover: (id: number | null) => void;
-  onClick: () => void;
-}> = ({ restaurant, isActive, onHover, onClick }) => (
+  onCardClick: (slug: string) => void;
+}>(({ restaurant, isActive, onHover, onCardClick }) => (
   <div
-    onClick={onClick}
+    onClick={() => onCardClick(restaurant.slug)}
     onMouseEnter={() => onHover(restaurant.id)}
     onMouseLeave={() => onHover(null)}
     className={`group rounded-[28px] overflow-hidden bg-white cursor-pointer transition-all duration-200 ${
@@ -74,7 +69,7 @@ const ShowcaseCard: React.FC<{
   >
     <div className="relative h-44 overflow-hidden">
       <img
-        src={restaurant.cover_image ?? ''}
+        src={resolveImageUrl(restaurant.cover_image)}
         alt={restaurant.name}
         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
       />
@@ -110,17 +105,17 @@ const ShowcaseCard: React.FC<{
       </div>
     </div>
   </div>
-);
+));
+ShowcaseCard.displayName = 'ShowcaseCard';
 
-
-const ListCard: React.FC<{
+const ListCard = React.memo<{
   restaurant: Restaurant;
   isActive: boolean;
   onHover: (id: number | null) => void;
-  onClick: () => void;
-}> = ({ restaurant, isActive, onHover, onClick }) => (
+  onCardClick: (slug: string) => void;
+}>(({ restaurant, isActive, onHover, onCardClick }) => (
   <div
-    onClick={onClick}
+    onClick={() => onCardClick(restaurant.slug)}
     onMouseEnter={() => onHover(restaurant.id)}
     onMouseLeave={() => onHover(null)}
     className={`group flex gap-4 py-5 cursor-pointer transition-colors ${
@@ -129,7 +124,7 @@ const ListCard: React.FC<{
   >
     <div className="relative w-36 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-ot-athens-gray">
       <img
-        src={restaurant.cover_image ?? ''}
+        src={resolveImageUrl(restaurant.cover_image)}
         alt={restaurant.name}
         className="w-full h-full object-cover"
       />
@@ -161,10 +156,8 @@ const ListCard: React.FC<{
       </div>
     </div>
   </div>
-);
-
-
-// ── Empty / Error / Loading states ────────────────────────────────────────────
+));
+ListCard.displayName = 'ListCard';
 
 const EmptyState: React.FC<{ query: string; onReset: () => void }> = ({ query, onReset }) => (
   <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
@@ -214,46 +207,28 @@ const ErrorState: React.FC<{ message: string; onRetry: () => void }> = ({ messag
   </div>
 );
 
-
-// ── Main Component ────────────────────────────────────────────────────────────
-
 const SearchPage: React.FC = () => {
   const navigate = useNavigate();
 
-  const [restaurants, setRestaurants]       = useState<Restaurant[]>([]);
-  const [isLoading, setIsLoading]           = useState(false);
-  const [error, setError]                   = useState<string | null>(null);
   const [searchQuery, setSearchQuery]       = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('Featured');
   const [sortBy, setSortBy]                 = useState<SortKey>('relevance');
   const [viewMode, setViewMode]             = useState<ViewMode>('list');
   const [activeId, setActiveId]             = useState<number | null>(null);
   const [showMap, setShowMap]               = useState(false);
-  const [fetchKey, setFetchKey]             = useState(0);
 
-  // Debounce search input
-  useEffect(() => {
-    const id = setTimeout(() => setDebouncedQuery(searchQuery), 400);
-    return () => clearTimeout(id);
-  }, [searchQuery]);
+  const debouncedQuery = useDebounce(searchQuery, 400);
 
-  useEffect(() => {
+  const fetchPath = useMemo(() => {
     const params = new URLSearchParams({ limit: '50' });
-
     if (debouncedQuery) params.set('q', debouncedQuery);
-
     const cuisine = CATEGORY_CUISINE[activeCategory];
     if (cuisine) params.set('cuisine', cuisine);
+    return `/restaurants/?${params}`;
+  }, [debouncedQuery, activeCategory]);
 
-    setIsLoading(true);
-    setError(null);
-
-    apiFetch<Restaurant[]>(`/restaurants/?${params}`)
-      .then(setRestaurants)
-      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load restaurants'))
-      .finally(() => setIsLoading(false));
-  }, [debouncedQuery, activeCategory, fetchKey]);
+  const { data: fetchedRestaurants, isLoading, error, refetch } = useFetch<Restaurant[]>(fetchPath);
+  const restaurants = useMemo(() => fetchedRestaurants ?? [], [fetchedRestaurants]);
 
   const displayedRestaurants = useMemo(() => {
     const list = [...restaurants];
@@ -261,6 +236,10 @@ const SearchPage: React.FC = () => {
     if (sortBy === 'reviews') return list.sort((a, b) => b.review_count - a.review_count);
     return list;
   }, [restaurants, sortBy]);
+
+  const handleCardClick = useCallback((slug: string) => {
+    navigate(`/restaurant/${slug}`);
+  }, [navigate]);
 
   const resetFilters = () => {
     setSearchQuery('');
@@ -271,14 +250,13 @@ const SearchPage: React.FC = () => {
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-ot-athens-gray">
 
-      {/* ── Top App Bar ───────────────────────────────────────────── */}
       <div className="flex-shrink-0 bg-ot-charade px-4 pt-4 pb-4 shadow-lg">
         <div className="max-w-7xl mx-auto space-y-3">
 
           <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-            <span className="text-white font-extrabold text-lg tracking-tight hidden sm:block mr-2 select-none">
+            <a href="/" className="text-white font-extrabold text-lg tracking-tight mr-2 select-none">
               Reservelt
-            </span>
+            </a>
             <div className="flex items-center gap-2 flex-wrap">
               {[
                 {
@@ -347,7 +325,6 @@ const SearchPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Category chips ────────────────────────────────────────── */}
       <div className="flex-shrink-0 bg-white border-b border-ot-iron shadow-sm">
         <div className="max-w-7xl mx-auto px-4 flex items-center gap-2 py-2.5 overflow-x-auto scrollbar-hide">
           {CATEGORIES.map(label => {
@@ -376,10 +353,8 @@ const SearchPage: React.FC = () => {
 
       <div className="flex flex-1 overflow-hidden">
 
-        {/* ── Results panel ──────────────────────────────────────────── */}
         <div className={`${showMap ? 'hidden' : 'flex'} md:flex flex-col flex-1 overflow-hidden`}>
 
-          {/* Sort / view controls */}
           <div className="flex-shrink-0 bg-white border-b border-ot-iron/50 px-4 py-2.5">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -437,13 +412,12 @@ const SearchPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Results */}
           <div className="flex-1 overflow-y-auto bg-white">
             <div className={viewMode === 'list' ? 'px-4' : 'p-4'}>
               {isLoading ? (
                 <LoadingSpinner />
               ) : error ? (
-                <ErrorState message={error} onRetry={() => setFetchKey(k => k + 1)} />
+                <ErrorState message={error} onRetry={refetch} />
               ) : displayedRestaurants.length > 0 ? (
                 viewMode === 'grid' ? (
                   <div className="grid grid-cols-1 gap-4">
@@ -453,7 +427,7 @@ const SearchPage: React.FC = () => {
                         restaurant={r}
                         isActive={activeId === r.id}
                         onHover={setActiveId}
-                        onClick={() => navigate(`/restaurant/${r.slug}`)}
+                        onCardClick={handleCardClick}
                       />
                     ))}
                   </div>
@@ -465,7 +439,7 @@ const SearchPage: React.FC = () => {
                         restaurant={r}
                         isActive={activeId === r.id}
                         onHover={setActiveId}
-                        onClick={() => navigate(`/restaurant/${r.slug}`)}
+                        onCardClick={handleCardClick}
                       />
                     ))}
                   </div>
@@ -477,7 +451,6 @@ const SearchPage: React.FC = () => {
           </div>
         </div>
 
-        {/* ── Map panel ──────────────────────────────────────────────── */}
         <div className={`${showMap ? 'flex-1' : 'hidden'} md:block md:w-[45%] md:flex-none flex-shrink-0`}>
           <MapView
             restaurants={displayedRestaurants}
@@ -489,7 +462,6 @@ const SearchPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Mobile map toggle ─────────────────────────────────────────── */}
       <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
         <button
           onClick={() => setShowMap(v => !v)}

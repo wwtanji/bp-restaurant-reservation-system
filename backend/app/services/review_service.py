@@ -60,6 +60,18 @@ def create_review(
     return get_review_with_relations(db, review.id)
 
 
+def list_latest_reviews(db: Session, limit: int) -> list[Review]:
+    return (
+        db.query(Review)
+        .options(joinedload(Review.user), joinedload(Review.restaurant))
+        .join(Review.restaurant)
+        .filter(Restaurant.is_active == True)
+        .order_by(Review.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+
 def list_restaurant_reviews(
     db: Session,
     restaurant_id: int,

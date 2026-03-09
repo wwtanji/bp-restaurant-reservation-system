@@ -39,6 +39,7 @@ class Restaurant(Base):
     longitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
     cover_image: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    gallery_images: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
 
     rating: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     review_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

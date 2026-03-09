@@ -38,6 +38,12 @@ async function tryRefreshToken(): Promise<string | null> {
   return refreshPromise;
 }
 
+export function resolveImageUrl(url: string | null): string {
+  if (!url) return '';
+  if (url.startsWith('/static/')) return `${API_URL}${url}`;
+  return url;
+}
+
 export async function apiFetch<T = unknown>(
   path: string,
   options: RequestInit = {},
@@ -45,7 +51,7 @@ export async function apiFetch<T = unknown>(
   const buildHeaders = (token: string | null) => {
     const headers = new Headers(options.headers);
     if (token) headers.set('Authorization', `Bearer ${token}`);
-    if (!headers.has('Content-Type') && options.body) {
+    if (!headers.has('Content-Type') && options.body && !(options.body instanceof FormData)) {
       headers.set('Content-Type', 'application/json');
     }
     return headers;

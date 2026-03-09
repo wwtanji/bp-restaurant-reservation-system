@@ -62,6 +62,10 @@ class ReviewRestaurantBrief(BaseModel):
     id: int
     name: str
     slug: str
+    cuisine: str
+    city: str
+    price_range: int
+    rating: Optional[float]
 
     model_config = ConfigDict(from_attributes=True)
 

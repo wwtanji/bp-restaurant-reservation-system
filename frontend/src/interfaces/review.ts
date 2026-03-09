@@ -7,6 +7,10 @@ export interface ReviewRestaurantBrief {
   id: number;
   name: string;
   slug: string;
+  cuisine: string;
+  city: string;
+  price_range: number;
+  rating: number | null;
 }
 
 export interface Review {

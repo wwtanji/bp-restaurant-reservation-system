@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useReducer } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import L from 'leaflet';
@@ -6,9 +6,10 @@ import 'leaflet/dist/leaflet.css';
 import { Restaurant } from '../interfaces/restaurant';
 import { SlotAvailability } from '../interfaces/reservation';
 import { Review } from '../interfaces/review';
-import { apiFetch, ApiError } from '../utils/api';
+import { apiFetch, ApiError, resolveImageUrl } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import PhotoGalleryModal from '../components/restaurant/PhotoGalleryModal';
+import useFetch from '../hooks/useFetch';
 
 import {
   TIME_OPTIONS,
@@ -43,6 +44,52 @@ const AVATAR_COLORS = [
   'from-gray-300 to-gray-500',
 ];
 
+type ReviewFormAction =
+  | { type: 'OPEN_FORM' }
+  | { type: 'CLOSE_FORM' }
+  | { type: 'SET_RATING'; rating: number }
+  | { type: 'SET_TEXT'; text: string }
+  | { type: 'SUBMIT_START' }
+  | { type: 'SUBMIT_SUCCESS' }
+  | { type: 'SUBMIT_ERROR'; error: string };
+
+interface ReviewFormState {
+  showForm: boolean;
+  rating: number;
+  text: string;
+  submitting: boolean;
+  error: string | null;
+}
+
+const REVIEW_FORM_INITIAL_STATE: ReviewFormState = {
+  showForm: false,
+  rating: 0,
+  text: '',
+  submitting: false,
+  error: null,
+};
+
+function reviewFormReducer(state: ReviewFormState, action: ReviewFormAction): ReviewFormState {
+  switch (action.type) {
+    case 'OPEN_FORM':
+      return { ...state, showForm: true };
+    case 'CLOSE_FORM':
+      return { ...REVIEW_FORM_INITIAL_STATE };
+    case 'SET_RATING':
+      return { ...state, rating: action.rating };
+    case 'SET_TEXT':
+      return { ...state, text: action.text };
+    case 'SUBMIT_START':
+      return { ...state, submitting: true, error: null };
+    case 'SUBMIT_SUCCESS':
+      return { ...REVIEW_FORM_INITIAL_STATE };
+    case 'SUBMIT_ERROR':
+      return { ...state, submitting: false, error: action.error };
+    default:
+      return state;
+  }
+}
+
 const StarSelector: React.FC<{
   value: number;
   onChange: (rating: number) => void;
@@ -66,14 +113,6 @@ const StarSelector: React.FC<{
     ))}
   </div>
 );
-
-const HERO_IMAGES = [
-  'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&h=600&fit=crop',
-  'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=450&h=300&fit=crop',
-  'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=450&h=300&fit=crop',
-  'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=450&h=300&fit=crop',
-  'https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=450&h=300&fit=crop',
-];
 
 function ratingLabel(rating: number | null): string {
   if (!rating) return '';
@@ -171,9 +210,8 @@ const RestaurantDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
 
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
-  const [restaurantLoading, setRestaurantLoading] = useState(true);
-  const [restaurantError, setRestaurantError] = useState<string | null>(null);
+  const { data: restaurant, isLoading: restaurantLoading, error: restaurantError, refetch: refetchRestaurant } =
+    useFetch<Restaurant>(slug ? `/restaurants/${slug}` : null);
 
   const [partySize, setPartySize]       = useState('2 people');
   const [selectedDate, setSelectedDate] = useState(todayISO);
@@ -188,13 +226,11 @@ const RestaurantDetailPage: React.FC = () => {
   const [galleryPhotoIndex, setGalleryPhotoIndex] = useState<number | null>(null);
   const [conciergeQuery, setConciergeQuery] = useState('');
 
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [reviewsLoading, setReviewsLoading] = useState(false);
-  const [showReviewForm, setShowReviewForm] = useState(false);
-  const [userRating, setUserRating] = useState(0);
-  const [userReviewText, setUserReviewText] = useState('');
-  const [submittingReview, setSubmittingReview] = useState(false);
-  const [reviewError, setReviewError] = useState<string | null>(null);
+  const { data: fetchedReviews, isLoading: reviewsLoading, refetch: refetchReviews } =
+    useFetch<Review[]>(restaurant ? `/reviews/restaurant/${restaurant.id}` : null);
+  const reviews = fetchedReviews ?? [];
+
+  const [reviewForm, dispatchReview] = useReducer(reviewFormReducer, REVIEW_FORM_INITIAL_STATE);
 
   const { user } = useAuth();
 
@@ -207,15 +243,6 @@ const RestaurantDetailPage: React.FC = () => {
     Concierge: conciergeRef,
     Reviews:   reviewsRef,
   };
-
-  useEffect(() => {
-    if (!slug) return;
-    setRestaurantLoading(true);
-    apiFetch<Restaurant>(`/restaurants/${slug}`)
-      .then(setRestaurant)
-      .catch(() => setRestaurantError('Restaurant not found'))
-      .finally(() => setRestaurantLoading(false));
-  }, [slug]);
 
   useEffect(() => {
     if (!slug) return;
@@ -232,42 +259,24 @@ const RestaurantDetailPage: React.FC = () => {
     return () => controller.abort();
   }, [slug, selectedDate, selectedTime]);
 
-  const fetchReviews = () => {
-    if (!restaurant) return;
-    setReviewsLoading(true);
-    apiFetch<Review[]>(`/reviews/restaurant/${restaurant.id}`)
-      .then(setReviews)
-      .catch(() => {})
-      .finally(() => setReviewsLoading(false));
-  };
-
-  useEffect(() => {
-    if (restaurant) fetchReviews();
-  }, [restaurant?.id]);
-
   const handleSubmitReview = async () => {
-    if (!restaurant || userRating === 0) return;
-    setSubmittingReview(true);
-    setReviewError(null);
+    if (!restaurant || reviewForm.rating === 0) return;
+    dispatchReview({ type: 'SUBMIT_START' });
     try {
       await apiFetch(`/reviews/${restaurant.id}`, {
         method: 'POST',
         body: JSON.stringify({
-          rating: userRating,
-          text: userReviewText.trim() || null,
+          rating: reviewForm.rating,
+          text: reviewForm.text.trim() || null,
         }),
       });
-      setShowReviewForm(false);
-      setUserRating(0);
-      setUserReviewText('');
-      fetchReviews();
-      apiFetch<Restaurant>(`/restaurants/${slug}`).then(setRestaurant);
+      dispatchReview({ type: 'SUBMIT_SUCCESS' });
+      refetchReviews();
+      refetchRestaurant();
     } catch (err) {
       if (err instanceof ApiError) {
-        setReviewError(err.message);
+        dispatchReview({ type: 'SUBMIT_ERROR', error: err.message });
       }
-    } finally {
-      setSubmittingReview(false);
     }
   };
 
@@ -345,24 +354,43 @@ const RestaurantDetailPage: React.FC = () => {
   const priceLabel = PRICE_SYMBOLS[restaurant.price_range] ?? '$$';
   const overallRating = restaurant.rating ?? 4.5;
 
+  const allPhotos: string[] = [
+    ...(restaurant.cover_image ? [resolveImageUrl(restaurant.cover_image)] : []),
+    ...(restaurant.gallery_images?.map(resolveImageUrl) ?? []),
+  ];
+
+  const heroImage = allPhotos[0] ?? null;
+
   return (
     <div className="min-h-screen bg-white">
 
-      <div className="relative h-64 md:h-[420px] overflow-hidden cursor-pointer" onClick={() => setGalleryPhotoIndex(0)}>
-        <img
-          src={restaurant.cover_image || HERO_IMAGES[0]}
-          alt={restaurant.name}
-          className="w-full h-full object-cover"
-        />
-        <button
-          onClick={() => setGalleryPhotoIndex(0)}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm text-ot-charade text-sm font-bold px-5 py-2.5 rounded-full shadow-md hover:shadow-lg hover:bg-white transition-all flex items-center gap-2"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          See all {HERO_IMAGES.length} photos
-        </button>
+      <div className="relative h-64 md:h-[420px] overflow-hidden cursor-pointer" onClick={() => allPhotos.length > 0 && setGalleryPhotoIndex(0)}>
+        {heroImage ? (
+          <img
+            src={heroImage}
+            alt={restaurant.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-ot-athens-gray flex flex-col items-center justify-center gap-2 text-ot-manatee">
+            <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="text-sm font-medium">No photos yet</span>
+          </div>
+        )}
+        {allPhotos.length > 0 && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setGalleryPhotoIndex(0); }}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm text-ot-charade text-sm font-bold px-5 py-2.5 rounded-full shadow-md hover:shadow-lg hover:bg-white transition-all flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            See all {allPhotos.length} photos
+          </button>
+        )}
       </div>
 
       <div className="sticky top-0 z-30 bg-white border-b border-ot-iron">
@@ -552,9 +580,9 @@ const RestaurantDetailPage: React.FC = () => {
 
               {user && (
                 <div className="mb-6">
-                  {!showReviewForm ? (
+                  {!reviewForm.showForm ? (
                     <button
-                      onClick={() => setShowReviewForm(true)}
+                      onClick={() => dispatchReview({ type: 'OPEN_FORM' })}
                       className="inline-flex items-center gap-2 bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-5 py-2.5 rounded-ot-btn transition-colors text-sm"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -567,32 +595,32 @@ const RestaurantDetailPage: React.FC = () => {
                       <h3 className="text-sm font-bold text-ot-charade mb-3">Your Review</h3>
                       <div className="mb-4">
                         <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-2">Rating</label>
-                        <StarSelector value={userRating} onChange={setUserRating} />
+                        <StarSelector value={reviewForm.rating} onChange={r => dispatchReview({ type: 'SET_RATING', rating: r })} />
                       </div>
                       <div className="mb-4">
                         <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-2">Review (optional)</label>
                         <textarea
-                          value={userReviewText}
-                          onChange={e => setUserReviewText(e.target.value)}
+                          value={reviewForm.text}
+                          onChange={e => dispatchReview({ type: 'SET_TEXT', text: e.target.value })}
                           placeholder="Share your experience..."
                           maxLength={2000}
                           rows={4}
                           className="w-full border border-ot-iron rounded-ot-btn px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white placeholder-ot-manatee resize-none"
                         />
                       </div>
-                      {reviewError && (
-                        <p className="text-xs text-red-600 mb-3">{reviewError}</p>
+                      {reviewForm.error && (
+                        <p className="text-xs text-red-600 mb-3">{reviewForm.error}</p>
                       )}
                       <div className="flex items-center gap-3">
                         <button
                           onClick={handleSubmitReview}
-                          disabled={userRating === 0 || submittingReview}
+                          disabled={reviewForm.rating === 0 || reviewForm.submitting}
                           className="bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-5 py-2.5 rounded-ot-btn transition-colors text-sm disabled:opacity-40"
                         >
-                          {submittingReview ? 'Submitting...' : 'Submit Review'}
+                          {reviewForm.submitting ? 'Submitting...' : 'Submit Review'}
                         </button>
                         <button
-                          onClick={() => { setShowReviewForm(false); setReviewError(null); }}
+                          onClick={() => dispatchReview({ type: 'CLOSE_FORM' })}
                           className="text-sm text-ot-pale-sky hover:text-ot-charade transition-colors"
                         >
                           Cancel
@@ -840,7 +868,7 @@ const RestaurantDetailPage: React.FC = () => {
       </div>
 
       <PhotoGalleryModal
-        images={HERO_IMAGES}
+        images={allPhotos}
         restaurantName={restaurant.name}
         isOpen={galleryPhotoIndex !== null}
         onClose={() => setGalleryPhotoIndex(null)}

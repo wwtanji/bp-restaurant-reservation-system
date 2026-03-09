@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -7,9 +9,10 @@ from app.schemas.owner_restaurant_schema import (
     RestaurantCreate,
     RestaurantUpdate,
     OwnerRestaurantOut,
+    GalleryImageDelete,
     DashboardStats,
 )
-from app.services import restaurant_service
+from app.services import restaurant_service, upload_service
 from app.utils.rbac import require_restaurant_owner
 
 
@@ -69,3 +72,54 @@ def delete_restaurant(
     db: Session = Depends(get_db),
 ):
     restaurant_service.delete_restaurant(db, restaurant_id, current_user.id)
+
+
+@OWNER_CONTROLLER.post("/{restaurant_id}/cover-image", response_model=OwnerRestaurantOut)
+def upload_cover_image(
+    restaurant_id: int,
+    file: Annotated[UploadFile, File()],
+    current_user: User = Depends(require_restaurant_owner),
+    db: Session = Depends(get_db),
+):
+    restaurant = restaurant_service.get_owner_restaurant(db, restaurant_id, current_user.id)
+    if restaurant.cover_image and restaurant.cover_image.startswith("/static/"):
+        upload_service.delete_image(restaurant.cover_image)
+    restaurant.cover_image = upload_service.save_image(file, restaurant_id, "cover")
+    db.commit()
+    db.refresh(restaurant)
+    return restaurant
+
+
+@OWNER_CONTROLLER.post("/{restaurant_id}/gallery-images", response_model=OwnerRestaurantOut)
+def upload_gallery_images(
+    restaurant_id: int,
+    files: Annotated[list[UploadFile], File()],
+    current_user: User = Depends(require_restaurant_owner),
+    db: Session = Depends(get_db),
+):
+    restaurant = restaurant_service.get_owner_restaurant(db, restaurant_id, current_user.id)
+    new_urls = [upload_service.save_image(f, restaurant_id, "gallery") for f in files]
+    existing = restaurant.gallery_images or []
+    restaurant.gallery_images = existing + new_urls
+    db.commit()
+    db.refresh(restaurant)
+    return restaurant
+
+
+@OWNER_CONTROLLER.delete("/{restaurant_id}/gallery-images", response_model=OwnerRestaurantOut)
+def delete_gallery_image(
+    restaurant_id: int,
+    data: GalleryImageDelete,
+    current_user: User = Depends(require_restaurant_owner),
+    db: Session = Depends(get_db),
+):
+    restaurant = restaurant_service.get_owner_restaurant(db, restaurant_id, current_user.id)
+    current_images = restaurant.gallery_images or []
+    if data.image_url not in current_images:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Image not found in gallery")
+    upload_service.delete_image(data.image_url)
+    restaurant.gallery_images = [url for url in current_images if url != data.image_url]
+    db.commit()
+    db.refresh(restaurant)
+    return restaurant

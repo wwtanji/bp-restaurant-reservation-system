@@ -20,6 +20,14 @@ def create_review(
     return review_service.create_review(db, current_user, restaurant_id, data)
 
 
+@REVIEW_CONTROLLER.get("/latest", response_model=list[ReviewOut])
+def list_latest_reviews(
+    limit: int = Query(default=10, ge=1, le=20),
+    db: Session = Depends(get_db),
+):
+    return review_service.list_latest_reviews(db, limit)
+
+
 @REVIEW_CONTROLLER.get("/restaurant/{restaurant_id}", response_model=list[ReviewOut])
 def list_restaurant_reviews(
     restaurant_id: int,

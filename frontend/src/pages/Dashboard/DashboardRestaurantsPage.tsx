@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import DashboardLayout from '../../components/dashboard/DashboardLayout';
-import { apiFetch } from '../../utils/api';
+import { apiFetch, resolveImageUrl } from '../../utils/api';
 import { useNotification } from '../../context/NotificationContext';
 import { OwnerRestaurant } from '../../interfaces/restaurant';
 import { PRICE_SYMBOLS } from '../../constants/reservation';
@@ -74,7 +74,7 @@ const DashboardRestaurantsPage: React.FC = () => {
                 <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 shrink-0">
                   {restaurant.cover_image ? (
                     <img
-                      src={restaurant.cover_image}
+                      src={resolveImageUrl(restaurant.cover_image)}
                       alt={restaurant.name}
                       className="w-full h-full object-cover"
                     />

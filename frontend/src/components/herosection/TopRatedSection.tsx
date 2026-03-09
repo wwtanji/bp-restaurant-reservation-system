@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Restaurant } from '../../interfaces/restaurant';
-import { apiFetch } from '../../utils/api';
+import { resolveImageUrl } from '../../utils/api';
 import { PRICE_SYMBOLS, QUICK_TIME_SLOTS } from '../../constants/reservation';
+import useFetch from '../../hooks/useFetch';
+import useHorizontalScroll from '../../hooks/useHorizontalScroll';
+import ScrollArrow from '../ScrollArrow';
 
 const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&h=300&fit=crop',
@@ -17,10 +20,6 @@ const FALLBACK_IMAGES = [
 
 function getFallbackImage(id: number): string {
   return FALLBACK_IMAGES[id % FALLBACK_IMAGES.length];
-}
-
-function pseudoBookingCount(id: number): number {
-  return ((id * 7 + 3) % 40) + 1;
 }
 
 const Stars: React.FC<{ rating: number | null }> = ({ rating }) => {
@@ -41,138 +40,79 @@ const Stars: React.FC<{ rating: number | null }> = ({ rating }) => {
   );
 };
 
-const RestaurantCard: React.FC<{
+const RestaurantCard = React.memo<{
   restaurant: Restaurant;
+  bookedToday: number;
   onClick: () => void;
-}> = ({ restaurant, onClick }) => {
-  const bookingCount = pseudoBookingCount(restaurant.id);
+}>(({ restaurant, bookedToday, onClick }) => (
+  <div
+    onClick={onClick}
+    className="flex-shrink-0 w-[234px] cursor-pointer group rounded-lg border border-ot-iron shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+  >
+    <div className="h-[140px] overflow-hidden bg-ot-athens-gray">
+      <img
+        src={resolveImageUrl(restaurant.cover_image) || getFallbackImage(restaurant.id)}
+        alt={restaurant.name}
+        onError={e => { (e.target as HTMLImageElement).src = getFallbackImage(restaurant.id); }}
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+      />
+    </div>
 
-  return (
-    <div
-      onClick={onClick}
-      className="flex-shrink-0 w-[234px] cursor-pointer group rounded-lg border border-ot-iron shadow-sm hover:shadow-md transition-shadow overflow-hidden"
-    >
-      <div className="h-[140px] overflow-hidden bg-ot-athens-gray">
-        <img
-          src={restaurant.cover_image || getFallbackImage(restaurant.id)}
-          alt={restaurant.name}
-          onError={e => { (e.target as HTMLImageElement).src = getFallbackImage(restaurant.id); }}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
+    <div className="flex flex-col items-start p-2 h-[160px] bg-white">
+      <h3 className="w-full font-bold text-[17px] leading-6 text-ot-charade line-clamp-1 pb-1">
+        {restaurant.name}
+      </h3>
+
+      <div className="flex items-center pb-1">
+        <Stars rating={restaurant.rating} />
+        <span className="text-[12.7px] font-medium leading-5 text-ot-charade pl-1">
+          {restaurant.review_count} reviews
+        </span>
       </div>
 
-      <div className="flex flex-col items-start p-3 bg-white">
-        <h3 className="w-full font-bold text-[17px] leading-6 text-ot-charade line-clamp-1 mb-1">
-          {restaurant.name}
-        </h3>
+      <p className="text-[13.8px] leading-5 text-ot-charade pb-2">
+        {restaurant.cuisine}
+        <span className="mx-1">&middot;</span>
+        {PRICE_SYMBOLS[restaurant.price_range]}
+        <span className="mx-1">&middot;</span>
+        {restaurant.city}
+      </p>
 
-        <div className="flex items-center gap-1 mb-1">
-          <Stars rating={restaurant.rating} />
-          <span className="text-[12.7px] font-medium leading-5 text-ot-charade">
-            {restaurant.review_count} reviews
-          </span>
-        </div>
+      <div className="flex items-center h-6">
+        <svg className="w-6 h-6 text-ot-charade flex-shrink-0 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <span className="text-[13.5px] font-medium leading-5 text-ot-charade">
+          Booked {bookedToday} {bookedToday === 1 ? 'time' : 'times'} today
+        </span>
+      </div>
 
-        <p className="text-[13.8px] leading-5 text-ot-charade mb-2">
-          {restaurant.cuisine}
-          <span className="mx-1">&middot;</span>
-          {PRICE_SYMBOLS[restaurant.price_range]}
-          <span className="mx-1">&middot;</span>
-          {restaurant.city}
-        </p>
-
-        <div className="flex items-center gap-1 mb-2">
-          <svg className="w-5 h-5 text-ot-charade flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <span className="text-[13.5px] font-medium leading-5 text-ot-charade">
-            Booked {bookingCount} times today
-          </span>
-        </div>
-
-        <div className="flex flex-wrap gap-1">
-          {QUICK_TIME_SLOTS.slice(0, 3).map(slot => (
-            <button
-              key={slot}
-              onClick={e => {
-                e.stopPropagation();
-                onClick();
-              }}
-              className="flex items-center justify-center w-[70px] h-8 bg-ot-primary rounded-ot-btn text-white font-bold text-[13.8px] leading-8 hover:bg-ot-primary-dark transition-colors"
-            >
-              {slot}
-            </button>
-          ))}
-        </div>
+      <div className="flex gap-1 pt-2 self-stretch">
+        {QUICK_TIME_SLOTS.slice(0, 3).map(slot => (
+          <button
+            key={slot}
+            onClick={e => {
+              e.stopPropagation();
+              onClick();
+            }}
+            className="flex items-center justify-center w-[70px] h-8 bg-ot-primary rounded text-white font-bold text-[13.8px] leading-8 hover:bg-ot-primary-dark transition-colors"
+          >
+            {slot}
+          </button>
+        ))}
       </div>
     </div>
-  );
-};
-
-const ScrollArrow: React.FC<{
-  direction: 'left' | 'right';
-  onClick: () => void;
-  visible: boolean;
-}> = ({ direction, onClick, visible }) => {
-  if (!visible) return null;
-  return (
-    <button
-      onClick={onClick}
-      className={`absolute top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-ot-athens-gray transition-colors ${
-        direction === 'left' ? 'left-0' : 'right-0'
-      }`}
-    >
-      <svg
-        className="w-5 h-5 text-ot-charade"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        {direction === 'left' ? (
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-        ) : (
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-        )}
-      </svg>
-    </button>
-  );
-};
+  </div>
+));
+RestaurantCard.displayName = 'RestaurantCard';
 
 const RestaurantRow: React.FC<{
   title: string;
   restaurants: Restaurant[];
+  bookedTodayMap: Record<number, number>;
   onCardClick: (slug: string) => void;
-}> = ({ title, restaurants, onCardClick }) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const updateScrollState = () => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 0);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
-  };
-
-  useEffect(() => {
-    updateScrollState();
-    const el = scrollRef.current;
-    if (!el) return;
-    el.addEventListener('scroll', updateScrollState);
-    window.addEventListener('resize', updateScrollState);
-    return () => {
-      el.removeEventListener('scroll', updateScrollState);
-      window.removeEventListener('resize', updateScrollState);
-    };
-  }, [restaurants]);
-
-  const scroll = (direction: 'left' | 'right') => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const amount = el.clientWidth * 0.8;
-    el.scrollBy({ left: direction === 'left' ? -amount : amount, behavior: 'smooth' });
-  };
+}> = ({ title, restaurants, bookedTodayMap, onCardClick }) => {
+  const { scrollRef, canScrollLeft, canScrollRight, scroll } = useHorizontalScroll([restaurants]);
 
   return (
     <section className="mb-10">
@@ -188,6 +128,7 @@ const RestaurantRow: React.FC<{
             <RestaurantCard
               key={r.id}
               restaurant={r}
+              bookedToday={bookedTodayMap[r.id] ?? 0}
               onClick={() => onCardClick(r.slug)}
             />
           ))}
@@ -200,17 +141,13 @@ const RestaurantRow: React.FC<{
 
 const TopRatedSection: React.FC = () => {
   const navigate = useNavigate();
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: fetchedRestaurants, isLoading: restaurantsLoading } = useFetch<Restaurant[]>('/restaurants/?limit=50');
+  const { data: fetchedBookedTodayMap } = useFetch<Record<number, number>>('/restaurants/booked-today');
 
-  useEffect(() => {
-    apiFetch<Restaurant[]>('/restaurants/?limit=50')
-      .then(setRestaurants)
-      .catch(() => {})
-      .finally(() => setIsLoading(false));
-  }, []);
+  const restaurants = fetchedRestaurants ?? [];
+  const bookedTodayMap = fetchedBookedTodayMap ?? {};
 
-  if (isLoading) {
+  if (restaurantsLoading) {
     return (
       <div className="py-12">
         <div className="max-w-ot mx-auto px-4">
@@ -248,6 +185,7 @@ const TopRatedSection: React.FC = () => {
           <RestaurantRow
             title="Top Rated Restaurants"
             restaurants={topRated}
+            bookedTodayMap={bookedTodayMap}
             onCardClick={handleClick}
           />
         )}
@@ -257,6 +195,7 @@ const TopRatedSection: React.FC = () => {
             key={cuisine}
             title={cuisine}
             restaurants={items}
+            bookedTodayMap={bookedTodayMap}
             onCardClick={handleClick}
           />
         ))}

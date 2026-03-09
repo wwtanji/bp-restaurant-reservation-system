@@ -108,6 +108,7 @@ class OwnerRestaurantOut(BaseModel):
     latitude: Optional[float]
     longitude: Optional[float]
     cover_image: Optional[str]
+    gallery_images: Optional[list[str]] = None
     rating: Optional[float]
     review_count: int
     max_capacity: int
@@ -117,6 +118,10 @@ class OwnerRestaurantOut(BaseModel):
     updated_at: Optional[datetime]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class GalleryImageDelete(BaseModel):
+    image_url: str
 
 
 class DashboardStats(BaseModel):

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiFetch, ApiError } from '../utils/api';
 import { Reservation } from '../interfaces/reservation';
+import useFetch from '../hooks/useFetch';
 import {
   formatDate,
   fromApiTime,
@@ -26,33 +27,21 @@ const STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> 
 const MyReservationsPage: React.FC = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('upcoming');
-  const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
-  const fetchReservations = () => {
-    setIsLoading(true);
-    setError(null);
-    apiFetch<Reservation[]>('/reservations/my')
-      .then(setReservations)
-      .catch((err: unknown) => {
-        setError(err instanceof ApiError ? err.message : 'Failed to load reservations');
-      })
-      .finally(() => setIsLoading(false));
-  };
-
-  useEffect(fetchReservations, []);
+  const { data: fetchedReservations, isLoading, error: fetchError, refetch } = useFetch<Reservation[]>('/reservations/my');
+  const reservations = fetchedReservations ?? [];
+  const error = fetchError || cancelError;
 
   const handleCancel = async (id: number) => {
     setCancellingId(id);
+    setCancelError(null);
     try {
       await apiFetch(`/reservations/${id}`, { method: 'DELETE' });
-      setReservations(prev =>
-        prev.map(r => r.id === id ? { ...r, status: RESERVATION_STATUS_CANCELLED } : r)
-      );
+      refetch();
     } catch (err: unknown) {
-      setError(err instanceof ApiError ? err.message : 'Failed to cancel reservation');
+      setCancelError(err instanceof ApiError ? err.message : 'Failed to cancel reservation');
     } finally {
       setCancellingId(null);
     }

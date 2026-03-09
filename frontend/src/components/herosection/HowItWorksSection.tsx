@@ -39,13 +39,13 @@ const STEPS = [
 
 const HowItWorksSection: React.FC = () => {
   return (
-    <div className="bg-ot-athens-gray py-16 sm:py-20">
+    <div className="bg-ot-athens-gray dark:bg-dark-bg py-16 sm:py-20">
       <div className="max-w-ot mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-ot-charade">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-ot-charade dark:text-dark-text">
             How It Works
           </h2>
-          <p className="mt-3 text-sm sm:text-base text-ot-pale-sky max-w-xl mx-auto">
+          <p className="mt-3 text-sm sm:text-base text-ot-pale-sky dark:text-dark-text-secondary max-w-xl mx-auto">
             From search to celebration — book your table in three simple steps.
           </p>
         </div>
@@ -56,10 +56,10 @@ const HowItWorksSection: React.FC = () => {
               <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-ot-primary text-white flex items-center justify-center">
                 {step.icon}
               </div>
-              <h3 className="text-base font-bold text-ot-charade mb-2">
+              <h3 className="text-base font-bold text-ot-charade dark:text-dark-text mb-2">
                 {step.number}. {step.title}
               </h3>
-              <p className="text-sm text-ot-pale-sky leading-relaxed">
+              <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary leading-relaxed">
                 {step.description}
               </p>
             </div>

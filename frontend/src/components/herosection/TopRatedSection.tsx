@@ -47,9 +47,9 @@ const RestaurantCard = React.memo<{
 }>(({ restaurant, bookedToday, onClick }) => (
   <div
     onClick={onClick}
-    className="flex-shrink-0 w-[234px] cursor-pointer group rounded-lg border border-ot-iron shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+    className="flex-shrink-0 w-[234px] cursor-pointer group rounded-lg border border-ot-iron dark:border-dark-border shadow-sm hover:shadow-md transition-shadow overflow-hidden"
   >
-    <div className="h-[140px] overflow-hidden bg-ot-athens-gray">
+    <div className="h-[140px] overflow-hidden bg-ot-athens-gray dark:bg-dark-bg">
       <img
         src={resolveImageUrl(restaurant.cover_image) || getFallbackImage(restaurant.id)}
         alt={restaurant.name}
@@ -58,19 +58,19 @@ const RestaurantCard = React.memo<{
       />
     </div>
 
-    <div className="flex flex-col items-start p-2 h-[160px] bg-white">
-      <h3 className="w-full font-bold text-[17px] leading-6 text-ot-charade line-clamp-1 pb-1">
+    <div className="flex flex-col items-start p-2 h-[160px] bg-white dark:bg-dark-paper">
+      <h3 className="w-full font-bold text-[17px] leading-6 text-ot-charade dark:text-dark-text line-clamp-1 pb-1">
         {restaurant.name}
       </h3>
 
       <div className="flex items-center pb-1">
         <Stars rating={restaurant.rating} />
-        <span className="text-[12.7px] font-medium leading-5 text-ot-charade pl-1">
+        <span className="text-[12.7px] font-medium leading-5 text-ot-charade dark:text-dark-text pl-1">
           {restaurant.review_count} reviews
         </span>
       </div>
 
-      <p className="text-[13.8px] leading-5 text-ot-charade pb-2">
+      <p className="text-[13.8px] leading-5 text-ot-charade dark:text-dark-text pb-2">
         {restaurant.cuisine}
         <span className="mx-1">&middot;</span>
         {PRICE_SYMBOLS[restaurant.price_range]}
@@ -79,10 +79,10 @@ const RestaurantCard = React.memo<{
       </p>
 
       <div className="flex items-center h-6">
-        <svg className="w-6 h-6 text-ot-charade flex-shrink-0 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-6 h-6 text-ot-charade dark:text-dark-text flex-shrink-0 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
-        <span className="text-[13.5px] font-medium leading-5 text-ot-charade">
+        <span className="text-[13.5px] font-medium leading-5 text-ot-charade dark:text-dark-text">
           Booked {bookedToday} {bookedToday === 1 ? 'time' : 'times'} today
         </span>
       </div>
@@ -116,7 +116,7 @@ const RestaurantRow: React.FC<{
 
   return (
     <section className="mb-10">
-      <h2 className="text-[22px] font-bold text-ot-charade mb-4">{title}</h2>
+      <h2 className="text-[22px] font-bold text-ot-charade dark:text-dark-text mb-4">{title}</h2>
 
       <div className="relative">
         <ScrollArrow direction="left" onClick={() => scroll('left')} visible={canScrollLeft} />
@@ -179,7 +179,7 @@ const TopRatedSection: React.FC = () => {
   const handleClick = (slug: string) => navigate(`/restaurant/${slug}`);
 
   return (
-    <div className="bg-white py-12">
+    <div className="bg-white dark:bg-dark-paper py-12">
       <div className="max-w-ot mx-auto px-4">
         {topRated.length > 0 && (
           <RestaurantRow

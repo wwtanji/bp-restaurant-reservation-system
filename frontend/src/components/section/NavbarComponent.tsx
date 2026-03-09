@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Dialog, DialogPanel } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, XMarkIcon, SunIcon, MoonIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../../context/AuthContext";
 import { useNotification } from "../../context/NotificationContext";
+import { useThemeMode } from "../../context/ThemeContext";
 import { Link, useNavigate } from "react-router-dom";
 import NotificationComponent from "../notification/NotificationComponent";
 
@@ -12,6 +13,7 @@ const NavbarComponent: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, logout: authLogout } = useAuth();
   const { show } = useNotification();
+  const { isDark, toggleTheme } = useThemeMode();
   const navigate = useNavigate();
 
   const navigation = [
@@ -32,10 +34,24 @@ const NavbarComponent: React.FC = () => {
     navigate("/login");
   };
 
+  const ThemeToggleButton = () => (
+    <button
+      onClick={toggleTheme}
+      className="p-2 rounded-lg text-ot-pale-sky hover:text-ot-charade dark:text-dark-text-secondary dark:hover:text-dark-text hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+    >
+      {isDark ? (
+        <SunIcon className="size-5" />
+      ) : (
+        <MoonIcon className="size-5" />
+      )}
+    </button>
+  );
+
   return (
     <>
       <NotificationComponent />
-      <header className="bg-white border-b border-ot-iron">
+      <header className="bg-white dark:bg-dark-paper border-b border-ot-iron dark:border-dark-border">
         <nav
           aria-label="Global"
           className="max-w-ot mx-auto flex items-center justify-between px-4 py-3 lg:px-6"
@@ -43,7 +59,7 @@ const NavbarComponent: React.FC = () => {
           <div className="flex items-center gap-8">
             <Link to="/" className="flex items-center gap-1">
               <span className="sr-only">Reservelt</span>
-              <span className="text-xl font-extrabold text-ot-primary tracking-tight">
+              <span className="text-xl font-extrabold text-ot-primary dark:text-dark-primary tracking-tight">
                 Reservelt
               </span>
             </Link>
@@ -52,7 +68,7 @@ const NavbarComponent: React.FC = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="text-sm font-medium text-ot-charade hover:text-ot-primary transition-colors"
+                  className="text-sm font-medium text-ot-charade dark:text-dark-text hover:text-ot-primary dark:hover:text-dark-primary transition-colors"
                 >
                   {item.name}
                 </Link>
@@ -60,11 +76,12 @@ const NavbarComponent: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex lg:hidden">
+          <div className="flex items-center gap-2 lg:hidden">
+            <ThemeToggleButton />
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-ot-charade"
+              className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-ot-charade dark:text-dark-text"
             >
               <span className="sr-only">Open main menu</span>
               <Bars3Icon aria-hidden="true" className="size-6" />
@@ -72,17 +89,18 @@ const NavbarComponent: React.FC = () => {
           </div>
 
           <div className="hidden lg:flex lg:items-center lg:gap-4">
+            <ThemeToggleButton />
             {!user ? (
               <>
                 <button
                   onClick={handleLoginClick}
-                  className="text-sm font-medium text-ot-charade hover:text-ot-primary transition-colors"
+                  className="text-sm font-medium text-ot-charade dark:text-dark-text hover:text-ot-primary dark:hover:text-dark-primary transition-colors"
                 >
                   Sign in
                 </button>
                 <Link
                   to="/signup"
-                  className="text-sm font-bold text-white bg-ot-charade hover:bg-ot-primary-dark px-4 py-2 rounded-ot-btn transition-colors"
+                  className="text-sm font-bold text-white bg-ot-charade dark:bg-dark-primary hover:bg-ot-primary-dark dark:hover:bg-dark-primary-dark px-4 py-2 rounded-ot-btn transition-colors"
                 >
                   Sign up
                 </Link>
@@ -90,7 +108,7 @@ const NavbarComponent: React.FC = () => {
             ) : (
               <button
                 onClick={handleLogout}
-                className="text-sm font-medium text-ot-charade hover:text-ot-primary transition-colors"
+                className="text-sm font-medium text-ot-charade dark:text-dark-text hover:text-ot-primary dark:hover:text-dark-primary transition-colors"
               >
                 Sign out
               </button>
@@ -104,32 +122,32 @@ const NavbarComponent: React.FC = () => {
           className="lg:hidden"
         >
           <div className="fixed inset-0 z-50" />
-          <DialogPanel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white p-6 sm:max-w-sm sm:border-l sm:border-ot-iron">
+          <DialogPanel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white dark:bg-dark-paper p-6 sm:max-w-sm sm:border-l sm:border-ot-iron dark:border-dark-border">
             <div className="flex items-center justify-between">
               <Link to="/" className="flex items-center gap-1">
                 <span className="sr-only">Reservelt</span>
-                <span className="text-xl font-extrabold text-ot-primary tracking-tight">
+                <span className="text-xl font-extrabold text-ot-primary dark:text-dark-primary tracking-tight">
                   Reservelt
                 </span>
               </Link>
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                className="-m-2.5 rounded-md p-2.5 text-ot-charade"
+                className="-m-2.5 rounded-md p-2.5 text-ot-charade dark:text-dark-text"
               >
                 <span className="sr-only">Close menu</span>
                 <XMarkIcon aria-hidden="true" className="size-6" />
               </button>
             </div>
             <div className="mt-6 flow-root">
-              <div className="-my-6 divide-y divide-ot-iron">
+              <div className="-my-6 divide-y divide-ot-iron dark:divide-dark-border">
                 <div className="space-y-1 py-6">
                   {navigation.map((item) => (
                     <Link
                       key={item.name}
                       to={item.href}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="block rounded-ot-btn px-3 py-2.5 text-sm font-medium text-ot-charade hover:bg-ot-athens-gray transition-colors"
+                      className="block rounded-ot-btn px-3 py-2.5 text-sm font-medium text-ot-charade dark:text-dark-text hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
                     >
                       {item.name}
                     </Link>
@@ -140,14 +158,14 @@ const NavbarComponent: React.FC = () => {
                     <>
                       <button
                         onClick={() => { handleLoginClick(); setMobileMenuOpen(false); }}
-                        className="block w-full text-left rounded-ot-btn px-3 py-2.5 text-sm font-medium text-ot-charade hover:bg-ot-athens-gray transition-colors"
+                        className="block w-full text-left rounded-ot-btn px-3 py-2.5 text-sm font-medium text-ot-charade dark:text-dark-text hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
                       >
                         Sign in
                       </button>
                       <Link
                         to="/signup"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="block text-center text-sm font-bold text-white bg-ot-charade hover:bg-ot-primary-dark px-4 py-2.5 rounded-ot-btn transition-colors"
+                        className="block text-center text-sm font-bold text-white bg-ot-charade dark:bg-dark-primary hover:bg-ot-primary-dark dark:hover:bg-dark-primary-dark px-4 py-2.5 rounded-ot-btn transition-colors"
                       >
                         Sign up
                       </Link>
@@ -155,7 +173,7 @@ const NavbarComponent: React.FC = () => {
                   ) : (
                     <button
                       onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
-                      className="block w-full text-left rounded-ot-btn px-3 py-2.5 text-sm font-medium text-ot-charade hover:bg-ot-athens-gray transition-colors"
+                      className="block w-full text-left rounded-ot-btn px-3 py-2.5 text-sm font-medium text-ot-charade dark:text-dark-text hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
                     >
                       Sign out
                     </button>

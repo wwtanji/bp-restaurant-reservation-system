@@ -80,14 +80,14 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-ot-athens-gray p-6">
-      <div className="w-full max-w-md bg-white border border-ot-iron rounded-ot-card shadow-lg p-8 sm:p-10">
+    <div className="min-h-screen flex items-center justify-center bg-ot-athens-gray dark:bg-dark-bg p-6">
+      <div className="w-full max-w-md bg-white dark:bg-dark-paper border border-ot-iron dark:border-dark-border rounded-ot-card shadow-lg p-8 sm:p-10">
         <div className="text-center mb-8">
-          <Link to="/" className="text-2xl font-extrabold text-ot-primary tracking-tight">
+          <Link to="/" className="text-2xl font-extrabold text-ot-primary dark:text-dark-primary tracking-tight">
             Reservelt
           </Link>
-          <h2 className="text-2xl font-extrabold text-ot-charade mt-4">Sign Up</h2>
-          <p className="mt-2 text-sm text-ot-pale-sky">Create your account to get started</p>
+          <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mt-4">Sign Up</h2>
+          <p className="mt-2 text-sm text-ot-pale-sky dark:text-dark-text-secondary">Create your account to get started</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -100,8 +100,8 @@ const RegisterPage: React.FC = () => {
                 value={formData.first_name}
                 onChange={handleChange}
                 placeholder="First Name"
-                className={`w-full px-4 py-3 border rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-primary text-sm text-ot-charade placeholder-ot-manatee ${
-                  errors.first_name ? 'border-red-500' : 'border-ot-iron'
+                className={`w-full px-4 py-3 border rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-primary dark:focus:ring-dark-primary text-sm text-ot-charade dark:text-dark-text placeholder-ot-manatee dark:placeholder-dark-text-secondary dark:bg-dark-surface ${
+                  errors.first_name ? 'border-red-500' : 'border-ot-iron dark:border-dark-border'
                 }`}
                 required
               />
@@ -117,8 +117,8 @@ const RegisterPage: React.FC = () => {
                 value={formData.last_name}
                 onChange={handleChange}
                 placeholder="Last Name"
-                className={`w-full px-4 py-3 border rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-primary text-sm text-ot-charade placeholder-ot-manatee ${
-                  errors.last_name ? 'border-red-500' : 'border-ot-iron'
+                className={`w-full px-4 py-3 border rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-primary dark:focus:ring-dark-primary text-sm text-ot-charade dark:text-dark-text placeholder-ot-manatee dark:placeholder-dark-text-secondary dark:bg-dark-surface ${
+                  errors.last_name ? 'border-red-500' : 'border-ot-iron dark:border-dark-border'
                 }`}
                 required
               />
@@ -135,7 +135,7 @@ const RegisterPage: React.FC = () => {
             value={formData.user_email}
             onChange={handleChange}
             placeholder="Email"
-            className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-primary text-sm text-ot-charade placeholder-ot-manatee"
+            className="w-full px-4 py-3 border border-ot-iron dark:border-dark-border rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-primary dark:focus:ring-dark-primary text-sm text-ot-charade dark:text-dark-text placeholder-ot-manatee dark:placeholder-dark-text-secondary dark:bg-dark-surface"
             required
           />
 
@@ -149,10 +149,10 @@ const RegisterPage: React.FC = () => {
                 onChange={handleChange}
                 onFocus={() => setPasswordTouched(true)}
                 placeholder="Password"
-                className={`w-full px-4 py-3 pr-10 border rounded-ot-btn focus:outline-none focus:ring-2 text-sm text-ot-charade placeholder-ot-manatee transition-colors ${
+                className={`w-full px-4 py-3 pr-10 border rounded-ot-btn focus:outline-none focus:ring-2 text-sm text-ot-charade dark:text-dark-text placeholder-ot-manatee dark:placeholder-dark-text-secondary dark:bg-dark-surface transition-colors ${
                   showPasswordError
                     ? 'border-red-500 focus:ring-red-200'
-                    : 'border-ot-iron focus:ring-ot-primary'
+                    : 'border-ot-iron dark:border-dark-border focus:ring-ot-primary dark:focus:ring-dark-primary'
                 }`}
                 required
               />
@@ -175,7 +175,7 @@ const RegisterPage: React.FC = () => {
               </div>
             )}
 
-            <p className="text-xs text-ot-manatee mt-1.5">
+            <p className="text-xs text-ot-manatee dark:text-dark-text-secondary mt-1.5">
               Password must be at least 8 characters and include an uppercase letter, a lowercase letter and a number.
             </p>
           </div>
@@ -187,15 +187,15 @@ const RegisterPage: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-ot-primary hover:bg-ot-primary-dark text-white font-bold py-3 rounded-ot-btn transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-ot-primary hover:bg-ot-primary-dark dark:hover:bg-dark-primary-dark text-white font-bold py-3 rounded-ot-btn transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
 
-        <p className="text-center text-sm text-ot-pale-sky mt-6">
+        <p className="text-center text-sm text-ot-pale-sky dark:text-dark-text-secondary mt-6">
           Already have an account?{' '}
-          <Link to="/login" className="text-ot-primary font-bold hover:underline">
+          <Link to="/login" className="text-ot-primary dark:text-dark-primary font-bold hover:underline">
             Log In
           </Link>
         </p>

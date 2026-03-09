@@ -17,22 +17,22 @@ import {
 } from '../constants/reservation';
 
 const CalendarIcon = () => (
-  <svg className="w-4 h-4 text-ot-manatee" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+  <svg className="w-4 h-4 text-ot-manatee dark:text-dark-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
   </svg>
 );
 const ClockIcon = () => (
-  <svg className="w-4 h-4 text-ot-manatee" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+  <svg className="w-4 h-4 text-ot-manatee dark:text-dark-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
 );
 const PersonIcon = () => (
-  <svg className="w-4 h-4 text-ot-manatee" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+  <svg className="w-4 h-4 text-ot-manatee dark:text-dark-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
   </svg>
 );
 const ChevronIcon = () => (
-  <svg className="w-4 h-4 text-ot-manatee pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+  <svg className="w-4 h-4 text-ot-manatee dark:text-dark-text-secondary pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
   </svg>
 );
@@ -142,8 +142,8 @@ const BookingPage: React.FC = () => {
     const iconColor = isEditMode ? 'bg-indigo-100' : isPending ? 'bg-amber-100' : 'bg-green-100';
 
     return (
-      <div className="min-h-screen bg-ot-athens-gray flex items-center justify-center p-4">
-        <div className="bg-white rounded-ot-card shadow-lg border border-ot-iron p-8 max-w-md w-full text-center opacity-0 animate-fade-in-up">
+      <div className="min-h-screen bg-ot-athens-gray dark:bg-dark-bg flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-dark-paper rounded-ot-card shadow-lg border border-ot-iron dark:border-dark-border p-8 max-w-md w-full text-center opacity-0 animate-fade-in-up">
 
           <div className={`w-16 h-16 ${iconColor} rounded-full flex items-center justify-center mx-auto mb-5 opacity-0 animate-scale-in`}>
             {isEditMode ? (
@@ -161,10 +161,10 @@ const BookingPage: React.FC = () => {
             )}
           </div>
 
-          <h2 className="text-xl font-extrabold text-ot-charade mb-1 opacity-0 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+          <h2 className="text-xl font-extrabold text-ot-charade dark:text-dark-text mb-1 opacity-0 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
             {isEditMode ? 'Reservation updated!' : isPending ? 'Reservation submitted!' : 'You\'re all set!'}
           </h2>
-          <p className="text-sm text-ot-pale-sky mb-6 opacity-0 animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
+          <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary mb-6 opacity-0 animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
             {isEditMode
               ? 'Your reservation has been updated successfully.'
               : isPending
@@ -172,7 +172,7 @@ const BookingPage: React.FC = () => {
                 : 'Your reservation is confirmed. See you there!'}
           </p>
 
-          <div className="bg-ot-athens-gray rounded-ot-card p-4 text-left space-y-2.5 mb-6 border border-ot-iron opacity-0 animate-fade-in-up" style={{ animationDelay: '0.35s' }}>
+          <div className="bg-ot-athens-gray dark:bg-dark-surface rounded-ot-card p-4 text-left space-y-2.5 mb-6 border border-ot-iron dark:border-dark-border opacity-0 animate-fade-in-up" style={{ animationDelay: '0.35s' }}>
             {[
               ['Restaurant', confirmation.restaurant.name],
               ['Date',       formatDate(confirmation.reservation_date)],
@@ -181,18 +181,18 @@ const BookingPage: React.FC = () => {
               ...(confirmation.guest_name ? [['Name', confirmation.guest_name]] : []),
             ].map(([label, value]) => (
               <div key={label} className="flex justify-between text-sm">
-                <span className="text-ot-pale-sky">{label}</span>
-                <span className="font-bold text-ot-charade">{value}</span>
+                <span className="text-ot-pale-sky dark:text-dark-text-secondary">{label}</span>
+                <span className="font-bold text-ot-charade dark:text-dark-text">{value}</span>
               </div>
             ))}
-            <div className="flex justify-between text-sm pt-1 border-t border-ot-iron">
-              <span className="text-ot-pale-sky">Confirmation #</span>
-              <span className="font-mono text-xs font-bold text-ot-charade bg-ot-iron px-2 py-0.5 rounded-ot-btn">
+            <div className="flex justify-between text-sm pt-1 border-t border-ot-iron dark:border-dark-border">
+              <span className="text-ot-pale-sky dark:text-dark-text-secondary">Confirmation #</span>
+              <span className="font-mono text-xs font-bold text-ot-charade dark:text-dark-text bg-ot-iron dark:bg-dark-border px-2 py-0.5 rounded-ot-btn">
                 #{confirmation.id}
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-ot-pale-sky">Status</span>
+              <span className="text-ot-pale-sky dark:text-dark-text-secondary">Status</span>
               <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                 isPending ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
               }`}>
@@ -210,7 +210,7 @@ const BookingPage: React.FC = () => {
             </Link>
             <Link
               to={`/restaurant/${slug}`}
-              className="w-full py-3 text-sm font-medium text-ot-charade border border-ot-iron rounded-ot-btn hover:bg-ot-athens-gray transition-colors text-center"
+              className="w-full py-3 text-sm font-medium text-ot-charade dark:text-dark-text border border-ot-iron dark:border-dark-border rounded-ot-btn hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors text-center"
             >
               Back to Restaurant
             </Link>
@@ -221,20 +221,20 @@ const BookingPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-ot-athens-gray">
+    <div className="min-h-screen bg-ot-athens-gray dark:bg-dark-bg">
 
-      <div className="bg-white border-b border-ot-iron px-4 py-4">
+      <div className="bg-white dark:bg-dark-paper border-b border-ot-iron dark:border-dark-border px-4 py-4">
         <div className="max-w-4xl mx-auto flex items-center gap-3">
           <button
             onClick={() => navigate(`/restaurant/${slug}`)}
-            className="text-ot-manatee hover:text-ot-charade transition-colors"
+            className="text-ot-manatee dark:text-dark-text-secondary hover:text-ot-charade dark:hover:text-dark-text transition-colors"
             aria-label="Back to restaurant"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <span className="text-sm font-bold text-ot-charade truncate">
+          <span className="text-sm font-bold text-ot-charade dark:text-dark-text truncate">
             {isEditMode ? 'Edit reservation' : (restaurant?.name ?? 'Complete your reservation')}
           </span>
         </div>
@@ -245,7 +245,7 @@ const BookingPage: React.FC = () => {
 
           <div className="flex-1 min-w-0">
 
-            <div className="bg-white rounded-ot-card border border-ot-iron p-4 mb-6 flex items-center gap-4">
+            <div className="bg-white dark:bg-dark-paper rounded-ot-card border border-ot-iron dark:border-dark-border p-4 mb-6 flex items-center gap-4">
               {restaurant?.cover_image ? (
                 <img
                   src={resolveImageUrl(restaurant.cover_image)}
@@ -253,11 +253,11 @@ const BookingPage: React.FC = () => {
                   className="w-14 h-14 rounded-ot-card object-cover flex-shrink-0"
                 />
               ) : (
-                <div className="w-14 h-14 rounded-ot-card bg-ot-iron flex-shrink-0" />
+                <div className="w-14 h-14 rounded-ot-card bg-ot-iron dark:bg-dark-border flex-shrink-0" />
               )}
               <div className="min-w-0">
-                <p className="font-bold text-ot-charade text-sm truncate">{restaurant?.name}</p>
-                <p className="text-xs text-ot-pale-sky mt-0.5">
+                <p className="font-bold text-ot-charade dark:text-dark-text text-sm truncate">{restaurant?.name}</p>
+                <p className="text-xs text-ot-pale-sky dark:text-dark-text-secondary mt-0.5">
                   {formatDate(selectedDate)} &middot; {selectedTime} &middot; {partySize}
                 </p>
               </div>
@@ -265,12 +265,12 @@ const BookingPage: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="space-y-5">
 
-              <div className="bg-white rounded-ot-card border border-ot-iron p-5">
-                <h2 className="text-sm font-extrabold text-ot-charade mb-4">Your details</h2>
+              <div className="bg-white dark:bg-dark-paper rounded-ot-card border border-ot-iron dark:border-dark-border p-5">
+                <h2 className="text-sm font-extrabold text-ot-charade dark:text-dark-text mb-4">Your details</h2>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">
+                    <label className="block text-xs font-bold text-ot-pale-sky dark:text-dark-text-secondary uppercase tracking-wide mb-1.5">
                       Name
                     </label>
                     <input
@@ -278,13 +278,13 @@ const BookingPage: React.FC = () => {
                       value={guestName}
                       onChange={e => setGuestName(e.target.value)}
                       placeholder="Full name"
-                      className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white placeholder-ot-manatee"
+                      className="w-full px-4 py-3 border border-ot-iron dark:border-dark-border rounded-ot-btn text-sm text-ot-charade dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-ot-primary dark:ring-dark-primary bg-white dark:bg-dark-surface placeholder-ot-manatee dark:placeholder-dark-text-secondary"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">
-                      Phone number <span className="text-ot-primary">*</span>
+                    <label className="block text-xs font-bold text-ot-pale-sky dark:text-dark-text-secondary uppercase tracking-wide mb-1.5">
+                      Phone number <span className="text-ot-primary dark:text-dark-primary">*</span>
                     </label>
                     <input
                       type="tel"
@@ -293,26 +293,26 @@ const BookingPage: React.FC = () => {
                       placeholder="+421 900 000 000"
                       required
                       pattern="^\+?[\d\s\-()]{6,20}$"
-                      className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white placeholder-ot-manatee"
+                      className="w-full px-4 py-3 border border-ot-iron dark:border-dark-border rounded-ot-btn text-sm text-ot-charade dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-ot-primary dark:ring-dark-primary bg-white dark:bg-dark-surface placeholder-ot-manatee dark:placeholder-dark-text-secondary"
                     />
-                    <p className="mt-1 text-xs text-ot-manatee">
+                    <p className="mt-1 text-xs text-ot-manatee dark:text-dark-text-secondary">
                       We'll only use this to contact you about your reservation
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-ot-card border border-ot-iron p-5">
-                <h2 className="text-sm font-extrabold text-ot-charade mb-4">Reservation details</h2>
+              <div className="bg-white dark:bg-dark-paper rounded-ot-card border border-ot-iron dark:border-dark-border p-5">
+                <h2 className="text-sm font-extrabold text-ot-charade dark:text-dark-text mb-4">Reservation details</h2>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
 
                   <div>
-                    <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">
+                    <label className="block text-xs font-bold text-ot-pale-sky dark:text-dark-text-secondary uppercase tracking-wide mb-1.5">
                       Party size
                     </label>
                     {availableSeats === 0 ? (
-                      <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-ot-btn text-sm text-red-600 font-medium">
+                      <div className="px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-ot-btn text-sm text-red-600 font-medium">
                         Fully booked
                       </div>
                     ) : (
@@ -321,7 +321,7 @@ const BookingPage: React.FC = () => {
                         <select
                           value={partySize}
                           onChange={e => setPartySize(e.target.value)}
-                          className="w-full pl-9 pr-8 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade appearance-none focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white"
+                          className="w-full pl-9 pr-8 py-3 border border-ot-iron dark:border-dark-border rounded-ot-btn text-sm text-ot-charade dark:text-dark-text appearance-none focus:outline-none focus:ring-2 focus:ring-ot-primary dark:ring-dark-primary bg-white dark:bg-dark-surface"
                         >
                           {(availableSeats !== null && !availabilityLoading
                             ? PARTY_SIZES.slice(0, availableSeats)
@@ -339,7 +339,7 @@ const BookingPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">
+                    <label className="block text-xs font-bold text-ot-pale-sky dark:text-dark-text-secondary uppercase tracking-wide mb-1.5">
                       Date
                     </label>
                     <div className="relative">
@@ -349,13 +349,13 @@ const BookingPage: React.FC = () => {
                         value={selectedDate}
                         min={todayISO()}
                         onChange={e => { setSelectedDate(e.target.value); setError(null); }}
-                        className="w-full pl-9 pr-2 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white"
+                        className="w-full pl-9 pr-2 py-3 border border-ot-iron dark:border-dark-border rounded-ot-btn text-sm text-ot-charade dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-ot-primary dark:ring-dark-primary bg-white dark:bg-dark-surface"
                       />
                     </div>
                   </div>
 
                   <div className="col-span-2 sm:col-span-1">
-                    <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">
+                    <label className="block text-xs font-bold text-ot-pale-sky dark:text-dark-text-secondary uppercase tracking-wide mb-1.5">
                       Time
                     </label>
                     <div className="relative">
@@ -363,7 +363,7 @@ const BookingPage: React.FC = () => {
                       <select
                         value={selectedTime}
                         onChange={e => setSelectedTime(e.target.value)}
-                        className="w-full pl-9 pr-8 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade appearance-none focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white"
+                        className="w-full pl-9 pr-8 py-3 border border-ot-iron dark:border-dark-border rounded-ot-btn text-sm text-ot-charade dark:text-dark-text appearance-none focus:outline-none focus:ring-2 focus:ring-ot-primary dark:ring-dark-primary bg-white dark:bg-dark-surface"
                       >
                         {TIME_OPTIONS.map(t => <option key={t}>{t}</option>)}
                       </select>
@@ -373,9 +373,9 @@ const BookingPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-1.5">
+                  <label className="block text-xs font-bold text-ot-pale-sky dark:text-dark-text-secondary uppercase tracking-wide mb-1.5">
                     Special requests{' '}
-                    <span className="font-normal text-ot-manatee normal-case">(optional)</span>
+                    <span className="font-normal text-ot-manatee dark:text-dark-text-secondary normal-case">(optional)</span>
                   </label>
                   <textarea
                     value={specialRequests}
@@ -383,16 +383,16 @@ const BookingPage: React.FC = () => {
                     placeholder="Allergies, anniversary, high chair needed..."
                     rows={3}
                     maxLength={500}
-                    className="w-full px-4 py-3 border border-ot-iron rounded-ot-btn text-sm text-ot-charade focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white resize-none placeholder-ot-manatee"
+                    className="w-full px-4 py-3 border border-ot-iron dark:border-dark-border rounded-ot-btn text-sm text-ot-charade dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-ot-primary dark:ring-dark-primary bg-white dark:bg-dark-surface resize-none placeholder-ot-manatee dark:placeholder-dark-text-secondary"
                   />
-                  <p className="mt-1 text-xs text-ot-manatee text-right">
+                  <p className="mt-1 text-xs text-ot-manatee dark:text-dark-text-secondary text-right">
                     {specialRequests.length}/500
                   </p>
                 </div>
               </div>
 
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-ot-btn p-3 text-sm text-red-700 flex items-start gap-2">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-ot-btn p-3 text-sm text-red-700 flex items-start gap-2">
                   <svg className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -418,15 +418,15 @@ const BookingPage: React.FC = () => {
                 )}
               </button>
 
-              <p className="text-xs text-ot-manatee text-center">
+              <p className="text-xs text-ot-manatee dark:text-dark-text-secondary text-center">
                 You won't be charged until after your visit
               </p>
             </form>
           </div>
 
           <div className="lg:w-72 xl:w-80 flex-shrink-0">
-            <div className="bg-white rounded-ot-card border border-ot-iron p-5 lg:sticky lg:top-8">
-              <h3 className="text-sm font-extrabold text-ot-charade mb-4">Booking summary</h3>
+            <div className="bg-white dark:bg-dark-paper rounded-ot-card border border-ot-iron dark:border-dark-border p-5 lg:sticky lg:top-8">
+              <h3 className="text-sm font-extrabold text-ot-charade dark:text-dark-text mb-4">Booking summary</h3>
 
               <div className="space-y-3.5">
                 {[
@@ -437,22 +437,22 @@ const BookingPage: React.FC = () => {
                   <div key={label} className="flex items-center gap-3">
                     <div className="flex-shrink-0">{icon}</div>
                     <div>
-                      <p className="text-xs text-ot-manatee">{label}</p>
-                      <p className="text-sm font-bold text-ot-charade">{value}</p>
+                      <p className="text-xs text-ot-manatee dark:text-dark-text-secondary">{label}</p>
+                      <p className="text-sm font-bold text-ot-charade dark:text-dark-text">{value}</p>
                     </div>
                   </div>
                 ))}
 
                 {restaurant && (
-                  <div className="flex items-start gap-3 pt-3 border-t border-ot-iron">
-                    <svg className="w-4 h-4 text-ot-manatee flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <div className="flex items-start gap-3 pt-3 border-t border-ot-iron dark:border-dark-border">
+                    <svg className="w-4 h-4 text-ot-manatee dark:text-dark-text-secondary flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                     <div className="min-w-0">
-                      <p className="text-xs text-ot-manatee">Location</p>
-                      <p className="text-sm font-bold text-ot-charade truncate">{restaurant.name}</p>
-                      <p className="text-xs text-ot-pale-sky">{restaurant.address}, {restaurant.city}</p>
+                      <p className="text-xs text-ot-manatee dark:text-dark-text-secondary">Location</p>
+                      <p className="text-sm font-bold text-ot-charade dark:text-dark-text truncate">{restaurant.name}</p>
+                      <p className="text-xs text-ot-pale-sky dark:text-dark-text-secondary">{restaurant.address}, {restaurant.city}</p>
                     </div>
                   </div>
                 )}

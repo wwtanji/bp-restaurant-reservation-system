@@ -41,10 +41,10 @@ const DashboardRestaurantsPage: React.FC = () => {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-ot-charade">My Restaurants</h1>
+          <h1 className="text-2xl font-bold text-ot-charade dark:text-dark-text">My Restaurants</h1>
           <Link
             to="/dashboard/restaurants/new"
-            className="bg-ot-charade text-white px-5 py-2.5 rounded-ot-btn text-sm font-bold hover:bg-ot-primary-dark transition-colors"
+            className="bg-ot-charade dark:bg-dark-primary text-white px-5 py-2.5 rounded-ot-btn text-sm font-bold hover:bg-ot-primary-dark transition-colors"
           >
             Add Restaurant
           </Link>
@@ -52,14 +52,14 @@ const DashboardRestaurantsPage: React.FC = () => {
 
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-ot-charade"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-ot-charade dark:border-dark-primary"></div>
           </div>
         ) : restaurants.length === 0 ? (
-          <div className="bg-white rounded-xl border border-ot-iron p-12 text-center">
-            <p className="text-gray-500 mb-4">You don't have any restaurants yet.</p>
+          <div className="bg-white dark:bg-dark-paper rounded-xl border border-ot-iron dark:border-dark-border p-12 text-center">
+            <p className="text-gray-500 dark:text-dark-text-secondary mb-4">You don't have any restaurants yet.</p>
             <Link
               to="/dashboard/restaurants/new"
-              className="bg-ot-charade text-white px-5 py-2.5 rounded-ot-btn text-sm font-bold hover:bg-ot-primary-dark transition-colors"
+              className="bg-ot-charade dark:bg-dark-primary text-white px-5 py-2.5 rounded-ot-btn text-sm font-bold hover:bg-ot-primary-dark transition-colors"
             >
               Create Your First Restaurant
             </Link>
@@ -69,9 +69,9 @@ const DashboardRestaurantsPage: React.FC = () => {
             {restaurants.map((restaurant) => (
               <div
                 key={restaurant.id}
-                className="bg-white rounded-xl border border-ot-iron p-4 flex items-center gap-4"
+                className="bg-white dark:bg-dark-paper rounded-xl border border-ot-iron dark:border-dark-border p-4 flex items-center gap-4"
               >
-                <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-dark-bg shrink-0">
                   {restaurant.cover_image ? (
                     <img
                       src={resolveImageUrl(restaurant.cover_image)}
@@ -87,24 +87,24 @@ const DashboardRestaurantsPage: React.FC = () => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-ot-charade truncate">{restaurant.name}</h3>
-                  <p className="text-sm text-gray-500 truncate">{restaurant.address}, {restaurant.city}</p>
+                  <h3 className="font-semibold text-ot-charade dark:text-dark-text truncate">{restaurant.name}</h3>
+                  <p className="text-sm text-gray-500 dark:text-dark-text-secondary truncate">{restaurant.address}, {restaurant.city}</p>
                   <div className="flex items-center gap-3 mt-1">
-                    <span className="text-xs text-gray-500">{restaurant.cuisine}</span>
-                    <span className="text-xs text-gray-500">{PRICE_SYMBOLS[restaurant.price_range] || ''}</span>
-                    <span className="text-xs text-gray-500">Capacity: {restaurant.max_capacity}</span>
+                    <span className="text-xs text-gray-500 dark:text-dark-text-secondary">{restaurant.cuisine}</span>
+                    <span className="text-xs text-gray-500 dark:text-dark-text-secondary">{PRICE_SYMBOLS[restaurant.price_range] || ''}</span>
+                    <span className="text-xs text-gray-500 dark:text-dark-text-secondary">Capacity: {restaurant.max_capacity}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <Link
                     to={`/dashboard/restaurants/${restaurant.id}/edit`}
-                    className="border border-ot-iron text-ot-charade px-4 py-2 rounded-ot-btn text-sm font-medium hover:bg-ot-athens-gray transition-colors"
+                    className="border border-ot-iron dark:border-dark-border text-ot-charade dark:text-dark-text px-4 py-2 rounded-ot-btn text-sm font-medium hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
                   >
                     Edit
                   </Link>
                   <button
                     onClick={() => setDeleteTarget(restaurant)}
-                    className="border border-red-200 text-red-600 px-4 py-2 rounded-ot-btn text-sm font-medium hover:bg-red-50 transition-colors"
+                    className="border border-red-200 dark:border-red-800 text-red-600 px-4 py-2 rounded-ot-btn text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                   >
                     Delete
                   </button>
@@ -118,17 +118,17 @@ const DashboardRestaurantsPage: React.FC = () => {
       <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} className="relative z-50">
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <DialogPanel className="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl">
-            <DialogTitle className="text-lg font-bold text-ot-charade">
+          <DialogPanel className="bg-white dark:bg-dark-paper rounded-xl p-6 max-w-sm w-full shadow-xl">
+            <DialogTitle className="text-lg font-bold text-ot-charade dark:text-dark-text">
               Delete Restaurant
             </DialogTitle>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm text-gray-500 dark:text-dark-text-secondary mt-2">
               Are you sure you want to delete <strong>{deleteTarget?.name}</strong>? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="border border-ot-iron text-ot-charade px-4 py-2 rounded-ot-btn text-sm font-medium hover:bg-ot-athens-gray transition-colors"
+                className="border border-ot-iron dark:border-dark-border text-ot-charade dark:text-dark-text px-4 py-2 rounded-ot-btn text-sm font-medium hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
               >
                 Cancel
               </button>

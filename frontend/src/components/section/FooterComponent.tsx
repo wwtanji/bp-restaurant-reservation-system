@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 const FooterComponent: React.FC = () => {
   return (
-    <footer className="bg-ot-charade text-ot-iron py-12 px-4 md:px-8">
+    <footer className="border-t border-ot-iron dark:border-dark-border bg-ot-charade dark:bg-dark-paper text-ot-iron py-12 px-4 md:px-8">
       <div className="max-w-ot mx-auto">
         <div className="flex flex-col md:flex-row md:justify-between gap-8">
           <div>
@@ -25,7 +25,7 @@ const FooterComponent: React.FC = () => {
 
           <div className="text-left md:text-right">
             <span className="text-2xl font-extrabold text-ot-primary tracking-tight">Reservelt</span>
-            <p className="text-xs text-ot-manatee mt-2">&copy;2025 Reservelt. All rights reserved.</p>
+            <p className="text-xs text-ot-manatee dark:text-dark-text-secondary mt-2">&copy;2025 Reservelt. All rights reserved.</p>
           </div>
         </div>
       </div>

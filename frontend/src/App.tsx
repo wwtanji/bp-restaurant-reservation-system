@@ -1,5 +1,11 @@
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { lightTheme, darkTheme } from './theme';
+import { ThemeModeProvider, useThemeMode } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -21,8 +27,8 @@ const DashboardRestaurantsPage = React.lazy(() => import('./pages/Dashboard/Dash
 const DashboardRestaurantFormPage = React.lazy(() => import('./pages/Dashboard/DashboardRestaurantFormPage'));
 
 const PageLoadingSpinner: React.FC = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-ot-charade"></div>
+  <div className="min-h-screen flex items-center justify-center bg-white dark:bg-dark-bg">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-ot-charade dark:border-dark-text"></div>
   </div>
 );
 
@@ -116,17 +122,32 @@ const AppRoutes = () => {
   );
 };
 
+const ThemedApp: React.FC = () => {
+  const { isDark } = useThemeMode();
+
+  return (
+    <ThemeProvider theme={isDark ? darkTheme : lightTheme}>
+      <CssBaseline />
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <Router>
+          <NotificationProvider>
+            <AuthProvider>
+              <ErrorBoundary>
+                <AppRoutes />
+              </ErrorBoundary>
+            </AuthProvider>
+          </NotificationProvider>
+        </Router>
+      </LocalizationProvider>
+    </ThemeProvider>
+  );
+};
+
 function App() {
   return (
-    <Router>
-      <NotificationProvider>
-        <AuthProvider>
-          <ErrorBoundary>
-            <AppRoutes />
-          </ErrorBoundary>
-        </AuthProvider>
-      </NotificationProvider>
-    </Router>
+    <ThemeModeProvider>
+      <ThemedApp />
+    </ThemeModeProvider>
   );
 }
 

@@ -7,7 +7,7 @@ const JoinComponent: React.FC = () => {
       className="relative min-h-[50vh] flex items-center justify-center bg-cover bg-center"
       style={{ backgroundImage: `url(${womenCookImage})` }}
     >
-      <div className="absolute inset-0 bg-ot-charade/75" />
+      <div className="absolute inset-0 bg-ot-charade/75 dark:bg-dark-bg/85" />
 
       <div className="relative text-center text-white px-4 sm:px-6 max-w-3xl py-16">
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold leading-tight mb-4">

@@ -21,7 +21,7 @@ interface RestaurantCardProps {
 
 const StarIcon: React.FC<{ filled: boolean }> = ({ filled }) => (
   <svg
-    className={`w-3.5 h-3.5 ${filled ? 'text-ot-primary' : 'text-ot-iron'}`}
+    className={`w-3.5 h-3.5 ${filled ? 'text-ot-primary' : 'text-ot-iron dark:text-dark-border'}`}
     fill="currentColor"
     viewBox="0 0 20 20"
   >
@@ -46,10 +46,10 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, isActive, o
       onMouseEnter={() => onHover(restaurant.id)}
       onMouseLeave={() => onHover(null)}
       className={`flex gap-4 p-4 rounded-ot-card transition-shadow cursor-pointer ${
-        isActive ? 'shadow-md bg-ot-athens-gray' : 'hover:shadow-sm'
+        isActive ? 'shadow-md bg-ot-athens-gray dark:bg-dark-surface' : 'hover:shadow-sm'
       }`}
     >
-      <div className="flex-shrink-0 w-36 h-28 rounded-ot-card overflow-hidden bg-ot-iron">
+      <div className="flex-shrink-0 w-36 h-28 rounded-ot-card overflow-hidden bg-ot-iron dark:bg-dark-border">
         <img
           src={resolveImageUrl(restaurant.cover_image)}
           alt={restaurant.name}
@@ -59,17 +59,17 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, isActive, o
 
       <div className="flex flex-col justify-between min-w-0 flex-1">
         <div>
-          <h3 className="font-bold text-ot-primary text-sm hover:underline truncate">
+          <h3 className="font-bold text-ot-primary dark:text-dark-primary text-sm hover:underline truncate">
             {restaurant.name}
           </h3>
 
           <div className="flex items-center gap-1.5 mt-1">
             <Stars rating={restaurant.rating} />
-            <span className="text-xs font-bold text-ot-charade">{ratingLabel(restaurant.rating)}</span>
-            <span className="text-xs text-ot-manatee">({restaurant.review_count})</span>
+            <span className="text-xs font-bold text-ot-charade dark:text-dark-text">{ratingLabel(restaurant.rating)}</span>
+            <span className="text-xs text-ot-manatee dark:text-dark-text-secondary">({restaurant.review_count})</span>
           </div>
 
-          <p className="text-xs text-ot-pale-sky mt-0.5">
+          <p className="text-xs text-ot-pale-sky dark:text-dark-text-secondary mt-0.5">
             {PRICE_SYMBOL[restaurant.price_range]} &middot; {restaurant.cuisine} &middot; {restaurant.city}
           </p>
         </div>

@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
@@ -18,6 +19,17 @@ module.exports = {
           'athens-gray': '#F1F5F9',
           manatee: '#94A3B8',
           teal: '#475569',
+        },
+        dark: {
+          bg: '#0A0A0B',
+          paper: '#141416',
+          surface: '#1C1C1F',
+          border: '#2A2A2E',
+          text: '#E4E4E7',
+          'text-secondary': '#A1A1AA',
+          primary: '#6366F1',
+          'primary-dark': '#4F46E5',
+          hover: '#232326',
         },
       },
       maxWidth: {

@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { PRICE_SYMBOLS } from '../../constants/reservation';
 import { Review } from '../../interfaces/review';
-import { apiFetch } from '../../utils/api';
+import useFetch from '../../hooks/useFetch';
+import useHorizontalScroll from '../../hooks/useHorizontalScroll';
+import ScrollArrow from '../ScrollArrow';
 
 const AVATAR_COLORS = ['#2D333F', '#6B7280', '#4B5563', '#374151', '#9CA3AF'];
 
@@ -24,7 +26,7 @@ const Stars: React.FC<{ rating: number; size?: string }> = ({ rating, size = 'w-
   );
 };
 
-const ReviewCard: React.FC<{ review: Review; index: number }> = ({ review, index }) => {
+const ReviewCard = React.memo<{ review: Review; index: number }>(({ review, index }) => {
   const avatarColor = AVATAR_COLORS[index % AVATAR_COLORS.length];
   const initial = review.author.first_name[0];
   const reviewDate = new Date(review.created_at).toLocaleDateString('en-US', {
@@ -105,69 +107,13 @@ const ReviewCard: React.FC<{ review: Review; index: number }> = ({ review, index
       </div>
     </div>
   );
-};
-
-const ScrollArrow: React.FC<{
-  direction: 'left' | 'right';
-  onClick: () => void;
-  visible: boolean;
-}> = ({ direction, onClick, visible }) => {
-  if (!visible) return null;
-  return (
-    <button
-      onClick={onClick}
-      className={`absolute top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-ot-athens-gray transition-colors ${
-        direction === 'left' ? 'left-0' : 'right-0'
-      }`}
-    >
-      <svg className="w-5 h-5 text-ot-charade" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        {direction === 'left' ? (
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-        ) : (
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-        )}
-      </svg>
-    </button>
-  );
-};
+});
+ReviewCard.displayName = 'ReviewCard';
 
 const ReviewsSection: React.FC = () => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-  const [reviews, setReviews] = useState<Review[]>([]);
-
-  useEffect(() => {
-    apiFetch<Review[]>('/reviews/latest?limit=10')
-      .then(setReviews)
-      .catch(() => {});
-  }, []);
-
-  const updateScrollState = () => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 0);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
-  };
-
-  useEffect(() => {
-    updateScrollState();
-    const el = scrollRef.current;
-    if (!el) return;
-    el.addEventListener('scroll', updateScrollState);
-    window.addEventListener('resize', updateScrollState);
-    return () => {
-      el.removeEventListener('scroll', updateScrollState);
-      window.removeEventListener('resize', updateScrollState);
-    };
-  }, [reviews]);
-
-  const scroll = (direction: 'left' | 'right') => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const amount = el.clientWidth * 0.8;
-    el.scrollBy({ left: direction === 'left' ? -amount : amount, behavior: 'smooth' });
-  };
+  const { data: fetchedReviews } = useFetch<Review[]>('/reviews/latest?limit=10');
+  const reviews = fetchedReviews ?? [];
+  const { scrollRef, canScrollLeft, canScrollRight, scroll } = useHorizontalScroll([reviews]);
 
   if (reviews.length === 0) return null;
 

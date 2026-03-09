@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useReducer } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import L from 'leaflet';
@@ -9,6 +9,7 @@ import { Review } from '../interfaces/review';
 import { apiFetch, ApiError, resolveImageUrl } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import PhotoGalleryModal from '../components/restaurant/PhotoGalleryModal';
+import useFetch from '../hooks/useFetch';
 
 import {
   TIME_OPTIONS,
@@ -42,6 +43,52 @@ const AVATAR_COLORS = [
   'from-gray-500 to-gray-700',
   'from-gray-300 to-gray-500',
 ];
+
+type ReviewFormAction =
+  | { type: 'OPEN_FORM' }
+  | { type: 'CLOSE_FORM' }
+  | { type: 'SET_RATING'; rating: number }
+  | { type: 'SET_TEXT'; text: string }
+  | { type: 'SUBMIT_START' }
+  | { type: 'SUBMIT_SUCCESS' }
+  | { type: 'SUBMIT_ERROR'; error: string };
+
+interface ReviewFormState {
+  showForm: boolean;
+  rating: number;
+  text: string;
+  submitting: boolean;
+  error: string | null;
+}
+
+const REVIEW_FORM_INITIAL_STATE: ReviewFormState = {
+  showForm: false,
+  rating: 0,
+  text: '',
+  submitting: false,
+  error: null,
+};
+
+function reviewFormReducer(state: ReviewFormState, action: ReviewFormAction): ReviewFormState {
+  switch (action.type) {
+    case 'OPEN_FORM':
+      return { ...state, showForm: true };
+    case 'CLOSE_FORM':
+      return { ...REVIEW_FORM_INITIAL_STATE };
+    case 'SET_RATING':
+      return { ...state, rating: action.rating };
+    case 'SET_TEXT':
+      return { ...state, text: action.text };
+    case 'SUBMIT_START':
+      return { ...state, submitting: true, error: null };
+    case 'SUBMIT_SUCCESS':
+      return { ...REVIEW_FORM_INITIAL_STATE };
+    case 'SUBMIT_ERROR':
+      return { ...state, submitting: false, error: action.error };
+    default:
+      return state;
+  }
+}
 
 const StarSelector: React.FC<{
   value: number;
@@ -163,9 +210,8 @@ const RestaurantDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
 
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
-  const [restaurantLoading, setRestaurantLoading] = useState(true);
-  const [restaurantError, setRestaurantError] = useState<string | null>(null);
+  const { data: restaurant, isLoading: restaurantLoading, error: restaurantError, refetch: refetchRestaurant } =
+    useFetch<Restaurant>(slug ? `/restaurants/${slug}` : null);
 
   const [partySize, setPartySize]       = useState('2 people');
   const [selectedDate, setSelectedDate] = useState(todayISO);
@@ -180,13 +226,11 @@ const RestaurantDetailPage: React.FC = () => {
   const [galleryPhotoIndex, setGalleryPhotoIndex] = useState<number | null>(null);
   const [conciergeQuery, setConciergeQuery] = useState('');
 
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [reviewsLoading, setReviewsLoading] = useState(false);
-  const [showReviewForm, setShowReviewForm] = useState(false);
-  const [userRating, setUserRating] = useState(0);
-  const [userReviewText, setUserReviewText] = useState('');
-  const [submittingReview, setSubmittingReview] = useState(false);
-  const [reviewError, setReviewError] = useState<string | null>(null);
+  const { data: fetchedReviews, isLoading: reviewsLoading, refetch: refetchReviews } =
+    useFetch<Review[]>(restaurant ? `/reviews/restaurant/${restaurant.id}` : null);
+  const reviews = fetchedReviews ?? [];
+
+  const [reviewForm, dispatchReview] = useReducer(reviewFormReducer, REVIEW_FORM_INITIAL_STATE);
 
   const { user } = useAuth();
 
@@ -199,15 +243,6 @@ const RestaurantDetailPage: React.FC = () => {
     Concierge: conciergeRef,
     Reviews:   reviewsRef,
   };
-
-  useEffect(() => {
-    if (!slug) return;
-    setRestaurantLoading(true);
-    apiFetch<Restaurant>(`/restaurants/${slug}`)
-      .then(setRestaurant)
-      .catch(() => setRestaurantError('Restaurant not found'))
-      .finally(() => setRestaurantLoading(false));
-  }, [slug]);
 
   useEffect(() => {
     if (!slug) return;
@@ -224,42 +259,24 @@ const RestaurantDetailPage: React.FC = () => {
     return () => controller.abort();
   }, [slug, selectedDate, selectedTime]);
 
-  const fetchReviews = () => {
-    if (!restaurant) return;
-    setReviewsLoading(true);
-    apiFetch<Review[]>(`/reviews/restaurant/${restaurant.id}`)
-      .then(setReviews)
-      .catch(() => {})
-      .finally(() => setReviewsLoading(false));
-  };
-
-  useEffect(() => {
-    if (restaurant) fetchReviews();
-  }, [restaurant?.id]);
-
   const handleSubmitReview = async () => {
-    if (!restaurant || userRating === 0) return;
-    setSubmittingReview(true);
-    setReviewError(null);
+    if (!restaurant || reviewForm.rating === 0) return;
+    dispatchReview({ type: 'SUBMIT_START' });
     try {
       await apiFetch(`/reviews/${restaurant.id}`, {
         method: 'POST',
         body: JSON.stringify({
-          rating: userRating,
-          text: userReviewText.trim() || null,
+          rating: reviewForm.rating,
+          text: reviewForm.text.trim() || null,
         }),
       });
-      setShowReviewForm(false);
-      setUserRating(0);
-      setUserReviewText('');
-      fetchReviews();
-      apiFetch<Restaurant>(`/restaurants/${slug}`).then(setRestaurant);
+      dispatchReview({ type: 'SUBMIT_SUCCESS' });
+      refetchReviews();
+      refetchRestaurant();
     } catch (err) {
       if (err instanceof ApiError) {
-        setReviewError(err.message);
+        dispatchReview({ type: 'SUBMIT_ERROR', error: err.message });
       }
-    } finally {
-      setSubmittingReview(false);
     }
   };
 
@@ -563,9 +580,9 @@ const RestaurantDetailPage: React.FC = () => {
 
               {user && (
                 <div className="mb-6">
-                  {!showReviewForm ? (
+                  {!reviewForm.showForm ? (
                     <button
-                      onClick={() => setShowReviewForm(true)}
+                      onClick={() => dispatchReview({ type: 'OPEN_FORM' })}
                       className="inline-flex items-center gap-2 bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-5 py-2.5 rounded-ot-btn transition-colors text-sm"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -578,32 +595,32 @@ const RestaurantDetailPage: React.FC = () => {
                       <h3 className="text-sm font-bold text-ot-charade mb-3">Your Review</h3>
                       <div className="mb-4">
                         <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-2">Rating</label>
-                        <StarSelector value={userRating} onChange={setUserRating} />
+                        <StarSelector value={reviewForm.rating} onChange={r => dispatchReview({ type: 'SET_RATING', rating: r })} />
                       </div>
                       <div className="mb-4">
                         <label className="block text-xs font-bold text-ot-pale-sky uppercase tracking-wide mb-2">Review (optional)</label>
                         <textarea
-                          value={userReviewText}
-                          onChange={e => setUserReviewText(e.target.value)}
+                          value={reviewForm.text}
+                          onChange={e => dispatchReview({ type: 'SET_TEXT', text: e.target.value })}
                           placeholder="Share your experience..."
                           maxLength={2000}
                           rows={4}
                           className="w-full border border-ot-iron rounded-ot-btn px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ot-primary bg-white placeholder-ot-manatee resize-none"
                         />
                       </div>
-                      {reviewError && (
-                        <p className="text-xs text-red-600 mb-3">{reviewError}</p>
+                      {reviewForm.error && (
+                        <p className="text-xs text-red-600 mb-3">{reviewForm.error}</p>
                       )}
                       <div className="flex items-center gap-3">
                         <button
                           onClick={handleSubmitReview}
-                          disabled={userRating === 0 || submittingReview}
+                          disabled={reviewForm.rating === 0 || reviewForm.submitting}
                           className="bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-5 py-2.5 rounded-ot-btn transition-colors text-sm disabled:opacity-40"
                         >
-                          {submittingReview ? 'Submitting...' : 'Submit Review'}
+                          {reviewForm.submitting ? 'Submitting...' : 'Submit Review'}
                         </button>
                         <button
-                          onClick={() => { setShowReviewForm(false); setReviewError(null); }}
+                          onClick={() => dispatchReview({ type: 'CLOSE_FORM' })}
                           className="text-sm text-ot-pale-sky hover:text-ot-charade transition-colors"
                         >
                           Cancel

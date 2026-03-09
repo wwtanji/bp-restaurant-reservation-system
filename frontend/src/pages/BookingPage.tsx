@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch, resolveImageUrl } from '../utils/api';
+import useFetch from '../hooks/useFetch';
 import { Restaurant } from '../interfaces/restaurant';
 import { Reservation, SlotAvailability } from '../interfaces/reservation';
 import {
@@ -62,7 +63,7 @@ const BookingPage: React.FC = () => {
   const [guestPhone, setGuestPhone]         = useState(editReservation?.guest_phone || '');
   const [specialRequests, setSpecialRequests] = useState(editReservation?.special_requests || '');
 
-  const [restaurant, setRestaurant]       = useState<Restaurant | null>(null);
+  const { data: restaurant, error: restaurantError } = useFetch<Restaurant>(slug ? `/restaurants/${slug}` : null);
   const [isSubmitting, setIsSubmitting]   = useState(false);
   const [error, setError]                 = useState<string | null>(null);
   const [confirmation, setConfirmation]   = useState<Reservation | null>(null);
@@ -96,11 +97,8 @@ const BookingPage: React.FC = () => {
   }, [availableSeats, partySize]);
 
   useEffect(() => {
-    if (!slug) return;
-    apiFetch<Restaurant>(`/restaurants/${slug}`)
-      .then(setRestaurant)
-      .catch(() => navigate(`/restaurant/${slug}`));
-  }, [slug, navigate]);
+    if (restaurantError && slug) navigate(`/restaurant/${slug}`);
+  }, [restaurantError, slug, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

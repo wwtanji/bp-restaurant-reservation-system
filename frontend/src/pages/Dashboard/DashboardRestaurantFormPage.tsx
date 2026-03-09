@@ -207,26 +207,26 @@ const DashboardRestaurantFormPage: React.FC = () => {
     return (
       <DashboardLayout>
         <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-ot-charade"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-ot-charade dark:border-dark-primary"></div>
         </div>
       </DashboardLayout>
     );
   }
 
-  const inputClasses = "w-full border border-ot-iron rounded-ot-btn px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ot-charade/20 focus:border-ot-charade";
+  const inputClasses = "w-full border border-ot-iron dark:border-dark-border rounded-ot-btn px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ot-charade/20 focus:border-ot-charade dark:bg-dark-surface dark:text-dark-text";
 
   return (
     <DashboardLayout>
       <div className="max-w-2xl">
-        <h1 className="text-2xl font-bold text-ot-charade mb-8">
+        <h1 className="text-2xl font-bold text-ot-charade dark:text-dark-text mb-8">
           {isEditing ? 'Edit Restaurant' : 'Add Restaurant'}
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-ot-charade">Basic Info</h2>
+            <h2 className="text-lg font-semibold text-ot-charade dark:text-dark-text">Basic Info</h2>
             <div>
-              <label className="block text-sm font-medium text-ot-charade mb-1">Name *</label>
+              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Name *</label>
               <input
                 type="text"
                 value={form.name}
@@ -236,7 +236,7 @@ const DashboardRestaurantFormPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-ot-charade mb-1">Description</label>
+              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Description</label>
               <textarea
                 value={form.description}
                 onChange={(e) => updateField('description', e.target.value)}
@@ -246,7 +246,7 @@ const DashboardRestaurantFormPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-ot-charade mb-1">Cuisine *</label>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Cuisine *</label>
                 <input
                   type="text"
                   value={form.cuisine}
@@ -256,7 +256,7 @@ const DashboardRestaurantFormPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-ot-charade mb-1">Price Range</label>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Price Range</label>
                 <select
                   value={form.price_range}
                   onChange={(e) => updateField('price_range', parseInt(e.target.value))}
@@ -272,10 +272,10 @@ const DashboardRestaurantFormPage: React.FC = () => {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-ot-charade">Contact</h2>
+            <h2 className="text-lg font-semibold text-ot-charade dark:text-dark-text">Contact</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-ot-charade mb-1">Phone</label>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Phone</label>
                 <input
                   type="tel"
                   value={form.phone_number}
@@ -284,7 +284,7 @@ const DashboardRestaurantFormPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-ot-charade mb-1">Email</label>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Email</label>
                 <input
                   type="email"
                   value={form.email}
@@ -296,9 +296,9 @@ const DashboardRestaurantFormPage: React.FC = () => {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-ot-charade">Location</h2>
+            <h2 className="text-lg font-semibold text-ot-charade dark:text-dark-text">Location</h2>
             <div>
-              <label className="block text-sm font-medium text-ot-charade mb-1">Address *</label>
+              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Address *</label>
               <input
                 type="text"
                 value={form.address}
@@ -309,7 +309,7 @@ const DashboardRestaurantFormPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-ot-charade mb-1">City *</label>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">City *</label>
                 <input
                   type="text"
                   value={form.city}
@@ -319,7 +319,7 @@ const DashboardRestaurantFormPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-ot-charade mb-1">Country</label>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Country</label>
                 <input
                   type="text"
                   value={form.country}
@@ -330,7 +330,7 @@ const DashboardRestaurantFormPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-ot-charade mb-1">Latitude</label>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Latitude</label>
                 <input
                   type="text"
                   value={form.latitude}
@@ -340,7 +340,7 @@ const DashboardRestaurantFormPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-ot-charade mb-1">Longitude</label>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Longitude</label>
                 <input
                   type="text"
                   value={form.longitude}
@@ -353,9 +353,9 @@ const DashboardRestaurantFormPage: React.FC = () => {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-ot-charade">Capacity</h2>
+            <h2 className="text-lg font-semibold text-ot-charade dark:text-dark-text">Capacity</h2>
             <div>
-              <label className="block text-sm font-medium text-ot-charade mb-1">Max Capacity</label>
+              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Max Capacity</label>
               <input
                 type="number"
                 min={1}
@@ -367,16 +367,16 @@ const DashboardRestaurantFormPage: React.FC = () => {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-ot-charade">Photos</h2>
+            <h2 className="text-lg font-semibold text-ot-charade dark:text-dark-text">Photos</h2>
 
             <div>
-              <label className="block text-sm font-medium text-ot-charade mb-2">Cover Photo</label>
+              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-2">Cover Photo</label>
               {coverPreview ? (
                 <div className="relative inline-block">
                   <img
                     src={coverPreview}
                     alt="Cover preview"
-                    className="w-48 h-32 object-cover rounded-ot-btn border border-ot-iron"
+                    className="w-48 h-32 object-cover rounded-ot-btn border border-ot-iron dark:border-dark-border"
                   />
                   <button
                     type="button"
@@ -392,7 +392,7 @@ const DashboardRestaurantFormPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => coverInputRef.current?.click()}
-                  className="w-48 h-32 border-2 border-dashed border-ot-iron rounded-ot-btn flex flex-col items-center justify-center gap-1 text-ot-manatee hover:border-ot-charade hover:text-ot-charade transition-colors"
+                  className="w-48 h-32 border-2 border-dashed border-ot-iron dark:border-dark-border rounded-ot-btn flex flex-col items-center justify-center gap-1 text-ot-manatee dark:text-dark-text-secondary hover:border-ot-charade hover:text-ot-charade dark:hover:border-dark-primary dark:hover:text-dark-text transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
@@ -410,14 +410,14 @@ const DashboardRestaurantFormPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-ot-charade mb-2">Gallery Photos</label>
+              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-2">Gallery Photos</label>
               <div className="grid grid-cols-4 gap-3">
                 {existingGallery.map((url) => (
                   <div key={url} className="relative group">
                     <img
                       src={`${API_URL}${url}`}
                       alt="Gallery"
-                      className="w-full h-24 object-cover rounded-ot-btn border border-ot-iron"
+                      className="w-full h-24 object-cover rounded-ot-btn border border-ot-iron dark:border-dark-border"
                     />
                     <button
                       type="button"
@@ -454,7 +454,7 @@ const DashboardRestaurantFormPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => galleryInputRef.current?.click()}
-                  className="w-full h-24 border-2 border-dashed border-ot-iron rounded-ot-btn flex flex-col items-center justify-center gap-1 text-ot-manatee hover:border-ot-charade hover:text-ot-charade transition-colors"
+                  className="w-full h-24 border-2 border-dashed border-ot-iron dark:border-dark-border rounded-ot-btn flex flex-col items-center justify-center gap-1 text-ot-manatee dark:text-dark-text-secondary hover:border-ot-charade hover:text-ot-charade dark:hover:border-dark-primary dark:hover:text-dark-text transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -474,7 +474,7 @@ const DashboardRestaurantFormPage: React.FC = () => {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-ot-charade">Opening Hours</h2>
+            <h2 className="text-lg font-semibold text-ot-charade dark:text-dark-text">Opening Hours</h2>
             <OpeningHoursEditor
               value={form.opening_hours}
               onChange={(hours) => updateField('opening_hours', hours)}
@@ -485,7 +485,7 @@ const DashboardRestaurantFormPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading || uploadingPhotos}
-              className="bg-ot-charade text-white px-6 py-2.5 rounded-ot-btn text-sm font-bold hover:bg-ot-primary-dark transition-colors disabled:opacity-50"
+              className="bg-ot-charade dark:bg-dark-primary text-white px-6 py-2.5 rounded-ot-btn text-sm font-bold hover:bg-ot-primary-dark transition-colors disabled:opacity-50"
             >
               {uploadingPhotos
                 ? 'Uploading photos...'
@@ -496,7 +496,7 @@ const DashboardRestaurantFormPage: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/dashboard/restaurants')}
-              className="border border-ot-iron text-ot-charade px-6 py-2.5 rounded-ot-btn text-sm font-medium hover:bg-ot-athens-gray transition-colors"
+              className="border border-ot-iron dark:border-dark-border text-ot-charade dark:text-dark-text px-6 py-2.5 rounded-ot-btn text-sm font-medium hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
             >
               Cancel
             </button>

@@ -24,6 +24,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
   color: #1E293B;
   background-color: #fff;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html.dark,
+html.dark body {
+  color: #E4E4E7;
+  background-color: #0A0A0B;
 }
 
 code {

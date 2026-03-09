@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 const FAQ_ITEMS = [
   {
@@ -28,30 +28,39 @@ const FAQItem: React.FC<{
   answer: string;
   isOpen: boolean;
   onToggle: () => void;
-}> = ({ question, answer, isOpen, onToggle }) => (
-  <div className="border-b border-ot-iron">
-    <button
-      onClick={onToggle}
-      className="w-full flex items-center justify-between py-5 text-left"
-    >
-      <span className="text-sm font-bold text-ot-charade pr-4">{question}</span>
-      <svg
-        className={`w-5 h-5 text-ot-manatee flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
+}> = ({ question, answer, isOpen, onToggle }) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  return (
+    <div className="border-b border-ot-iron dark:border-dark-border">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between py-5 text-left"
       >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-      </svg>
-    </button>
-    {isOpen && (
-      <p className="text-sm text-ot-pale-sky leading-relaxed pb-5">
-        {answer}
-      </p>
-    )}
-  </div>
-);
+        <span className="text-sm font-bold text-ot-charade dark:text-dark-text pr-4">{question}</span>
+        <svg
+          className={`w-5 h-5 text-ot-manatee dark:text-dark-text-secondary flex-shrink-0 transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <div
+        className="overflow-hidden transition-all duration-300 ease-in-out"
+        style={{ maxHeight: isOpen ? contentRef.current?.scrollHeight ?? 200 : 0, opacity: isOpen ? 1 : 0 }}
+      >
+        <div ref={contentRef}>
+          <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary leading-relaxed pb-5">
+            {answer}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const FAQSection: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -64,9 +73,9 @@ const FAQSection: React.FC = () => {
   const rightColumn = FAQ_ITEMS.filter((_, i) => i % 2 !== 0);
 
   return (
-    <div className="bg-white py-12 border-t border-ot-iron">
+    <div className="bg-white dark:bg-dark-paper py-12 border-t border-ot-iron dark:border-dark-border">
       <div className="max-w-ot mx-auto px-4">
-        <h2 className="text-2xl font-bold text-ot-charade mb-8">
+        <h2 className="text-2xl font-bold text-ot-charade dark:text-dark-text mb-8">
           Frequently asked questions about Reservelt
         </h2>
 

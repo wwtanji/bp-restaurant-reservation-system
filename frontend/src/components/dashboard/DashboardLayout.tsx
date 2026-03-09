@@ -16,7 +16,7 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
   };
 
   return (
-    <div className="min-h-screen bg-ot-athens-gray">
+    <div className="min-h-screen bg-ot-athens-gray dark:bg-dark-bg">
       <NavbarComponent />
       <div className="max-w-ot mx-auto px-4 py-8 lg:px-6">
         <div className="flex flex-col lg:flex-row gap-8">
@@ -28,8 +28,8 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
                   to={item.href}
                   className={`whitespace-nowrap px-4 py-2.5 rounded-ot-btn text-sm font-medium transition-colors ${
                     isActive(item.href)
-                      ? 'bg-ot-charade text-white'
-                      : 'text-ot-charade hover:bg-white'
+                      ? 'bg-ot-charade dark:bg-dark-primary text-white'
+                      : 'text-ot-charade dark:text-dark-text hover:bg-white dark:hover:bg-dark-paper'
                   }`}
                 >
                   {item.label}

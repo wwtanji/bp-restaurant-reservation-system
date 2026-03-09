@@ -50,15 +50,15 @@ const VerifyEmailPage: React.FC = () => {
   return (
     <div>
       <NavbarComponent />
-      <div className="min-h-screen flex items-center justify-center bg-ot-athens-gray p-6">
-        <div className="w-full max-w-md bg-white border border-ot-iron rounded-ot-card shadow-lg p-8 sm:p-10 text-center">
+      <div className="min-h-screen flex items-center justify-center bg-ot-athens-gray dark:bg-dark-bg p-6">
+        <div className="w-full max-w-md bg-white dark:bg-dark-paper border border-ot-iron dark:border-dark-border rounded-ot-card shadow-lg p-8 sm:p-10 text-center">
           {status === 'verifying' && (
             <>
               <div className="mb-6 flex justify-center">
                 <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-ot-primary" />
               </div>
-              <h2 className="text-2xl font-extrabold text-ot-charade mb-4">Verifying Email</h2>
-              <p className="text-sm text-ot-pale-sky">{message}</p>
+              <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mb-4">Verifying Email</h2>
+              <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary">{message}</p>
             </>
           )}
 
@@ -69,9 +69,9 @@ const VerifyEmailPage: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-extrabold text-ot-charade mb-4">Email Verified!</h2>
-              <p className="text-sm text-ot-pale-sky mb-6">{message}</p>
-              <p className="text-xs text-ot-manatee">Redirecting to login page...</p>
+              <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mb-4">Email Verified!</h2>
+              <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary mb-6">{message}</p>
+              <p className="text-xs text-ot-manatee dark:text-dark-text-secondary">Redirecting to login page...</p>
             </>
           )}
 
@@ -82,11 +82,11 @@ const VerifyEmailPage: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-extrabold text-ot-charade mb-4">Verification Failed</h2>
-              <p className="text-sm text-ot-pale-sky mb-6">{message}</p>
+              <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mb-4">Verification Failed</h2>
+              <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary mb-6">{message}</p>
               <Link
                 to="/login"
-                className="inline-block bg-ot-primary hover:bg-ot-primary-dark text-white font-bold py-3 px-8 rounded-ot-btn transition-colors"
+                className="inline-block bg-ot-primary hover:bg-ot-primary-dark dark:hover:bg-dark-primary-dark text-white font-bold py-3 px-8 rounded-ot-btn transition-colors"
               >
                 Go to Login
               </Link>

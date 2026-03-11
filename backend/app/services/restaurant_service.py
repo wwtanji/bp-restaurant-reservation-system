@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.models.restaurant import Restaurant
-from app.models.reservation import Reservation, ReservationStatus
+from app.models.reservation import Reservation, ACTIVE_STATUSES
 from app.models.user import User
 from app.schemas.owner_restaurant_schema import RestaurantCreate, RestaurantUpdate
 
@@ -131,9 +131,7 @@ def get_dashboard_stats(db: Session, owner_id: int) -> dict[str, int]:
         .filter(
             Reservation.restaurant_id.in_(ids),
             Reservation.reservation_date == date.today(),
-            Reservation.status.in_(
-                [ReservationStatus.PENDING, ReservationStatus.CONFIRMED]
-            ),
+            Reservation.status.in_(ACTIVE_STATUSES),
         )
         .scalar()
     )

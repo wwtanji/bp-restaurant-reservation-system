@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -116,7 +116,6 @@ def delete_gallery_image(
     restaurant = restaurant_service.get_owner_restaurant(db, restaurant_id, current_user.id)
     current_images = restaurant.gallery_images or []
     if data.image_url not in current_images:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Image not found in gallery")
     upload_service.delete_image(data.image_url)
     restaurant.gallery_images = [url for url in current_images if url != data.image_url]

@@ -19,6 +19,9 @@ class ReservationStatus(str, enum.Enum):
     NO_SHOW = "no_show"
 
 
+ACTIVE_STATUSES = [ReservationStatus.PENDING, ReservationStatus.CONFIRMED]
+
+
 class Reservation(Base):
     __tablename__ = "reservations"
 

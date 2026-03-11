@@ -21,7 +21,11 @@ ACTIVE_BOOKING_STATUSES = (
 
 
 def get_restaurant_by_slug(slug: str, db: Session = Depends(get_db)) -> Restaurant:
-    restaurant = db.query(Restaurant).filter(Restaurant.slug == slug).first()
+    restaurant = (
+        db.query(Restaurant)
+        .filter(Restaurant.slug == slug, Restaurant.is_active.is_(True))
+        .first()
+    )
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
     return restaurant
@@ -80,6 +84,4 @@ def get_restaurant(
     restaurant: Restaurant = Depends(get_restaurant_by_slug),
     _=Depends(get_current_user),
 ):
-    if not restaurant.is_active:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
     return restaurant

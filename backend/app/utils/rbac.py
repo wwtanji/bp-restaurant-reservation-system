@@ -35,51 +35,21 @@ def get_current_user(
     return user
 
 
-def require_roles(allowed_roles: list[int]):
+def require_roles(*allowed_roles: UserRole):
     def role_checker(current_user: User = Depends(get_current_user)) -> User:
         if current_user.role not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Access denied. Required roles: {allowed_roles}",
+                detail="Access denied. Insufficient permissions.",
             )
         return current_user
 
     return role_checker
 
 
-def require_admin(current_user: User = Depends(get_current_user)) -> User:
-    if current_user.role != UserRole.ADMIN:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required",
-        )
-    return current_user
-
-
-def require_restaurant_owner(current_user: User = Depends(get_current_user)) -> User:
-    if current_user.role != UserRole.RESTAURANT_OWNER:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Restaurant owner access required",
-        )
-    return current_user
-
-
-def require_customer(current_user: User = Depends(get_current_user)) -> User:
-    if current_user.role != UserRole.CUSTOMER:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Customer access required",
-        )
-    return current_user
-
-
-def require_restaurant_owner_or_admin(
-    current_user: User = Depends(get_current_user),
-) -> User:
-    if current_user.role not in [UserRole.RESTAURANT_OWNER, UserRole.ADMIN]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Restaurant owner or admin access required",
-        )
-    return current_user
+require_admin = require_roles(UserRole.ADMIN)
+require_restaurant_owner = require_roles(UserRole.RESTAURANT_OWNER)
+require_customer = require_roles(UserRole.CUSTOMER)
+require_restaurant_owner_or_admin = require_roles(
+    UserRole.RESTAURANT_OWNER, UserRole.ADMIN
+)

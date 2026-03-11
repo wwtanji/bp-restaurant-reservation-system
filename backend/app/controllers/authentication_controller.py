@@ -15,7 +15,7 @@ from app.schemas.user_schema import (
     RegistrationResponse,
     MessageResponse,
 )
-from app.schemas.token_schema import TokenResponse, TokenRefreshRequest, LogoutResponse
+from app.schemas.token_schema import TokenResponse, TokenRefreshRequest
 from app.services import auth_service
 from app.utils.rate_limiter import rate_limit_auth_endpoints, rate_limit_strict
 from app.utils.rbac import get_current_user
@@ -53,13 +53,13 @@ def refresh_token(refresh_request: TokenRefreshRequest, db: Session = Depends(ge
     return auth_service.refresh_auth_tokens(db, refresh_request.refresh_token)
 
 
-@AUTH_CONTROLLER.post("/logout", response_model=LogoutResponse)
+@AUTH_CONTROLLER.post("/logout", response_model=MessageResponse)
 def logout(refresh_request: TokenRefreshRequest, db: Session = Depends(get_db)):
     auth_service.logout_user(db, refresh_request.refresh_token)
     return {"message": "Successfully logged out"}
 
 
-@AUTH_CONTROLLER.post("/logout-all", response_model=LogoutResponse)
+@AUTH_CONTROLLER.post("/logout-all", response_model=MessageResponse)
 def logout_all(refresh_request: TokenRefreshRequest, db: Session = Depends(get_db)):
     auth_service.logout_all_devices(db, refresh_request.refresh_token)
     return {"message": "Successfully logged out from all devices"}

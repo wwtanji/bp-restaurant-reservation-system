@@ -38,6 +38,36 @@ def get_user_by_email(db: Session, email: str) -> User | None:
     return db.query(User).filter(User.user_email == email).first()
 
 
+def _validate_and_consume_token(
+    db: Session, token: str, error_label: str
+) -> tuple[PasswordResetToken, User]:
+    db_token = (
+        db.query(PasswordResetToken)
+        .filter(PasswordResetToken.token == token, ~PasswordResetToken.is_used)
+        .first()
+    )
+
+    if not db_token:
+        raise HTTPException(
+            status_code=400, detail=f"Invalid or expired {error_label} token"
+        )
+
+    if db_token.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
+        raise HTTPException(
+            status_code=400,
+            detail=f"{error_label.title()} token has expired. Please request a new one.",
+        )
+
+    user = db.query(User).filter(User.id == db_token.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    db_token.is_used = True
+    db_token.used_at = datetime.now(timezone.utc)
+
+    return db_token, user
+
+
 def register_user(db: Session, user_data: UserRegister) -> User:
     existing_user = get_user_by_email(db, user_data.user_email)
     if existing_user:
@@ -110,8 +140,8 @@ def authenticate_user(db: Session, email: str, password: str) -> User:
             db.commit()
             raise HTTPException(
                 status_code=423,
-                detail="Account locked due to multiple failed login attempts. "
-                "Please try again in 15 minutes.",
+                detail=f"Account locked due to multiple failed login attempts. "
+                f"Please try again in {ACCOUNT_LOCKOUT_MINUTES} minutes.",
             )
 
         db.commit()
@@ -158,7 +188,7 @@ def logout_user(db: Session, refresh_token_str: str) -> None:
     try:
         revoke_refresh_token(refresh_token_str, db)
     except Exception:
-        pass
+        logger.warning(f"Failed to revoke refresh token during logout")
 
 
 def logout_all_devices(db: Session, refresh_token_str: str) -> None:
@@ -166,36 +196,13 @@ def logout_all_devices(db: Session, refresh_token_str: str) -> None:
         db_token = verify_and_get_refresh_token(refresh_token_str, db)
         revoke_all_user_tokens(db_token.user_id, db)
     except Exception:
-        pass
+        logger.warning(f"Failed to revoke all tokens during logout-all")
 
 
 def verify_email_token(db: Session, token: str) -> User:
-    db_token = (
-        db.query(PasswordResetToken)
-        .filter(PasswordResetToken.token == token, ~PasswordResetToken.is_used)
-        .first()
-    )
-
-    if not db_token:
-        raise HTTPException(
-            status_code=400, detail="Invalid or expired verification token"
-        )
-
-    if db_token.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
-        raise HTTPException(
-            status_code=400,
-            detail="Verification token has expired. Please request a new one.",
-        )
-
-    user = db.query(User).filter(User.id == db_token.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
+    _, user = _validate_and_consume_token(db, token, "verification")
     user.email_verified = True
-    db_token.is_used = True
-    db_token.used_at = datetime.now(timezone.utc)
     db.commit()
-
     return user
 
 
@@ -223,33 +230,11 @@ def create_password_reset(db: Session, email: str) -> None:
 
 
 def reset_user_password(db: Session, token: str, new_password: str) -> None:
-    db_token = (
-        db.query(PasswordResetToken)
-        .filter(PasswordResetToken.token == token, ~PasswordResetToken.is_used)
-        .first()
-    )
-
-    if not db_token:
-        raise HTTPException(
-            status_code=400, detail="Invalid or expired password reset token"
-        )
-
-    if db_token.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
-        raise HTTPException(
-            status_code=400,
-            detail="Password reset token has expired. Please request a new one.",
-        )
-
-    user = db.query(User).filter(User.id == db_token.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    _, user = _validate_and_consume_token(db, token, "password reset")
 
     user.user_password = get_password_hash(new_password)
     user.failed_login_attempts = 0
     user.locked_until = None
-
-    db_token.is_used = True
-    db_token.used_at = datetime.now(timezone.utc)
 
     revoke_all_user_tokens(user.id, db)
 

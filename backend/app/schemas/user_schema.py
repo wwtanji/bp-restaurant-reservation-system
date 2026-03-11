@@ -3,15 +3,9 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr, constr, field_validator, ConfigDict
 from typing import Optional, Annotated
 from email_validator import validate_email, EmailNotValidError
-from enum import IntEnum
 
+from app.models.user import UserRole
 from app.schemas.validators import validate_password_strength
-
-
-class UserRole(IntEnum):
-    CUSTOMER = 0
-    RESTAURANT_OWNER = 1
-    ADMIN = 2
 
 
 class UserRegister(BaseModel):
@@ -57,15 +51,6 @@ class UserLogin(BaseModel):
         if len(value) < 8:
             raise ValueError("Password must be at least 8 characters long")
         return value
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-class TokenData(BaseModel):
-    sub: Optional[str] = None
 
 
 class UserProfile(BaseModel):

@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import IntEnum
 
 from sqlalchemy import String, Boolean, Integer, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
     from app.models.review import Review
 
 
-class UserRole:
+class UserRole(IntEnum):
     CUSTOMER = 0
     RESTAURANT_OWNER = 1
     ADMIN = 2

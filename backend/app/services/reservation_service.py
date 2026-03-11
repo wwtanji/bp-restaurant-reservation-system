@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy import exists
 from sqlalchemy.orm import Session, joinedload
 
-from app.models.reservation import Reservation, ReservationStatus
+from app.models.reservation import Reservation, ReservationStatus, ACTIVE_STATUSES
 from app.models.restaurant import Restaurant
 from app.models.user import User, UserRole
 from app.schemas.reservation_schema import ReservationCreate
@@ -23,15 +23,16 @@ OWNER_TRANSITIONS: dict[str, list[str]] = {
     ],
 }
 
+EDITABLE_STATUSES = {ReservationStatus.PENDING, ReservationStatus.CONFIRMED}
+
 
 def build_overlap_filters(reservation_date: date, reservation_time: time) -> list:
     base = datetime.combine(date(2000, 6, 15), reservation_time)
     slot_start = (base - timedelta(hours=TURN_HOURS)).time()
     slot_end = (base + timedelta(hours=TURN_HOURS)).time()
-    active_statuses = [ReservationStatus.PENDING, ReservationStatus.CONFIRMED]
     return [
         Reservation.reservation_date == reservation_date,
-        Reservation.status.in_(active_statuses),
+        Reservation.status.in_(ACTIVE_STATUSES),
         Reservation.reservation_time > slot_start,
         Reservation.reservation_time < slot_end,
     ]
@@ -49,6 +50,56 @@ def get_reservation_with_restaurant(db: Session, reservation_id: int) -> Reserva
     return reservation
 
 
+def _check_capacity(
+    db: Session,
+    restaurant_id: int,
+    max_capacity: int,
+    party_size: int,
+    overlap_filters: list,
+    exclude_reservation_id: int | None = None,
+) -> None:
+    query = db.query(Reservation).filter(
+        Reservation.restaurant_id == restaurant_id, *overlap_filters
+    )
+    if exclude_reservation_id:
+        query = query.filter(Reservation.id != exclude_reservation_id)
+
+    overlapping = query.with_for_update().all()
+    booked_seats = sum(r.party_size for r in overlapping)
+    if booked_seats + party_size > max_capacity:
+        available = max(0, max_capacity - booked_seats)
+        raise HTTPException(
+            status_code=409,
+            detail=f"Not enough capacity. {available} seat(s) available for this time slot.",
+        )
+
+
+def _check_user_conflict(
+    db: Session,
+    user_id: int,
+    overlap_filters: list,
+    exclude_reservation_id: int | None = None,
+) -> None:
+    conflict_filters = [Reservation.user_id == user_id, *overlap_filters]
+    if exclude_reservation_id:
+        conflict_filters.append(Reservation.id != exclude_reservation_id)
+
+    user_conflict = db.query(exists().where(*conflict_filters)).scalar()
+    if user_conflict:
+        raise HTTPException(
+            status_code=409,
+            detail="You already have a reservation at this time.",
+        )
+
+
+def _validate_reservation_date(reservation_date: date) -> None:
+    if reservation_date < date.today():
+        raise HTTPException(
+            status_code=400,
+            detail="Reservation date must be today or in the future",
+        )
+
+
 def create_reservation(
     db: Session,
     current_user: User,
@@ -58,36 +109,12 @@ def create_reservation(
     if not restaurant.is_active:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
-    if data.reservation_date < date.today():
-        raise HTTPException(
-            status_code=400,
-            detail="Reservation date must be today or in the future",
-        )
-
+    _validate_reservation_date(data.reservation_date)
     overlap_filters = build_overlap_filters(data.reservation_date, data.reservation_time)
-
-    user_conflict = db.query(
-        exists().where(Reservation.user_id == current_user.id, *overlap_filters)
-    ).scalar()
-    if user_conflict:
-        raise HTTPException(
-            status_code=409,
-            detail="You already have a reservation at this time.",
-        )
-
-    overlapping = (
-        db.query(Reservation)
-        .filter(Reservation.restaurant_id == restaurant.id, *overlap_filters)
-        .with_for_update()
-        .all()
+    _check_user_conflict(db, current_user.id, overlap_filters)
+    _check_capacity(
+        db, restaurant.id, restaurant.max_capacity, data.party_size, overlap_filters
     )
-    booked_seats = sum(r.party_size for r in overlapping)
-    if booked_seats + data.party_size > restaurant.max_capacity:
-        available = max(0, restaurant.max_capacity - booked_seats)
-        raise HTTPException(
-            status_code=409,
-            detail=f"Not enough capacity. {available} seat(s) available for this time slot.",
-        )
 
     reservation = Reservation(
         user_id=current_user.id,
@@ -128,9 +155,7 @@ def list_user_reservations(
     if upcoming:
         query = query.filter(
             Reservation.reservation_date >= date.today(),
-            Reservation.status.in_(
-                [ReservationStatus.PENDING, ReservationStatus.CONFIRMED]
-            ),
+            Reservation.status.in_(ACTIVE_STATUSES),
         )
 
     return (
@@ -139,9 +164,6 @@ def list_user_reservations(
         .limit(limit)
         .all()
     )
-
-
-EDITABLE_STATUSES = {ReservationStatus.PENDING, ReservationStatus.CONFIRMED}
 
 
 def update_reservation(
@@ -161,44 +183,17 @@ def update_reservation(
             detail=f"Cannot edit a reservation with status '{reservation.status}'",
         )
 
-    if data.reservation_date < date.today():
-        raise HTTPException(
-            status_code=400,
-            detail="Reservation date must be today or in the future",
-        )
-
+    _validate_reservation_date(data.reservation_date)
     overlap_filters = build_overlap_filters(data.reservation_date, data.reservation_time)
-
-    user_conflict = db.query(
-        exists().where(
-            Reservation.user_id == current_user.id,
-            Reservation.id != reservation_id,
-            *overlap_filters,
-        )
-    ).scalar()
-    if user_conflict:
-        raise HTTPException(
-            status_code=409,
-            detail="You already have a reservation at this time.",
-        )
-
-    overlapping = (
-        db.query(Reservation)
-        .filter(
-            Reservation.restaurant_id == reservation.restaurant_id,
-            Reservation.id != reservation_id,
-            *overlap_filters,
-        )
-        .with_for_update()
-        .all()
+    _check_user_conflict(db, current_user.id, overlap_filters, reservation_id)
+    _check_capacity(
+        db,
+        reservation.restaurant_id,
+        reservation.restaurant.max_capacity,
+        data.party_size,
+        overlap_filters,
+        reservation_id,
     )
-    booked_seats = sum(r.party_size for r in overlapping)
-    if booked_seats + data.party_size > reservation.restaurant.max_capacity:
-        available = max(0, reservation.restaurant.max_capacity - booked_seats)
-        raise HTTPException(
-            status_code=409,
-            detail=f"Not enough capacity. {available} seat(s) available for this time slot.",
-        )
 
     reservation.party_size = data.party_size
     reservation.reservation_date = data.reservation_date
@@ -224,8 +219,7 @@ def cancel_reservation(db: Session, reservation_id: int, user_id: int) -> None:
     if not reservation:
         raise HTTPException(status_code=404, detail="Reservation not found")
 
-    cancellable = {ReservationStatus.PENDING, ReservationStatus.CONFIRMED}
-    if reservation.status not in cancellable:
+    if reservation.status not in EDITABLE_STATUSES:
         raise HTTPException(
             status_code=400,
             detail=f"Cannot cancel a reservation with status '{reservation.status}'",

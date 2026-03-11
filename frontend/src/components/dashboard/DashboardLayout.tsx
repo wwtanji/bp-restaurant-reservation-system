@@ -4,6 +4,7 @@ import NavbarComponent from '../section/NavbarComponent';
 
 const SIDEBAR_ITEMS = [
   { label: 'Overview', href: '/dashboard' },
+  { label: 'Reservations', href: '/dashboard/reservations' },
   { label: 'My Restaurants', href: '/dashboard/restaurants' },
 ];
 

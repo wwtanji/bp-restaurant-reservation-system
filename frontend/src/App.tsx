@@ -25,6 +25,7 @@ const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
 const DashboardOverviewPage = React.lazy(() => import('./pages/Dashboard/DashboardOverviewPage'));
 const DashboardRestaurantsPage = React.lazy(() => import('./pages/Dashboard/DashboardRestaurantsPage'));
 const DashboardRestaurantFormPage = React.lazy(() => import('./pages/Dashboard/DashboardRestaurantFormPage'));
+const DashboardReservationsPage = React.lazy(() => import('./pages/Dashboard/DashboardReservationsPage'));
 
 const PageLoadingSpinner: React.FC = () => (
   <div className="min-h-screen flex items-center justify-center bg-white dark:bg-dark-bg">
@@ -100,6 +101,11 @@ const AppRoutes = () => {
         <Route path="/dashboard" element={
           <OwnerRoute>
             <DashboardOverviewPage />
+          </OwnerRoute>
+        } />
+        <Route path="/dashboard/reservations" element={
+          <OwnerRoute>
+            <DashboardReservationsPage />
           </OwnerRoute>
         } />
         <Route path="/dashboard/restaurants" element={

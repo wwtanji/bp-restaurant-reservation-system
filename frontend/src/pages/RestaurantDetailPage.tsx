@@ -10,6 +10,7 @@ import { apiFetch, ApiError, resolveImageUrl } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import PhotoGalleryModal from '../components/restaurant/PhotoGalleryModal';
 import useFetch from '../hooks/useFetch';
+import FavoriteButton from '../components/FavoriteButton';
 
 import {
   TIME_OPTIONS,
@@ -417,9 +418,12 @@ const RestaurantDetailPage: React.FC = () => {
           <div className="flex-1 min-w-0">
 
             <div ref={overviewRef} className="mb-8 scroll-mt-20">
-              <h1 className="text-2xl md:text-3xl font-extrabold text-ot-charade dark:text-dark-text leading-tight mb-2">
-                {restaurant.name}
-              </h1>
+              <div className="flex items-start gap-3 mb-2">
+                <h1 className="text-2xl md:text-3xl font-extrabold text-ot-charade dark:text-dark-text leading-tight">
+                  {restaurant.name}
+                </h1>
+                <FavoriteButton restaurantId={restaurant.id} variant="labeled" className="mt-1" />
+              </div>
 
               <div className="flex items-center gap-2 flex-wrap text-sm text-ot-pale-sky dark:text-dark-text-secondary mb-3">
                 <div className="flex items-center gap-1.5">

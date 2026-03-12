@@ -460,6 +460,7 @@ const SearchPage: React.FC = () => {
             restaurants={displayedRestaurants}
             activeId={activeId}
             onMarkerClick={slug => navigate(`/restaurant/${slug}`)}
+            onMarkerHover={setActiveId}
             center={[48.148, 17.107]}
             zoom={7}
           />

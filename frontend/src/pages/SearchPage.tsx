@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MapView from '../components/map/MapView';
 import { Restaurant } from '../interfaces/restaurant';
 import { resolveImageUrl } from '../utils/api';
-import { PRICE_SYMBOLS, todayISO, formatDate } from '../constants/reservation';
+import { PRICE_SYMBOLS, todayISO, formatDate, TIME_OPTIONS, PARTY_SIZES } from '../constants/reservation';
+import { SortKey, SORT_OPTIONS, SORT_RELEVANCE, RATING_THRESHOLDS, PRICE_RANGE_OPTIONS } from '../constants/search';
 import useFetch from '../hooks/useFetch';
 import useDebounce from '../hooks/useDebounce';
 import FavoriteButton from '../components/FavoriteButton';
@@ -27,7 +28,6 @@ const CATEGORY_CUISINE: Record<string, string | undefined> = {
 };
 
 type ViewMode = 'grid' | 'list';
-type SortKey  = 'relevance' | 'rating' | 'reviews';
 
 const CATEGORIES = [
   'Featured', 'Romantic', 'Italian', 'Brunch', 'Mexican',
@@ -214,41 +214,67 @@ const ErrorState: React.FC<{ message: string; onRetry: () => void }> = ({ messag
 const SearchPage: React.FC = () => {
   const navigate = useNavigate();
 
-  const [searchQuery, setSearchQuery]       = useState('');
-  const [activeCategory, setActiveCategory] = useState('Featured');
-  const [sortBy, setSortBy]                 = useState<SortKey>('relevance');
-  const [viewMode, setViewMode]             = useState<ViewMode>('list');
-  const [activeId, setActiveId]             = useState<number | null>(null);
-  const [showMap, setShowMap]               = useState(false);
+  const [searchQuery, setSearchQuery]             = useState('');
+  const [activeCategory, setActiveCategory]       = useState('Featured');
+  const [sortBy, setSortBy]                       = useState<SortKey>(SORT_RELEVANCE);
+  const [viewMode, setViewMode]                   = useState<ViewMode>('list');
+  const [activeId, setActiveId]                   = useState<number | null>(null);
+  const [showMap, setShowMap]                     = useState(false);
+  const [selectedCity, setSelectedCity]           = useState('');
+  const [selectedPriceRanges, setSelectedPriceRanges] = useState<number[]>([]);
+  const [ratingMin, setRatingMin]                 = useState<number | null>(null);
+  const [openNow, setOpenNow]                     = useState(false);
+  const [bookingDate, setBookingDate]             = useState(todayISO);
+  const [bookingTime, setBookingTime]             = useState('7:00 PM');
+  const [bookingParty, setBookingParty]           = useState('2 people');
+
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   const debouncedQuery = useDebounce(searchQuery, 400);
+
+  const { data: cities } = useFetch<string[]>('/restaurants/cities');
 
   const fetchPath = useMemo(() => {
     const params = new URLSearchParams({ limit: '50' });
     if (debouncedQuery) params.set('q', debouncedQuery);
     const cuisine = CATEGORY_CUISINE[activeCategory];
     if (cuisine) params.set('cuisine', cuisine);
+    if (selectedCity) params.set('city', selectedCity);
+    selectedPriceRanges.forEach(p => params.append('price_range', String(p)));
+    if (ratingMin !== null) params.set('rating_min', String(ratingMin));
+    if (openNow) params.set('open_now', 'true');
+    if (sortBy !== SORT_RELEVANCE) params.set('sort_by', sortBy);
     return `/restaurants/?${params}`;
-  }, [debouncedQuery, activeCategory]);
+  }, [debouncedQuery, activeCategory, selectedCity, selectedPriceRanges, ratingMin, openNow, sortBy]);
 
   const { data: fetchedRestaurants, isLoading, error, refetch } = useFetch<Restaurant[]>(fetchPath);
-  const restaurants = useMemo(() => fetchedRestaurants ?? [], [fetchedRestaurants]);
+  const displayedRestaurants = useMemo(() => fetchedRestaurants ?? [], [fetchedRestaurants]);
 
-  const displayedRestaurants = useMemo(() => {
-    const list = [...restaurants];
-    if (sortBy === 'rating')  return list.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-    if (sortBy === 'reviews') return list.sort((a, b) => b.review_count - a.review_count);
-    return list;
-  }, [restaurants, sortBy]);
+  const hasActiveFilters = selectedCity !== '' || selectedPriceRanges.length > 0 || ratingMin !== null || openNow;
 
   const handleCardClick = useCallback((slug: string) => {
-    navigate(`/restaurant/${slug}`);
-  }, [navigate]);
+    const params = new URLSearchParams({ date: bookingDate, time: bookingTime, party: bookingParty });
+    navigate(`/restaurant/${slug}?${params}`);
+  }, [navigate, bookingDate, bookingTime, bookingParty]);
+
+  const togglePriceRange = useCallback((price: number) => {
+    setSelectedPriceRanges(prev =>
+      prev.includes(price) ? prev.filter(p => p !== price) : [...prev, price]
+    );
+  }, []);
+
+  const toggleRating = useCallback((threshold: number) => {
+    setRatingMin(prev => prev === threshold ? null : threshold);
+  }, []);
 
   const resetFilters = () => {
     setSearchQuery('');
     setActiveCategory('Featured');
-    setSortBy('relevance');
+    setSortBy(SORT_RELEVANCE);
+    setSelectedCity('');
+    setSelectedPriceRanges([]);
+    setRatingMin(null);
+    setOpenNow(false);
   };
 
   return (
@@ -262,43 +288,49 @@ const SearchPage: React.FC = () => {
               Reservelt
             </a>
             <div className="flex items-center gap-2 flex-wrap">
-              {[
-                {
-                  label: formatDate(todayISO()),
-                  icon: (
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  ),
-                },
-                {
-                  label: '7:00 PM',
-                  icon: (
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  ),
-                },
-                {
-                  label: '2 people',
-                  icon: (
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  ),
-                },
-              ].map(({ label, icon }) => (
-                <button
-                  key={label}
-                  className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white text-xs font-medium px-3 py-1.5 rounded-full transition-colors"
+              <label className="relative flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white text-xs font-medium px-3 py-1.5 rounded-full transition-colors cursor-pointer">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>{formatDate(bookingDate)}</span>
+                <input
+                  type="date"
+                  value={bookingDate}
+                  min={todayISO()}
+                  onChange={e => setBookingDate(e.target.value)}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                />
+              </label>
+
+              <div className="relative">
+                <select
+                  value={bookingTime}
+                  onChange={e => setBookingTime(e.target.value)}
+                  className="appearance-none bg-white/15 hover:bg-white/25 text-white text-xs font-medium pl-7 pr-3 py-1.5 rounded-full transition-colors cursor-pointer border-none outline-none"
                 >
-                  {icon}
-                  <span>{label}</span>
-                  <svg className="w-3 h-3 text-white/60 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-              ))}
+                  {TIME_OPTIONS.map(t => (
+                    <option key={t} value={t} className="text-ot-charade">{t}</option>
+                  ))}
+                </select>
+                <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+
+              <div className="relative">
+                <select
+                  value={bookingParty}
+                  onChange={e => setBookingParty(e.target.value)}
+                  className="appearance-none bg-white/15 hover:bg-white/25 text-white text-xs font-medium pl-7 pr-3 py-1.5 rounded-full transition-colors cursor-pointer border-none outline-none"
+                >
+                  {PARTY_SIZES.map(p => (
+                    <option key={p} value={p} className="text-ot-charade">{p}</option>
+                  ))}
+                </select>
+                <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
             </div>
           </div>
 
@@ -322,7 +354,10 @@ const SearchPage: React.FC = () => {
                 </button>
               )}
             </div>
-            <button className="flex-shrink-0 bg-white dark:bg-dark-surface text-ot-charade dark:text-dark-text font-bold text-sm px-5 py-2.5 rounded-2xl shadow-md hover:bg-ot-athens-gray dark:hover:bg-dark-hover hover:shadow-lg active:scale-95 transition-all whitespace-nowrap">
+            <button
+              onClick={() => resultsRef.current?.scrollIntoView({ behavior: 'smooth' })}
+              className="flex-shrink-0 bg-white dark:bg-dark-surface text-ot-charade dark:text-dark-text font-bold text-sm px-5 py-2.5 rounded-2xl shadow-md hover:bg-ot-athens-gray dark:hover:bg-dark-hover hover:shadow-lg active:scale-95 transition-all whitespace-nowrap"
+            >
               Find a table
             </button>
           </div>
@@ -355,6 +390,86 @@ const SearchPage: React.FC = () => {
         </div>
       </div>
 
+      <div className="flex-shrink-0 bg-white dark:bg-dark-paper border-b border-ot-iron dark:border-dark-border">
+        <div className="max-w-7xl mx-auto px-4 flex items-center gap-2 py-2.5 overflow-x-auto scrollbar-hide">
+          <div className="relative flex-shrink-0">
+            <select
+              value={selectedCity}
+              onChange={e => setSelectedCity(e.target.value)}
+              className="appearance-none text-xs font-semibold border border-ot-iron dark:border-dark-border rounded-full pl-3 pr-7 py-1.5 bg-white dark:bg-dark-surface text-ot-charade dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-ot-charade/30 dark:focus:ring-dark-primary/30 cursor-pointer"
+            >
+              <option value="">All Cities</option>
+              {(cities ?? []).map(city => (
+                <option key={city} value={city}>{city}</option>
+              ))}
+            </select>
+            <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-ot-manatee dark:text-dark-text-secondary pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+
+          <div className="w-px h-5 bg-ot-iron dark:bg-dark-border flex-shrink-0" />
+
+          {PRICE_RANGE_OPTIONS.map(price => (
+            <button
+              key={price}
+              onClick={() => togglePriceRange(price)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                selectedPriceRanges.includes(price)
+                  ? 'bg-ot-charade dark:bg-dark-primary text-white border-ot-charade dark:border-dark-primary shadow-sm'
+                  : 'bg-white dark:bg-dark-surface text-ot-pale-sky dark:text-dark-text-secondary border-ot-iron dark:border-dark-border hover:border-ot-charade dark:hover:border-dark-text hover:text-ot-charade dark:hover:text-dark-text'
+              }`}
+            >
+              {PRICE_SYMBOLS[price]}
+            </button>
+          ))}
+
+          <div className="w-px h-5 bg-ot-iron dark:bg-dark-border flex-shrink-0" />
+
+          {RATING_THRESHOLDS.map(threshold => (
+            <button
+              key={threshold}
+              onClick={() => toggleRating(threshold)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                ratingMin === threshold
+                  ? 'bg-ot-charade dark:bg-dark-primary text-white border-ot-charade dark:border-dark-primary shadow-sm'
+                  : 'bg-white dark:bg-dark-surface text-ot-pale-sky dark:text-dark-text-secondary border-ot-iron dark:border-dark-border hover:border-ot-charade dark:hover:border-dark-text hover:text-ot-charade dark:hover:text-dark-text'
+              }`}
+            >
+              {threshold}+
+            </button>
+          ))}
+
+          <div className="w-px h-5 bg-ot-iron dark:bg-dark-border flex-shrink-0" />
+
+          <button
+            onClick={() => setOpenNow(prev => !prev)}
+            className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+              openNow
+                ? 'bg-ot-charade dark:bg-dark-primary text-white border-ot-charade dark:border-dark-primary shadow-sm'
+                : 'bg-white dark:bg-dark-surface text-ot-pale-sky dark:text-dark-text-secondary border-ot-iron dark:border-dark-border hover:border-ot-charade dark:hover:border-dark-text hover:text-ot-charade dark:hover:text-dark-text'
+            }`}
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Open Now
+          </button>
+
+          {hasActiveFilters && (
+            <>
+              <div className="w-px h-5 bg-ot-iron dark:bg-dark-border flex-shrink-0" />
+              <button
+                onClick={resetFilters}
+                className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold text-red-500 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+              >
+                Clear
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
       <div className="flex flex-1 overflow-hidden">
 
         <div className={`${showMap ? 'hidden' : 'flex'} md:flex flex-col flex-1 overflow-hidden`}>
@@ -369,6 +484,10 @@ const SearchPage: React.FC = () => {
                 <p className="text-xs text-ot-manatee dark:text-dark-text-secondary">
                   Slovakia · {activeCategory}
                   {debouncedQuery && ` · "${debouncedQuery}"`}
+                  {selectedCity && ` · ${selectedCity}`}
+                  {selectedPriceRanges.length > 0 && ` · ${selectedPriceRanges.map(p => PRICE_SYMBOLS[p]).join(' ')}`}
+                  {ratingMin !== null && ` · ${ratingMin}+`}
+                  {openNow && ' · Open Now'}
                 </p>
               </div>
 
@@ -379,9 +498,9 @@ const SearchPage: React.FC = () => {
                     onChange={e => setSortBy(e.target.value as SortKey)}
                     className="appearance-none text-xs font-medium border border-ot-iron dark:border-dark-border rounded-xl pl-3 pr-7 py-1.5 bg-white dark:bg-dark-surface text-ot-charade dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-ot-charade/30 dark:focus:ring-dark-primary/30 cursor-pointer"
                   >
-                    <option value="relevance">Relevance</option>
-                    <option value="rating">Highest Rated</option>
-                    <option value="reviews">Most Reviewed</option>
+                    {SORT_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                   <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ot-manatee dark:text-dark-text-secondary pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -416,7 +535,7 @@ const SearchPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto bg-white dark:bg-dark-paper">
+          <div ref={resultsRef} className="flex-1 overflow-y-auto bg-white dark:bg-dark-paper">
             <div className={viewMode === 'list' ? 'px-4' : 'p-4'}>
               {isLoading ? (
                 <LoadingSpinner />

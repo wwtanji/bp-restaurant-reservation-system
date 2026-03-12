@@ -16,7 +16,10 @@ import {
   RESERVATION_STATUS_CANCELLED,
   RESERVATION_STATUS_COMPLETED,
   RESERVATION_STATUS_NO_SHOW,
+  PRICE_SYMBOLS,
 } from '../constants/reservation';
+import { useFavorites } from '../context/FavoritesContext';
+import { resolveImageUrl } from '../utils/api';
 
 type SidebarSection = 'overview' | 'reservations' | 'reviews' | 'saved' | 'transactions' | 'settings';
 type ReservationTab = 'upcoming' | 'past' | 'cancelled';
@@ -909,27 +912,111 @@ const ReviewsSection: React.FC = () => {
 };
 
 
-const SavedVenuesSection: React.FC = () => (
-  <div>
-    <h2 className="text-xl font-bold text-ot-charade dark:text-dark-text mb-6">Saved Venues</h2>
+const SavedVenuesSection: React.FC = () => {
+  const { favorites, toggleFavorite, isLoading } = useFavorites();
 
-    <div className="bg-white dark:bg-dark-paper rounded-xl border border-ot-iron dark:border-dark-border text-center py-16 px-6 shadow-sm">
-      <svg className="w-14 h-14 text-ot-iron dark:text-dark-border mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-      </svg>
-      <h3 className="text-base font-bold text-ot-charade dark:text-dark-text mb-1">No saved venues</h3>
-      <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary mb-6">
-        Save your favorite restaurants so you can easily find them later.
-      </p>
-      <Link
-        to="/search"
-        className="inline-flex items-center gap-2 bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-6 py-3 rounded-lg transition-colors text-sm"
-      >
-        Explore restaurants
-      </Link>
+  if (isLoading) {
+    return (
+      <div>
+        <h2 className="text-xl font-bold text-ot-charade dark:text-dark-text mb-6">Saved Venues</h2>
+        <div className="flex items-center justify-center py-16">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-ot-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (favorites.length === 0) {
+    return (
+      <div>
+        <h2 className="text-xl font-bold text-ot-charade dark:text-dark-text mb-6">Saved Venues</h2>
+        <div className="bg-white dark:bg-dark-paper rounded-xl border border-ot-iron dark:border-dark-border text-center py-16 px-6 shadow-sm">
+          <svg className="w-14 h-14 text-ot-iron dark:text-dark-border mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+          <h3 className="text-base font-bold text-ot-charade dark:text-dark-text mb-1">No saved venues</h3>
+          <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary mb-6">
+            Save your favorite restaurants so you can easily find them later.
+          </p>
+          <Link
+            to="/search"
+            className="inline-flex items-center gap-2 bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-6 py-3 rounded-lg transition-colors text-sm"
+          >
+            Explore restaurants
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h2 className="text-xl font-bold text-ot-charade dark:text-dark-text mb-6">
+        Saved Venues ({favorites.length})
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {favorites.map(fav => (
+          <div
+            key={fav.restaurant_id}
+            className="bg-white dark:bg-dark-paper rounded-xl border border-ot-iron dark:border-dark-border shadow-sm overflow-hidden group"
+          >
+            <Link to={`/restaurant/${fav.restaurant.slug}`}>
+              <div className="relative h-36 overflow-hidden bg-ot-athens-gray dark:bg-dark-bg">
+                <img
+                  src={resolveImageUrl(fav.restaurant.cover_image)}
+                  alt={fav.restaurant.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+            </Link>
+
+            <div className="p-3">
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <Link
+                  to={`/restaurant/${fav.restaurant.slug}`}
+                  className="font-semibold text-sm text-ot-charade dark:text-dark-text hover:text-ot-primary dark:hover:text-dark-primary line-clamp-1 transition-colors"
+                >
+                  {fav.restaurant.name}
+                </Link>
+                <button
+                  onClick={() => toggleFavorite(fav.restaurant_id)}
+                  className="flex-shrink-0 text-red-500 hover:text-red-600 transition-colors"
+                  aria-label="Remove from favorites"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </button>
+              </div>
+
+              <p className="text-xs text-ot-pale-sky dark:text-dark-text-secondary">
+                {fav.restaurant.cuisine}
+                <span className="mx-1 text-ot-iron dark:text-dark-border">&middot;</span>
+                {PRICE_SYMBOLS[fav.restaurant.price_range]}
+                <span className="mx-1 text-ot-iron dark:text-dark-border">&middot;</span>
+                {fav.restaurant.city}
+              </p>
+
+              {fav.restaurant.rating && (
+                <div className="flex items-center gap-1 mt-1.5">
+                  <svg className="w-3.5 h-3.5 text-ot-primary" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z" />
+                  </svg>
+                  <span className="text-xs font-semibold text-ot-charade dark:text-dark-text">
+                    {fav.restaurant.rating.toFixed(1)}
+                  </span>
+                  <span className="text-xs text-ot-pale-sky dark:text-dark-text-secondary">
+                    ({fav.restaurant.review_count})
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 
 const TransactionsSection: React.FC = () => (

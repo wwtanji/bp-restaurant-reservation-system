@@ -34,7 +34,7 @@ const ReviewCard = React.memo<{ review: Review; index: number }>(({ review, inde
   });
 
   return (
-    <div className="flex-shrink-0 w-[392px] h-[360px] flex flex-col rounded-ot-card shadow-[0_2px_4px_rgba(45,51,63,0.2)] overflow-hidden bg-white dark:bg-dark-paper dark:border dark:border-dark-border">
+    <div className="flex-shrink-0 w-[392px] h-[360px] flex flex-col rounded-ot-card border border-ot-iron dark:border-dark-border shadow-[0_2px_4px_rgba(45,51,63,0.2)] overflow-hidden bg-white dark:bg-dark-paper">
       <div className="p-4 pb-2">
         <div className="flex items-start gap-2 mb-1">
           <div

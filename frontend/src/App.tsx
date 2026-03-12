@@ -8,6 +8,7 @@ import { lightTheme, darkTheme } from './theme';
 import { ThemeModeProvider, useThemeMode } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { FavoritesProvider } from './context/FavoritesContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import OwnerRoute from './components/dashboard/OwnerRoute';
 
@@ -138,9 +139,11 @@ const ThemedApp: React.FC = () => {
         <Router>
           <NotificationProvider>
             <AuthProvider>
-              <ErrorBoundary>
-                <AppRoutes />
-              </ErrorBoundary>
+              <FavoritesProvider>
+                <ErrorBoundary>
+                  <AppRoutes />
+                </ErrorBoundary>
+              </FavoritesProvider>
             </AuthProvider>
           </NotificationProvider>
         </Router>

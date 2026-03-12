@@ -49,7 +49,7 @@ const RestaurantCard = React.memo<{
     onClick={onClick}
     className="flex-shrink-0 w-[234px] cursor-pointer group rounded-lg border border-ot-iron dark:border-dark-border shadow-sm hover:shadow-md transition-shadow overflow-hidden"
   >
-    <div className="h-[140px] overflow-hidden bg-ot-athens-gray dark:bg-dark-bg">
+    <div className="relative h-[140px] overflow-hidden bg-ot-athens-gray dark:bg-dark-bg">
       <img
         src={resolveImageUrl(restaurant.cover_image) || getFallbackImage(restaurant.id)}
         alt={restaurant.name}

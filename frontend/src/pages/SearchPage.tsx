@@ -6,6 +6,7 @@ import { resolveImageUrl } from '../utils/api';
 import { PRICE_SYMBOLS, todayISO, formatDate } from '../constants/reservation';
 import useFetch from '../hooks/useFetch';
 import useDebounce from '../hooks/useDebounce';
+import FavoriteButton from '../components/FavoriteButton';
 
 function ratingLabel(rating: number | null): string {
   if (!rating) return '';
@@ -75,7 +76,7 @@ const ShowcaseCard = React.memo<{
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
-      <div className="absolute top-3 right-3 flex items-center gap-1 bg-white/95 dark:bg-dark-paper/95 backdrop-blur-sm px-2.5 py-1 rounded-full shadow text-xs font-bold text-ot-charade dark:text-dark-text">
+<div className="absolute top-3 right-3 flex items-center gap-1 bg-white/95 dark:bg-dark-paper/95 backdrop-blur-sm px-2.5 py-1 rounded-full shadow text-xs font-bold text-ot-charade dark:text-dark-text">
         <StarIcon />
         {restaurant.rating ?? '—'}
       </div>
@@ -132,9 +133,12 @@ const ListCard = React.memo<{
 
     <div className="flex flex-col justify-between flex-1 min-w-0">
       <div className="space-y-1">
-        <h3 className="font-semibold text-ot-charade dark:text-dark-text text-[15px] leading-snug group-hover:underline">
-          {restaurant.name}
-        </h3>
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-semibold text-ot-charade dark:text-dark-text text-[15px] leading-snug group-hover:underline">
+            {restaurant.name}
+          </h3>
+          <FavoriteButton restaurantId={restaurant.id} size="sm" variant="surface" className="flex-shrink-0 mt-0.5" />
+        </div>
 
         <div className="flex items-center gap-1.5">
           <Stars rating={restaurant.rating} />

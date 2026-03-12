@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.models.reservation import Reservation
     from app.models.password_reset_token import PasswordResetToken
     from app.models.review import Review
+    from app.models.favorite import Favorite
 
 
 class UserRole(IntEnum):
@@ -60,4 +61,8 @@ class User(Base):
 
     reviews: Mapped[list["Review"]] = relationship(
         "Review", back_populates="user", cascade="all, delete-orphan"
+    )
+
+    favorites: Mapped[list["Favorite"]] = relationship(
+        "Favorite", back_populates="user", cascade="all, delete-orphan"
     )

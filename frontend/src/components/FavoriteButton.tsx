@@ -54,15 +54,15 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({ restaurantId, size = 'm
     return (
       <button
         onClick={handleClick}
-        className={`group/fav flex items-center gap-2.5 px-5 py-3 rounded-xl border-2 transition-all active:scale-95 ${
+        className={`group/fav flex items-center gap-2 px-4 py-2.5 rounded-full border transition-all active:scale-95 flex-shrink-0 ${
           favorited
             ? 'border-ot-primary dark:border-dark-primary bg-ot-primary/5 dark:bg-dark-primary/10 text-ot-primary dark:text-dark-primary'
-            : 'border-ot-charade dark:border-dark-text bg-white dark:bg-dark-surface text-ot-charade dark:text-dark-text hover:shadow-sm'
+            : 'border-ot-iron dark:border-dark-border bg-white dark:bg-dark-surface text-ot-charade dark:text-dark-text hover:bg-gray-50 dark:hover:bg-dark-bg'
         } ${className}`}
         aria-label={favorited ? 'Remove from favorites' : 'Add to favorites'}
       >
-        <BookmarkIcon filled={favorited} className={`w-6 h-6 flex-shrink-0 transition-colors ${favorited ? 'text-ot-primary dark:text-dark-primary' : 'text-ot-charade dark:text-dark-text'}`} />
-        <span className="text-sm font-bold whitespace-nowrap">
+        <BookmarkIcon filled={favorited} className={`w-5 h-5 flex-shrink-0 transition-colors ${favorited ? 'text-ot-primary dark:text-dark-primary' : 'text-ot-charade dark:text-dark-text'}`} />
+        <span className="text-sm font-semibold whitespace-nowrap">
           {favorited ? 'Restaurant saved' : 'Save this restaurant'}
         </span>
       </button>

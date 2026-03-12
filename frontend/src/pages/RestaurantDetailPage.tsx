@@ -418,11 +418,11 @@ const RestaurantDetailPage: React.FC = () => {
           <div className="flex-1 min-w-0">
 
             <div ref={overviewRef} className="mb-8 scroll-mt-20">
-              <div className="flex items-start gap-3 mb-2">
+              <div className="flex items-center justify-between gap-4 mb-2">
                 <h1 className="text-2xl md:text-3xl font-extrabold text-ot-charade dark:text-dark-text leading-tight">
                   {restaurant.name}
                 </h1>
-                <FavoriteButton restaurantId={restaurant.id} variant="labeled" className="mt-1" />
+                <FavoriteButton restaurantId={restaurant.id} variant="labeled" />
               </div>
 
               <div className="flex items-center gap-2 flex-wrap text-sm text-ot-pale-sky dark:text-dark-text-secondary mb-3">

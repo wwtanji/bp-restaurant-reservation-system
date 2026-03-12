@@ -14,6 +14,7 @@ import { useThemeMode } from "../../context/ThemeContext";
 import { Link, useNavigate } from "react-router-dom";
 import NotificationComponent from "../notification/NotificationComponent";
 import { OWNER_ROLE } from "../../constants/dashboard";
+import { ADMIN_ROLE } from "../../constants/admin";
 import { STORAGE_KEY_JUST_LOGGED_IN } from "../../constants/storage";
 
 const NavbarComponent: React.FC = () => {
@@ -27,6 +28,7 @@ const NavbarComponent: React.FC = () => {
     { name: "Search", href: "/search" },
     { name: "My Reservations", href: "/my-reservations" },
     ...(user?.role === OWNER_ROLE ? [{ name: "Dashboard", href: "/dashboard" }] : []),
+    ...(user?.role === ADMIN_ROLE ? [{ name: "Admin", href: "/admin" }] : []),
   ];
 
   const handleLogout = () => {
@@ -180,6 +182,16 @@ const NavbarComponent: React.FC = () => {
                             className="block px-4 py-2 text-sm text-ot-charade dark:text-dark-text data-[focus]:bg-ot-athens-gray dark:data-[focus]:bg-dark-surface transition-colors"
                           >
                             Dashboard
+                          </Link>
+                        </MenuItem>
+                      )}
+                      {user.role === ADMIN_ROLE && (
+                        <MenuItem>
+                          <Link
+                            to="/admin"
+                            className="block px-4 py-2 text-sm text-ot-charade dark:text-dark-text data-[focus]:bg-ot-athens-gray dark:data-[focus]:bg-dark-surface transition-colors"
+                          >
+                            Admin Panel
                           </Link>
                         </MenuItem>
                       )}

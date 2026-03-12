@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { FavoritesProvider } from './context/FavoritesContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import OwnerRoute from './components/dashboard/OwnerRoute';
+import AdminRoute from './components/admin/AdminRoute';
 
 const MainPage = React.lazy(() => import('./pages/MainPage'));
 const LoginPage = React.lazy(() => import('./pages/Auth/LoginPage'));
@@ -27,6 +28,11 @@ const DashboardOverviewPage = React.lazy(() => import('./pages/Dashboard/Dashboa
 const DashboardRestaurantsPage = React.lazy(() => import('./pages/Dashboard/DashboardRestaurantsPage'));
 const DashboardRestaurantFormPage = React.lazy(() => import('./pages/Dashboard/DashboardRestaurantFormPage'));
 const DashboardReservationsPage = React.lazy(() => import('./pages/Dashboard/DashboardReservationsPage'));
+const AdminOverviewPage = React.lazy(() => import('./pages/Admin/AdminOverviewPage'));
+const AdminUsersPage = React.lazy(() => import('./pages/Admin/AdminUsersPage'));
+const AdminRestaurantsPage = React.lazy(() => import('./pages/Admin/AdminRestaurantsPage'));
+const AdminReservationsPage = React.lazy(() => import('./pages/Admin/AdminReservationsPage'));
+const AdminReviewsPage = React.lazy(() => import('./pages/Admin/AdminReviewsPage'));
 
 const PageLoadingSpinner: React.FC = () => (
   <div className="min-h-screen flex items-center justify-center bg-white dark:bg-dark-bg">
@@ -123,6 +129,31 @@ const AppRoutes = () => {
           <OwnerRoute>
             <DashboardRestaurantFormPage />
           </OwnerRoute>
+        } />
+        <Route path="/admin" element={
+          <AdminRoute>
+            <AdminOverviewPage />
+          </AdminRoute>
+        } />
+        <Route path="/admin/users" element={
+          <AdminRoute>
+            <AdminUsersPage />
+          </AdminRoute>
+        } />
+        <Route path="/admin/restaurants" element={
+          <AdminRoute>
+            <AdminRestaurantsPage />
+          </AdminRoute>
+        } />
+        <Route path="/admin/reservations" element={
+          <AdminRoute>
+            <AdminReservationsPage />
+          </AdminRoute>
+        } />
+        <Route path="/admin/reviews" element={
+          <AdminRoute>
+            <AdminReviewsPage />
+          </AdminRoute>
         } />
       </Routes>
     </Suspense>

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useReducer } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -190,13 +190,14 @@ const LocationMiniMap: React.FC<{ lat: number | null; lng: number | null; name: 
 const RestaurantDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const { data: restaurant, isLoading: restaurantLoading, error: restaurantError, refetch: refetchRestaurant } =
     useFetch<Restaurant>(slug ? `/restaurants/${slug}` : null);
 
-  const [partySize, setPartySize]       = useState('2 people');
-  const [selectedDate, setSelectedDate] = useState(todayISO);
-  const [selectedTime, setSelectedTime] = useState('7:00 PM');
+  const [partySize, setPartySize]       = useState(searchParams.get('party') || '2 people');
+  const [selectedDate, setSelectedDate] = useState(searchParams.get('date') || todayISO);
+  const [selectedTime, setSelectedTime] = useState(searchParams.get('time') || '7:00 PM');
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
   const [availability, setAvailability] = useState<SlotAvailability | null>(null);

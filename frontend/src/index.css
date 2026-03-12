@@ -17,6 +17,8 @@
 html,
 body {
   margin: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -25,6 +27,11 @@ body {
   color: #1E293B;
   background-color: #fff;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
 }
 
 html.dark,

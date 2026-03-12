@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import NavbarComponent from '../components/section/NavbarComponent';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
@@ -22,6 +22,7 @@ import { useFavorites } from '../context/FavoritesContext';
 import { resolveImageUrl } from '../utils/api';
 
 type SidebarSection = 'overview' | 'reservations' | 'reviews' | 'saved' | 'transactions' | 'settings';
+const VALID_SECTIONS: SidebarSection[] = ['overview', 'reservations', 'reviews', 'saved', 'transactions', 'settings'];
 type ReservationTab = 'upcoming' | 'past' | 'cancelled';
 
 const ROLE_LABELS: Record<number, string> = {
@@ -107,9 +108,19 @@ const ProfilePage: React.FC = () => {
   const { user, logout: authLogout } = useAuth();
   const { show } = useNotification();
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState<SidebarSection>('overview');
+  const [searchParams] = useSearchParams();
+  const sectionParam = searchParams.get('section') as SidebarSection | null;
+  const initialSection = sectionParam && VALID_SECTIONS.includes(sectionParam) ? sectionParam : 'overview';
+  const [activeSection, setActiveSection] = useState<SidebarSection>(initialSection);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [reservationsLoading, setReservationsLoading] = useState(true);
+
+  useEffect(() => {
+    const param = searchParams.get('section') as SidebarSection | null;
+    if (param && VALID_SECTIONS.includes(param)) {
+      setActiveSection(param);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     apiFetch<Reservation[]>('/reservations/my')

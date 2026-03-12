@@ -6,6 +6,22 @@ from typing import Optional
 
 HH_MM_PATTERN = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 
+PRICE_RANGE_MIN = 1
+PRICE_RANGE_MAX = 4
+MIN_CAPACITY = 1
+
+
+def validate_price_range_value(value: Optional[int]) -> Optional[int]:
+    if value is not None and (value < PRICE_RANGE_MIN or value > PRICE_RANGE_MAX):
+        raise ValueError(f"Price range must be between {PRICE_RANGE_MIN} and {PRICE_RANGE_MAX}")
+    return value
+
+
+def validate_max_capacity_value(value: Optional[int]) -> Optional[int]:
+    if value is not None and value < MIN_CAPACITY:
+        raise ValueError(f"Max capacity must be at least {MIN_CAPACITY}")
+    return value
+
 
 class DayHours(BaseModel):
     open: str = "09:00"
@@ -49,16 +65,12 @@ class RestaurantCreate(BaseModel):
     @field_validator("price_range")
     @classmethod
     def validate_price_range(cls, value: int) -> int:
-        if value < 1 or value > 4:
-            raise ValueError("Price range must be between 1 and 4")
-        return value
+        return validate_price_range_value(value)
 
     @field_validator("max_capacity")
     @classmethod
     def validate_max_capacity(cls, value: int) -> int:
-        if value < 1:
-            raise ValueError("Max capacity must be at least 1")
-        return value
+        return validate_max_capacity_value(value)
 
 
 class RestaurantUpdate(BaseModel):
@@ -80,16 +92,12 @@ class RestaurantUpdate(BaseModel):
     @field_validator("price_range")
     @classmethod
     def validate_price_range(cls, value: Optional[int]) -> Optional[int]:
-        if value is not None and (value < 1 or value > 4):
-            raise ValueError("Price range must be between 1 and 4")
-        return value
+        return validate_price_range_value(value)
 
     @field_validator("max_capacity")
     @classmethod
     def validate_max_capacity(cls, value: Optional[int]) -> Optional[int]:
-        if value is not None and value < 1:
-            raise ValueError("Max capacity must be at least 1")
-        return value
+        return validate_max_capacity_value(value)
 
 
 class OwnerRestaurantOut(BaseModel):

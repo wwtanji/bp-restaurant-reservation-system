@@ -13,8 +13,8 @@ import { useNotification } from "../../context/NotificationContext";
 import { useThemeMode } from "../../context/ThemeContext";
 import { Link, useNavigate } from "react-router-dom";
 import NotificationComponent from "../notification/NotificationComponent";
-
-const OWNER_ROLE = 1;
+import { OWNER_ROLE } from "../../constants/dashboard";
+import { STORAGE_KEY_JUST_LOGGED_IN } from "../../constants/storage";
 
 const NavbarComponent: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -31,7 +31,7 @@ const NavbarComponent: React.FC = () => {
 
   const handleLogout = () => {
     authLogout();
-    localStorage.removeItem("justLoggedIn");
+    localStorage.removeItem(STORAGE_KEY_JUST_LOGGED_IN);
     show("You have successfully logged out", "error");
     navigate("/");
   };

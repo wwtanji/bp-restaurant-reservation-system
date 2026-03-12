@@ -6,6 +6,7 @@ from app.models.review import Review
 from app.models.restaurant import Restaurant
 from app.models.user import User
 from app.schemas.review_schema import ReviewCreate, ReviewUpdate
+from app.services.restaurant_service import get_active_restaurant_or_404
 
 
 def recalculate_rating(db: Session, restaurant_id: int) -> None:
@@ -28,12 +29,7 @@ def create_review(
     restaurant_id: int,
     data: ReviewCreate,
 ) -> Review:
-    restaurant = db.query(Restaurant).filter(
-        Restaurant.id == restaurant_id,
-        Restaurant.is_active == True,
-    ).first()
-    if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+    get_active_restaurant_or_404(db, restaurant_id)
 
     existing = db.query(Review).filter(
         Review.user_id == user.id,
@@ -65,7 +61,7 @@ def list_latest_reviews(db: Session, limit: int) -> list[Review]:
         db.query(Review)
         .options(joinedload(Review.user), joinedload(Review.restaurant))
         .join(Review.restaurant)
-        .filter(Restaurant.is_active == True)
+        .filter(Restaurant.is_active.is_(True))
         .order_by(Review.created_at.desc())
         .limit(limit)
         .all()

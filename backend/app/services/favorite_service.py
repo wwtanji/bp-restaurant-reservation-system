@@ -2,17 +2,12 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.favorite import Favorite
-from app.models.restaurant import Restaurant
 from app.models.user import User
+from app.services.restaurant_service import get_active_restaurant_or_404
 
 
 def add_favorite(db: Session, user: User, restaurant_id: int) -> Favorite:
-    restaurant = db.query(Restaurant).filter(
-        Restaurant.id == restaurant_id,
-        Restaurant.is_active == True,
-    ).first()
-    if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
+    get_active_restaurant_or_404(db, restaurant_id)
 
     existing = db.query(Favorite).filter(
         Favorite.user_id == user.id,

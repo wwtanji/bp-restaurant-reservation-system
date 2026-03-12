@@ -13,6 +13,7 @@ import {
   RESERVATION_STATUS_CANCELLED,
   RESERVATION_STATUS_COMPLETED,
   RESERVATION_STATUS_NO_SHOW,
+  STATUS_BADGE,
 } from '../../constants/reservation';
 
 const STATUS_TABS = [
@@ -23,14 +24,6 @@ const STATUS_TABS = [
   { key: RESERVATION_STATUS_CANCELLED, label: 'Cancelled' },
   { key: RESERVATION_STATUS_NO_SHOW, label: 'No Show' },
 ] as const;
-
-const STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> = {
-  [RESERVATION_STATUS_PENDING]:   { bg: 'bg-amber-100 dark:bg-yellow-900/20',  text: 'text-amber-700',  label: 'Pending' },
-  [RESERVATION_STATUS_CONFIRMED]: { bg: 'bg-green-100 dark:bg-green-900/20',  text: 'text-green-700',  label: 'Confirmed' },
-  [RESERVATION_STATUS_CANCELLED]: { bg: 'bg-gray-100 dark:bg-dark-surface',   text: 'text-gray-500 dark:text-dark-text-secondary',   label: 'Cancelled' },
-  [RESERVATION_STATUS_COMPLETED]: { bg: 'bg-blue-100 dark:bg-blue-900/20',   text: 'text-blue-700',   label: 'Completed' },
-  [RESERVATION_STATUS_NO_SHOW]:   { bg: 'bg-red-100 dark:bg-red-900/20',    text: 'text-red-600',    label: 'No Show' },
-};
 
 const DashboardReservationsPage: React.FC = () => {
   const { show } = useNotification();

@@ -58,3 +58,11 @@ export function formatTime(apiTime: string): string {
 export const PRICE_SYMBOLS: Record<number, string> = {
   1: '\u20AC', 2: '\u20AC\u20AC', 3: '\u20AC\u20AC\u20AC', 4: '\u20AC\u20AC\u20AC\u20AC',
 };
+
+export const STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> = {
+  [RESERVATION_STATUS_PENDING]:   { bg: 'bg-amber-100 dark:bg-yellow-900/20',  text: 'text-amber-700',  label: 'Pending' },
+  [RESERVATION_STATUS_CONFIRMED]: { bg: 'bg-green-100 dark:bg-green-900/20',  text: 'text-green-700',  label: 'Confirmed' },
+  [RESERVATION_STATUS_CANCELLED]: { bg: 'bg-gray-100 dark:bg-dark-surface',   text: 'text-gray-500 dark:text-dark-text-secondary',   label: 'Cancelled' },
+  [RESERVATION_STATUS_COMPLETED]: { bg: 'bg-blue-100 dark:bg-blue-900/20',   text: 'text-blue-700',   label: 'Completed' },
+  [RESERVATION_STATUS_NO_SHOW]:   { bg: 'bg-red-100 dark:bg-red-900/20',    text: 'text-red-600',    label: 'No Show' },
+};

@@ -1,3 +1,5 @@
+import { STORAGE_KEY_TOKEN, STORAGE_KEY_REFRESH_TOKEN } from '../constants/storage';
+
 export const API_URL = 'http://localhost:8000/api';
 
 export class ApiError extends Error {
@@ -11,7 +13,7 @@ let refreshPromise: Promise<string | null> | null = null;
 async function tryRefreshToken(): Promise<string | null> {
   if (refreshPromise) return refreshPromise;
 
-  const refreshToken = localStorage.getItem('refresh_token');
+  const refreshToken = localStorage.getItem(STORAGE_KEY_REFRESH_TOKEN);
   if (!refreshToken) return null;
 
   refreshPromise = (async () => {
@@ -23,12 +25,12 @@ async function tryRefreshToken(): Promise<string | null> {
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
-      localStorage.setItem('token', data.access_token);
-      localStorage.setItem('refresh_token', data.refresh_token);
+      localStorage.setItem(STORAGE_KEY_TOKEN, data.access_token);
+      localStorage.setItem(STORAGE_KEY_REFRESH_TOKEN, data.refresh_token);
       return data.access_token as string;
     } catch {
-      localStorage.removeItem('token');
-      localStorage.removeItem('refresh_token');
+      localStorage.removeItem(STORAGE_KEY_TOKEN);
+      localStorage.removeItem(STORAGE_KEY_REFRESH_TOKEN);
       return null;
     } finally {
       refreshPromise = null;
@@ -57,7 +59,7 @@ export async function apiFetch<T = unknown>(
     return headers;
   };
 
-  let token = localStorage.getItem('token');
+  let token = localStorage.getItem(STORAGE_KEY_TOKEN);
   let res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: buildHeaders(token),

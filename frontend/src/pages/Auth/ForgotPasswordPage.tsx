@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import NavbarComponent from '../../components/section/NavbarComponent';
+import { apiFetch, ApiError } from '../../utils/api';
 
 const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -14,22 +15,17 @@ const ForgotPasswordPage: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/authentication/forgot-password', {
+      await apiFetch('/authentication/forgot-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_email: email }),
-        mode: 'cors',
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.detail || 'Failed to send password reset email');
-      }
-
       setSubmitted(true);
-    } catch (error: any) {
-      setError(error.message || 'Failed to send password reset email. Please try again.');
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError('Failed to send password reset email. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

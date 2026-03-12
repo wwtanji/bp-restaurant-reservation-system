@@ -11,6 +11,16 @@ from app.models.user import User
 from app.schemas.owner_restaurant_schema import RestaurantCreate, RestaurantUpdate
 
 
+def get_active_restaurant_or_404(db: Session, restaurant_id: int) -> Restaurant:
+    restaurant = db.query(Restaurant).filter(
+        Restaurant.id == restaurant_id,
+        Restaurant.is_active.is_(True),
+    ).first()
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restaurant not found")
+    return restaurant
+
+
 def generate_unique_slug(db: Session, name: str) -> str:
     base_slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
     if not base_slug:
@@ -56,7 +66,7 @@ def create_restaurant(db: Session, owner: User, data: RestaurantCreate) -> Resta
 def list_owner_restaurants(db: Session, owner_id: int) -> list[Restaurant]:
     return (
         db.query(Restaurant)
-        .filter(Restaurant.owner_id == owner_id, Restaurant.is_active == True)
+        .filter(Restaurant.owner_id == owner_id, Restaurant.is_active.is_(True))
         .order_by(Restaurant.created_at.desc())
         .all()
     )
@@ -68,7 +78,7 @@ def get_owner_restaurant(db: Session, restaurant_id: int, owner_id: int) -> Rest
         .filter(
             Restaurant.id == restaurant_id,
             Restaurant.owner_id == owner_id,
-            Restaurant.is_active == True,
+            Restaurant.is_active.is_(True),
         )
         .first()
     )
@@ -106,7 +116,7 @@ def delete_restaurant(db: Session, restaurant_id: int, owner_id: int) -> None:
 def get_dashboard_stats(db: Session, owner_id: int) -> dict[str, int]:
     restaurant_ids = (
         db.query(Restaurant.id)
-        .filter(Restaurant.owner_id == owner_id, Restaurant.is_active == True)
+        .filter(Restaurant.owner_id == owner_id, Restaurant.is_active.is_(True))
         .all()
     )
     ids = [r.id for r in restaurant_ids]

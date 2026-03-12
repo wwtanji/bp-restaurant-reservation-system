@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import PhotoGalleryModal from '../components/restaurant/PhotoGalleryModal';
 import useFetch from '../hooks/useFetch';
 import FavoriteButton from '../components/FavoriteButton';
+import StarRating from '../components/common/StarRating';
 
 import {
   TIME_OPTIONS,
@@ -122,27 +123,6 @@ function ratingLabel(rating: number | null): string {
   if (rating >= 3.5) return 'Very Good';
   return 'Good';
 }
-
-const StarRating: React.FC<{ rating: number; size?: 'sm' | 'md' | 'lg' }> = ({
-  rating,
-  size = 'md',
-}) => {
-  const dim = { sm: 'w-3.5 h-3.5', md: 'w-4 h-4', lg: 'w-5 h-5' }[size];
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map(i => (
-        <svg
-          key={i}
-          className={`${dim} ${i <= Math.round(rating) ? 'text-ot-primary' : 'text-ot-iron dark:text-dark-border'}`}
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z" />
-        </svg>
-      ))}
-    </div>
-  );
-};
 
 const RatingBar: React.FC<{ score: number }> = ({ score }) => (
   <div className="flex-1 h-1.5 bg-ot-iron dark:bg-dark-border rounded-full overflow-hidden">
@@ -427,7 +407,7 @@ const RestaurantDetailPage: React.FC = () => {
 
               <div className="flex items-center gap-2 flex-wrap text-sm text-ot-pale-sky dark:text-dark-text-secondary mb-3">
                 <div className="flex items-center gap-1.5">
-                  <StarRating rating={overallRating} size="sm" />
+                  <StarRating rating={overallRating} size="w-3.5 h-3.5" />
                   <span className="font-bold text-ot-charade dark:text-dark-text">{ratingLabel(restaurant.rating)}</span>
                   <span className="text-ot-manatee dark:text-dark-text-secondary">({restaurant.review_count} reviews)</span>
                 </div>
@@ -526,7 +506,7 @@ const RestaurantDetailPage: React.FC = () => {
                 <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
                   <div className="flex flex-col items-center justify-center sm:w-32 flex-shrink-0 text-center">
                     <span className="text-5xl font-extrabold text-ot-charade dark:text-dark-text tracking-tight mb-1">{overallRating.toFixed(1)}</span>
-                    <StarRating rating={overallRating} size="lg" />
+                    <StarRating rating={overallRating} size="w-5 h-5" />
                     <span className="text-sm font-bold text-ot-charade dark:text-dark-text mt-1.5">{ratingLabel(restaurant.rating)}</span>
                     <span className="text-xs text-ot-manatee dark:text-dark-text-secondary mt-0.5">{restaurant.review_count} reviews</span>
                   </div>
@@ -663,7 +643,7 @@ const RestaurantDetailPage: React.FC = () => {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap mb-0.5">
                                 <span className="text-sm font-bold text-ot-charade dark:text-dark-text">{review.author.first_name}</span>
-                                <StarRating rating={review.rating} size="sm" />
+                                <StarRating rating={review.rating} size="w-3.5 h-3.5" />
                                 <span className="text-xs font-bold text-ot-charade dark:text-dark-text">
                                   {ratingLabel(review.rating)}
                                 </span>

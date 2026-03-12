@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User } from '../interfaces/user';
 import { useNotification } from './NotificationContext';
 import { API_URL } from '../utils/api';
+import { STORAGE_KEY_TOKEN, STORAGE_KEY_REFRESH_TOKEN, STORAGE_KEY_JUST_LOGGED_IN } from '../constants/storage';
 
 interface LoginData {
   user_email: string;
@@ -78,7 +79,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return refreshPromise.current;
     }
 
-    const refreshToken = localStorage.getItem('refresh_token');
+    const refreshToken = localStorage.getItem(STORAGE_KEY_REFRESH_TOKEN);
     if (!refreshToken) {
       return null;
     }
@@ -97,13 +98,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
 
         const data: TokenResponse = await response.json();
-        localStorage.setItem('token', data.access_token);
-        localStorage.setItem('refresh_token', data.refresh_token);
+        localStorage.setItem(STORAGE_KEY_TOKEN, data.access_token);
+        localStorage.setItem(STORAGE_KEY_REFRESH_TOKEN, data.refresh_token);
         return data.access_token;
       } catch (error) {
         console.error('Error refreshing token:', error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('refresh_token');
+        localStorage.removeItem(STORAGE_KEY_TOKEN);
+        localStorage.removeItem(STORAGE_KEY_REFRESH_TOKEN);
         setUser(null);
         return null;
       } finally {
@@ -134,14 +135,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      const refreshToken = localStorage.getItem('refresh_token');
+      const refreshToken = localStorage.getItem(STORAGE_KEY_REFRESH_TOKEN);
       if (!refreshToken) {
         setIsLoading(false);
         return;
       }
 
       try {
-        const userData = await fetchUserProfile(localStorage.getItem('token') || '');
+        const userData = await fetchUserProfile(localStorage.getItem(STORAGE_KEY_TOKEN) || '');
         setUser(userData);
       } catch (error) {
         console.error("Could not initialize auth:", error);
@@ -177,13 +178,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       const tokenData: TokenResponse = await response.json();
-      localStorage.setItem('token', tokenData.access_token);
-      localStorage.setItem('refresh_token', tokenData.refresh_token);
+      localStorage.setItem(STORAGE_KEY_TOKEN, tokenData.access_token);
+      localStorage.setItem(STORAGE_KEY_REFRESH_TOKEN, tokenData.refresh_token);
 
       const userData = await fetchUserProfile(tokenData.access_token);
       setUser(userData);
 
-      localStorage.setItem('justLoggedIn', 'true');
+      localStorage.setItem(STORAGE_KEY_JUST_LOGGED_IN, 'true');
       show(`Welcome back, ${userData?.first_name}! You're now logged into Reservelt.`, 'success');
       navigate('/');
     } catch (error) {
@@ -250,8 +251,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = useCallback(() => {
     setUser(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('refresh_token');
+    localStorage.removeItem(STORAGE_KEY_TOKEN);
+    localStorage.removeItem(STORAGE_KEY_REFRESH_TOKEN);
     refreshPromise.current = null;
     navigate('/login');
   }, [navigate]);

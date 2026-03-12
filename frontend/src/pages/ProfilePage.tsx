@@ -18,6 +18,7 @@ import {
   RESERVATION_STATUS_NO_SHOW,
   PRICE_SYMBOLS,
 } from '../constants/reservation';
+import { STORAGE_KEY_JUST_LOGGED_IN } from '../constants/storage';
 import { useFavorites } from '../context/FavoritesContext';
 import { resolveImageUrl } from '../utils/api';
 
@@ -131,7 +132,7 @@ const ProfilePage: React.FC = () => {
 
   const handleLogout = () => {
     authLogout();
-    localStorage.removeItem('justLoggedIn');
+    localStorage.removeItem(STORAGE_KEY_JUST_LOGGED_IN);
     show('You have successfully logged out', 'error');
     navigate('/');
   };

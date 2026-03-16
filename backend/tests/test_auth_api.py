@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.models.user import User, UserRole
 from app.services.auth_service import bcrypt_context
+from app.utils.rate_limiter import rate_limiter
 
 REGISTER_URL = "/authentication/register"
 LOGIN_URL = "/authentication/login"
@@ -18,12 +19,12 @@ VALID_PASSWORD = "StrongPass1"
 VALID_REGISTRATION = {
     "first_name": "John",
     "last_name": "Doe",
-    "user_email": "john@example.com",
+    "user_email": "john@gmail.com",
     "user_password": VALID_PASSWORD,
 }
 
 
-def _register_and_login(client: TestClient, email: str = "john@example.com") -> dict:
+def _register_and_login(client: TestClient, email: str = "john@gmail.com") -> dict:
     reg_data = {**VALID_REGISTRATION, "user_email": email}
     client.post(REGISTER_URL, json=reg_data)
     resp = client.post(
@@ -98,24 +99,37 @@ class TestLogin:
     def test_nonexistent_email(self, test_client: TestClient):
         resp = test_client.post(
             LOGIN_URL,
-            json={"user_email": "nobody@example.com", "user_password": VALID_PASSWORD},
+            json={"user_email": "nobody@gmail.com", "user_password": VALID_PASSWORD},
         )
         assert resp.status_code == 400
 
-    def test_lockout_after_failures(self, test_client: TestClient):
-        test_client.post(REGISTER_URL, json=VALID_REGISTRATION)
+    def test_lockout_after_failures(
+        self, test_client: TestClient, db_session: Session,
+    ):
+        user = User(
+            first_name="Lock",
+            last_name="Test",
+            user_email="lock@gmail.com",
+            user_password=bcrypt_context.hash(VALID_PASSWORD),
+            role=UserRole.CUSTOMER,
+            email_verified=True,
+        )
+        db_session.add(user)
+        db_session.commit()
         for _ in range(5):
+            rate_limiter.requests = {}
             test_client.post(
                 LOGIN_URL,
                 json={
-                    "user_email": VALID_REGISTRATION["user_email"],
+                    "user_email": "lock@gmail.com",
                     "user_password": "WrongPass1",
                 },
             )
+        rate_limiter.requests = {}
         resp = test_client.post(
             LOGIN_URL,
             json={
-                "user_email": VALID_REGISTRATION["user_email"],
+                "user_email": "lock@gmail.com",
                 "user_password": "WrongPass1",
             },
         )

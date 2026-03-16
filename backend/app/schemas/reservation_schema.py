@@ -6,6 +6,7 @@ from datetime import date, time, datetime
 
 from app.models.reservation import ReservationStatus
 from app.schemas.restaurant_schema import RestaurantBrief
+from app.schemas.table_schema import TableBrief
 
 MAX_PARTY_SIZE = 20
 MAX_GUEST_NAME_LENGTH = 100
@@ -63,6 +64,7 @@ class ReservationCreate(BaseModel):
 class ReservationOut(BaseModel):
     id: int
     restaurant: RestaurantBrief
+    table: Optional[TableBrief] = None
     party_size: int
     reservation_date: date
     reservation_time: time
@@ -89,5 +91,5 @@ class ReservationStatusUpdate(BaseModel):
 
 
 class SlotAvailabilityResponse(BaseModel):
-    available_seats: int
-    max_capacity: int
+    available_tables: int
+    total_tables: int

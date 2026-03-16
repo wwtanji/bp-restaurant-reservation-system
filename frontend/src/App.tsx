@@ -27,6 +27,8 @@ const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
 const DashboardOverviewPage = React.lazy(() => import('./pages/Dashboard/DashboardOverviewPage'));
 const DashboardRestaurantsPage = React.lazy(() => import('./pages/Dashboard/DashboardRestaurantsPage'));
 const DashboardRestaurantFormPage = React.lazy(() => import('./pages/Dashboard/DashboardRestaurantFormPage'));
+const DashboardTablesPage = React.lazy(() => import('./pages/Dashboard/DashboardTablesPage'));
+const DashboardTableFormPage = React.lazy(() => import('./pages/Dashboard/DashboardTableFormPage'));
 const DashboardReservationsPage = React.lazy(() => import('./pages/Dashboard/DashboardReservationsPage'));
 const AdminOverviewPage = React.lazy(() => import('./pages/Admin/AdminOverviewPage'));
 const AdminUsersPage = React.lazy(() => import('./pages/Admin/AdminUsersPage'));
@@ -128,6 +130,21 @@ const AppRoutes = () => {
         <Route path="/dashboard/restaurants/:id/edit" element={
           <OwnerRoute>
             <DashboardRestaurantFormPage />
+          </OwnerRoute>
+        } />
+        <Route path="/dashboard/restaurants/:restaurantId/tables" element={
+          <OwnerRoute>
+            <DashboardTablesPage />
+          </OwnerRoute>
+        } />
+        <Route path="/dashboard/restaurants/:restaurantId/tables/new" element={
+          <OwnerRoute>
+            <DashboardTableFormPage />
+          </OwnerRoute>
+        } />
+        <Route path="/dashboard/restaurants/:restaurantId/tables/:tableId/edit" element={
+          <OwnerRoute>
+            <DashboardTableFormPage />
           </OwnerRoute>
         } />
         <Route path="/admin" element={

@@ -19,6 +19,7 @@ import {
   PARTY_SIZES,
   todayISO,
   toApiTime,
+  toApiPartySize,
   PRICE_SYMBOLS,
 } from '../constants/reservation';
 
@@ -233,13 +234,14 @@ const RestaurantDetailPage: React.FC = () => {
     const params = new URLSearchParams({
       reservation_date: selectedDate,
       reservation_time: toApiTime(selectedTime),
+      party_size: String(toApiPartySize(partySize)),
     });
     apiFetch<SlotAvailability>(`/reservations/${slug}/availability?${params}`)
       .then(setAvailability)
       .catch(() => {})
       .finally(() => setAvailabilityLoading(false));
     return () => controller.abort();
-  }, [slug, selectedDate, selectedTime]);
+  }, [slug, selectedDate, selectedTime, partySize]);
 
   const handleSubmitReview = async () => {
     if (!restaurant || reviewForm.rating === 0) return;
@@ -747,17 +749,17 @@ const RestaurantDetailPage: React.FC = () => {
 
                     {availability && !availabilityLoading && (
                       <div className={`mb-4 px-3 py-2 rounded-ot-btn text-xs font-medium ${
-                        availability.available_seats === 0
+                        availability.available_tables === 0
                           ? 'bg-red-50 dark:bg-red-900/20 text-red-600 border border-red-200 dark:border-red-800'
-                          : availability.available_seats <= 3
+                          : availability.available_tables <= 3
                             ? 'bg-amber-50 dark:bg-yellow-900/20 text-amber-700 border border-amber-200 dark:border-yellow-800'
                             : 'bg-green-50 dark:bg-green-900/20 text-green-700 border border-green-200 dark:border-green-800'
                       }`}>
-                        {availability.available_seats === 0
-                          ? 'Fully booked for this time slot'
-                          : availability.available_seats <= 3
-                            ? `Only ${availability.available_seats} seat${availability.available_seats === 1 ? '' : 's'} left`
-                            : `${availability.available_seats} seats available`}
+                        {availability.available_tables === 0
+                          ? 'No tables available for this time slot'
+                          : availability.available_tables <= 3
+                            ? `Only ${availability.available_tables} table${availability.available_tables === 1 ? '' : 's'} left`
+                            : `${availability.available_tables} tables available`}
                       </div>
                     )}
 
@@ -782,11 +784,11 @@ const RestaurantDetailPage: React.FC = () => {
 
                     <button
                       onClick={handleBook}
-                      disabled={availability?.available_seats === 0}
+                      disabled={availability?.available_tables === 0}
                       className="w-full py-3.5 text-sm font-bold text-white bg-ot-primary rounded-ot-btn hover:bg-ot-primary-dark transition-colors mb-3 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      {availability?.available_seats === 0
-                        ? 'Fully booked'
+                      {availability?.available_tables === 0
+                        ? 'No tables available'
                         : `Book a Table \u00B7 ${selectedTime}`}
                     </button>
 

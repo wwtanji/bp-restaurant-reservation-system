@@ -176,6 +176,14 @@ const MyReservationsPage: React.FC = () => {
                           {reservation.party_size} {reservation.party_size === 1 ? 'person' : 'people'}
                         </span>
                       </div>
+                      {reservation.table && (
+                        <div className="flex items-center gap-1.5">
+                          <svg className="w-4 h-4 text-ot-manatee dark:text-dark-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h7" />
+                          </svg>
+                          <span className="font-medium">Table {reservation.table.table_number}</span>
+                        </div>
+                      )}
                     </div>
 
                     {reservation.special_requests && (

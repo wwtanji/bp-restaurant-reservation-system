@@ -1,10 +1,8 @@
-from datetime import date, time, timedelta
+from datetime import datetime
 
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
 
-from app.models.user import User, UserRole
+from app.models.user import UserRole
 from app.models.reservation import ReservationStatus
 
 
@@ -97,7 +95,6 @@ class TestAdminLock:
         assert resp.json()["locked_until"] is not None
 
     def test_unlock_user(self, test_client, admin, customer, auth_headers, db_session):
-        from datetime import datetime
         customer.locked_until = datetime(2099, 12, 31)
         db_session.commit()
         headers = auth_headers(admin)
@@ -144,11 +141,10 @@ class TestAdminRestaurants:
 class TestAdminReservations:
     def test_list(
         self, test_client, admin, customer, restaurant, create_table,
-        create_reservation, auth_headers,
+        create_reservation, auth_headers, future_date, default_time,
     ):
-        future = date.today() + timedelta(days=7)
         table = create_table(restaurant.id, 1, 4)
-        create_reservation(customer.id, restaurant.id, table.id, future, time(18, 0))
+        create_reservation(customer.id, restaurant.id, table.id, future_date, default_time)
         headers = auth_headers(admin)
         resp = test_client.get("/admin/reservations", headers=headers)
         assert resp.status_code == 200
@@ -159,12 +155,11 @@ class TestAdminReservations:
 
     def test_filter_by_status(
         self, test_client, admin, customer, restaurant, create_table,
-        create_reservation, auth_headers,
+        create_reservation, auth_headers, future_date, default_time,
     ):
-        future = date.today() + timedelta(days=7)
         table = create_table(restaurant.id, 1, 4)
         create_reservation(
-            customer.id, restaurant.id, table.id, future, time(18, 0),
+            customer.id, restaurant.id, table.id, future_date, default_time,
             status=ReservationStatus.CONFIRMED,
         )
         headers = auth_headers(admin)
@@ -175,14 +170,13 @@ class TestAdminReservations:
 
     def test_filter_by_date(
         self, test_client, admin, customer, restaurant, create_table,
-        create_reservation, auth_headers,
+        create_reservation, auth_headers, future_date, default_time,
     ):
-        future = date.today() + timedelta(days=7)
         table = create_table(restaurant.id, 1, 4)
-        create_reservation(customer.id, restaurant.id, table.id, future, time(18, 0))
+        create_reservation(customer.id, restaurant.id, table.id, future_date, default_time)
         headers = auth_headers(admin)
         resp = test_client.get(
-            f"/admin/reservations?date_from={future}&date_to={future}",
+            f"/admin/reservations?date_from={future_date}&date_to={future_date}",
             headers=headers,
         )
         assert resp.status_code == 200
@@ -190,12 +184,11 @@ class TestAdminReservations:
 
     def test_update_status(
         self, test_client, admin, customer, restaurant, create_table,
-        create_reservation, auth_headers,
+        create_reservation, auth_headers, future_date, default_time,
     ):
-        future = date.today() + timedelta(days=7)
         table = create_table(restaurant.id, 1, 4)
         reservation = create_reservation(
-            customer.id, restaurant.id, table.id, future, time(18, 0),
+            customer.id, restaurant.id, table.id, future_date, default_time,
         )
         headers = auth_headers(admin)
         resp = test_client.patch(

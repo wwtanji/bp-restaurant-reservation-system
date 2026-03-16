@@ -1,10 +1,3 @@
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-
-from app.models.user import User, UserRole
-from app.models.restaurant import Restaurant
-
-
 class TestCreateReview:
     def test_success(self, test_client, customer, restaurant, auth_headers):
         headers = auth_headers(customer)

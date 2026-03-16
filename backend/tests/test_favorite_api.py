@@ -1,9 +1,3 @@
-from fastapi.testclient import TestClient
-
-from app.models.user import User
-from app.models.restaurant import Restaurant
-
-
 class TestFavorites:
     def test_empty_list(self, test_client, customer, auth_headers):
         headers = auth_headers(customer)

@@ -1,12 +1,6 @@
-from datetime import date, time, timedelta
+from datetime import date, timedelta
 
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-
-from app.models.user import User, UserRole
-from app.models.restaurant import Restaurant
-from app.models.table import Table
+from app.models.user import UserRole
 from app.models.reservation import ReservationStatus
 
 

@@ -214,7 +214,7 @@ def create_restaurant(db_session: Session) -> Callable[..., Restaurant]:
         nonlocal _counter
         _counter += 1
         base_slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
-        slug = f"{base_slug}-f{_counter}"
+        slug = f"{base_slug}-{_counter}"
         return _persist(db_session, Restaurant(
             owner_id=owner_id,
             name=name,

@@ -35,8 +35,16 @@ class TestFavorites:
         resp = test_client.delete("/favorites/9999", headers=headers)
         assert resp.status_code == 404
 
-    def test_no_auth(self, test_client):
+    def test_no_auth_list(self, test_client):
         resp = test_client.get("/favorites/")
+        assert resp.status_code == 403
+
+    def test_no_auth_add(self, test_client, restaurant):
+        resp = test_client.post(f"/favorites/{restaurant.id}")
+        assert resp.status_code == 403
+
+    def test_no_auth_remove(self, test_client, restaurant):
+        resp = test_client.delete(f"/favorites/{restaurant.id}")
         assert resp.status_code == 403
 
     def test_add_nonexistent_restaurant(self, test_client, customer, auth_headers):

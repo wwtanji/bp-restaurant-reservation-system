@@ -47,6 +47,8 @@ class TestTableApi:
         headers = auth_headers(owner)
         resp = test_client.delete(_url(restaurant.id, table.id), headers=headers)
         assert resp.status_code == 204
+        follow_up = test_client.get(_url(restaurant.id, table.id), headers=headers)
+        assert follow_up.status_code == 404
 
     def test_no_auth(self, test_client, restaurant):
         resp = test_client.get(_url(restaurant.id))

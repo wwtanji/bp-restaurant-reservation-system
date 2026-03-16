@@ -41,7 +41,7 @@ class UserLogin(BaseModel):
     def validate_email(cls, value: str) -> str:
         try:
             valid = validate_email(value)
-            return valid.email
+            return valid.normalized
         except EmailNotValidError as e:
             raise ValueError(str(e)) from e
 

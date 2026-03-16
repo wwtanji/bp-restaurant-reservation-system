@@ -1,4 +1,4 @@
-from datetime import datetime
+from app.services.admin_service import LOCK_FOREVER
 
 import pytest
 
@@ -95,7 +95,7 @@ class TestAdminLock:
         assert resp.json()["locked_until"] is not None
 
     def test_unlock_user(self, test_client, admin, customer, auth_headers, db_session):
-        customer.locked_until = datetime(2099, 12, 31)
+        customer.locked_until = LOCK_FOREVER
         db_session.commit()
         headers = auth_headers(admin)
         resp = test_client.patch(

@@ -277,14 +277,16 @@ class TestTimeSlotOverlapDetection:
         future_date: date,
     ):
         table = create_table(restaurant.id, table_number=1, capacity=4)
+        first_time = time(12, 0)
 
         blocker = create_user()
         create_reservation(
             blocker.id, restaurant.id, table.id,
-            future_date, time(12, 0),
+            future_date, first_time,
         )
 
-        well_outside_window = time(18, 0)
+        minutes_outside_window = int(TURN_HOURS * 60) + 1
+        well_outside_window = time_plus_minutes(first_time, minutes_outside_window)
         data = build_reservation_data(future_date, well_outside_window, party_size=2)
 
         result = reservation_service.create_reservation(
@@ -450,12 +452,15 @@ class TestUserDoubleBookingPrevention:
     ):
         create_table(restaurant.id, table_number=1, capacity=4)
 
-        morning = build_reservation_data(future_date, time(10, 0), party_size=2)
+        morning_time = time(10, 0)
+        morning = build_reservation_data(future_date, morning_time, party_size=2)
         reservation_service.create_reservation(
             db_session, customer, restaurant, morning
         )
 
-        evening = build_reservation_data(future_date, time(20, 0), party_size=2)
+        minutes_outside_window = int(TURN_HOURS * 60) + 1
+        evening_time = time_plus_minutes(morning_time, minutes_outside_window)
+        evening = build_reservation_data(future_date, evening_time, party_size=2)
         result = reservation_service.create_reservation(
             db_session, customer, restaurant, evening
         )

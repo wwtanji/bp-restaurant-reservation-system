@@ -66,13 +66,19 @@ class TestTableUpdateValidation:
         assert data.table_number is None
 
     def test_capacity_above_maximum_rejected(self):
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError) as exc:
             TableUpdate(capacity=MAX_TABLE_CAPACITY + 1)
 
+        assert "capacity" in str(exc.value).lower()
+
     def test_capacity_below_minimum_rejected(self):
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError) as exc:
             TableUpdate(capacity=MIN_TABLE_CAPACITY - 1)
 
+        assert "capacity" in str(exc.value).lower()
+
     def test_table_number_below_minimum_rejected(self):
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError) as exc:
             TableUpdate(table_number=MIN_TABLE_NUMBER - 1)
+
+        assert "table_number" in str(exc.value).lower()

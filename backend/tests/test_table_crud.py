@@ -52,20 +52,9 @@ class TestCreateTable:
         assert exc.value.status_code == 404
 
     def test_same_table_number_allowed_in_different_restaurants(
-        self, db_session: Session, owner: User, create_table
+        self, db_session: Session, owner: User, create_table, create_restaurant,
     ):
-        other_restaurant = Restaurant(
-            owner_id=owner.id,
-            name="Other Place",
-            slug="other-place",
-            cuisine="Italian",
-            address="Other 1",
-            city="Košice",
-            is_active=True,
-        )
-        db_session.add(other_restaurant)
-        db_session.commit()
-        db_session.refresh(other_restaurant)
+        other_restaurant = create_restaurant(owner.id, name="Other Place", city="Košice")
 
         table_a = create_table(other_restaurant.id, table_number=1, capacity=4)
         table_b = table_service.create_table(

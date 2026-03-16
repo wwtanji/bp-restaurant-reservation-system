@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.models.user import User, UserRole
-from app.services.auth_service import bcrypt_context
+from app.services.auth_service import bcrypt_context, MAX_FAILED_LOGIN_ATTEMPTS
 from app.utils.rate_limiter import rate_limiter
 
 REGISTER_URL = "/authentication/register"
@@ -116,7 +116,7 @@ class TestLogin:
         )
         db_session.add(user)
         db_session.commit()
-        for _ in range(5):
+        for _ in range(MAX_FAILED_LOGIN_ATTEMPTS):
             rate_limiter.requests = {}
             test_client.post(
                 LOGIN_URL,

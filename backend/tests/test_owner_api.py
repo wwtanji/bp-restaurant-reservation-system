@@ -1,7 +1,4 @@
-from fastapi.testclient import TestClient
-
-from app.models.user import User, UserRole
-from app.models.restaurant import Restaurant
+from app.models.user import UserRole
 
 BASE_URL = "/owners/restaurants"
 

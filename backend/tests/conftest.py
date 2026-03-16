@@ -32,6 +32,13 @@ engine = create_engine(
 TestingSession = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
+def _persist(db_session: Session, entity):
+    db_session.add(entity)
+    db_session.commit()
+    db_session.refresh(entity)
+    return entity
+
+
 @pytest.fixture(autouse=True)
 def db_session() -> Generator[Session, None, None]:
     Base.metadata.create_all(bind=engine)
@@ -71,55 +78,43 @@ def auth_headers() -> Callable[[User], dict[str, str]]:
 
 @pytest.fixture
 def owner(db_session: Session) -> User:
-    user = User(
+    return _persist(db_session, User(
         first_name="Owner",
         last_name="Test",
         user_email="owner@test.com",
         user_password="hashed_pw",
         role=UserRole.RESTAURANT_OWNER,
         email_verified=True,
-    )
-    db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
-    return user
+    ))
 
 
 @pytest.fixture
 def customer(db_session: Session) -> User:
-    user = User(
+    return _persist(db_session, User(
         first_name="Customer",
         last_name="Test",
         user_email="customer@test.com",
         user_password="hashed_pw",
         role=UserRole.CUSTOMER,
         email_verified=True,
-    )
-    db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
-    return user
+    ))
 
 
 @pytest.fixture
 def admin(db_session: Session) -> User:
-    user = User(
+    return _persist(db_session, User(
         first_name="Admin",
         last_name="Test",
         user_email="admin@test.com",
         user_password="hashed_pw",
         role=UserRole.ADMIN,
         email_verified=True,
-    )
-    db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
-    return user
+    ))
 
 
 @pytest.fixture
 def restaurant(db_session: Session, owner: User) -> Restaurant:
-    r = Restaurant(
+    return _persist(db_session, Restaurant(
         owner_id=owner.id,
         name="Test Restaurant",
         slug="test-restaurant",
@@ -127,11 +122,7 @@ def restaurant(db_session: Session, owner: User) -> Restaurant:
         address="Test 1",
         city="Bratislava",
         is_active=True,
-    )
-    db_session.add(r)
-    db_session.commit()
-    db_session.refresh(r)
-    return r
+    ))
 
 
 @pytest.fixture
@@ -152,16 +143,12 @@ def create_table(db_session: Session) -> Callable[..., Table]:
         capacity: int,
         is_active: bool = True,
     ) -> Table:
-        table = Table(
+        return _persist(db_session, Table(
             restaurant_id=restaurant_id,
             table_number=table_number,
             capacity=capacity,
             is_active=is_active,
-        )
-        db_session.add(table)
-        db_session.commit()
-        db_session.refresh(table)
-        return table
+        ))
 
     return _factory
 
@@ -176,18 +163,14 @@ def create_user(db_session: Session) -> Callable[..., User]:
     ) -> User:
         nonlocal _counter
         _counter += 1
-        user = User(
+        return _persist(db_session, User(
             first_name=f"Test{_counter}",
             last_name="User",
             user_email=f"{email_prefix}{_counter}@test.com",
             user_password="hashed_pw",
             role=role,
             email_verified=True,
-        )
-        db_session.add(user)
-        db_session.commit()
-        db_session.refresh(user)
-        return user
+        ))
 
     return _factory
 
@@ -203,7 +186,7 @@ def create_reservation(db_session: Session) -> Callable[..., Reservation]:
         party_size: int = 2,
         status: str = ReservationStatus.PENDING,
     ) -> Reservation:
-        reservation = Reservation(
+        return _persist(db_session, Reservation(
             user_id=user_id,
             restaurant_id=restaurant_id,
             table_id=table_id,
@@ -212,11 +195,7 @@ def create_reservation(db_session: Session) -> Callable[..., Reservation]:
             reservation_time=reservation_time,
             guest_name="Test Guest",
             status=status,
-        )
-        db_session.add(reservation)
-        db_session.commit()
-        db_session.refresh(reservation)
-        return reservation
+        ))
 
     return _factory
 
@@ -236,7 +215,7 @@ def create_restaurant(db_session: Session) -> Callable[..., Restaurant]:
         _counter += 1
         base_slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
         slug = f"{base_slug}-f{_counter}"
-        r = Restaurant(
+        return _persist(db_session, Restaurant(
             owner_id=owner_id,
             name=name,
             slug=slug,
@@ -244,11 +223,7 @@ def create_restaurant(db_session: Session) -> Callable[..., Restaurant]:
             address=f"Test Address {_counter}",
             city=city,
             is_active=is_active,
-        )
-        db_session.add(r)
-        db_session.commit()
-        db_session.refresh(r)
-        return r
+        ))
 
     return _factory
 
@@ -261,15 +236,11 @@ def create_review(db_session: Session) -> Callable[..., Review]:
         rating: int = 4,
         text: str = "Great place!",
     ) -> Review:
-        review = Review(
+        return _persist(db_session, Review(
             user_id=user_id,
             restaurant_id=restaurant_id,
             rating=rating,
             text=text,
-        )
-        db_session.add(review)
-        db_session.commit()
-        db_session.refresh(review)
-        return review
+        ))
 
     return _factory

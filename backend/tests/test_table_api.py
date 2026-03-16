@@ -1,8 +1,3 @@
-from fastapi.testclient import TestClient
-
-from app.models.user import User, UserRole
-
-
 def _url(restaurant_id: int, table_id: int | None = None) -> str:
     base = f"/owners/restaurants/{restaurant_id}/tables"
     if table_id is not None:

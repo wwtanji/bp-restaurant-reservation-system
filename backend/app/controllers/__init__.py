@@ -5,12 +5,14 @@ from app.controllers.owner_controller import OWNER_CONTROLLER
 from app.controllers.review_controller import REVIEW_CONTROLLER
 from app.controllers.favorite_controller import FAVORITE_CONTROLLER
 from app.controllers.admin_controller import ADMIN_CONTROLLER
+from app.controllers.table_controller import TABLE_CONTROLLER
 
 ALL_CONTROLLERS = [
     AUTH_CONTROLLER,
     RESTAURANT_CONTROLLER,
     RESERVATION_CONTROLLER,
     OWNER_CONTROLLER,
+    TABLE_CONTROLLER,
     REVIEW_CONTROLLER,
     FAVORITE_CONTROLLER,
     ADMIN_CONTROLLER,

@@ -67,7 +67,7 @@ const BookingPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting]   = useState(false);
   const [error, setError]                 = useState<string | null>(null);
   const [confirmation, setConfirmation]   = useState<Reservation | null>(null);
-  const [availableSeats, setAvailableSeats]     = useState<number | null>(null);
+  const [availableTables, setAvailableTables]   = useState<number | null>(null);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
   useEffect(() => {
@@ -81,20 +81,14 @@ const BookingPage: React.FC = () => {
     const params = new URLSearchParams({
       reservation_date: selectedDate,
       reservation_time: toApiTime(selectedTime),
+      party_size: String(toApiPartySize(partySize)),
     });
     apiFetch<SlotAvailability>(`/reservations/${slug}/availability?${params}`)
-      .then(data => setAvailableSeats(data.available_seats))
+      .then(data => setAvailableTables(data.available_tables))
       .catch(() => {})
       .finally(() => setAvailabilityLoading(false));
     return () => controller.abort();
-  }, [slug, selectedDate, selectedTime]);
-
-  useEffect(() => {
-    if (availableSeats === null || availableSeats === 0) return;
-    if (toApiPartySize(partySize) > availableSeats) {
-      setPartySize(PARTY_SIZES[availableSeats - 1]);
-    }
-  }, [availableSeats, partySize]);
+  }, [slug, selectedDate, selectedTime, partySize]);
 
   useEffect(() => {
     if (restaurantError && slug) navigate(`/restaurant/${slug}`);
@@ -178,6 +172,7 @@ const BookingPage: React.FC = () => {
               ['Date',       formatDate(confirmation.reservation_date)],
               ['Time',       fromApiTime(confirmation.reservation_time)],
               ['Party',      `${confirmation.party_size} ${confirmation.party_size === 1 ? 'person' : 'people'}`],
+              ...(confirmation.table ? [['Table', `Table ${confirmation.table.table_number}`]] : []),
               ...(confirmation.guest_name ? [['Name', confirmation.guest_name]] : []),
             ].map(([label, value]) => (
               <div key={label} className="flex justify-between text-sm">
@@ -311,9 +306,9 @@ const BookingPage: React.FC = () => {
                     <label className="block text-xs font-bold text-ot-pale-sky dark:text-dark-text-secondary uppercase tracking-wide mb-1.5">
                       Party size
                     </label>
-                    {availableSeats === 0 ? (
+                    {availableTables === 0 ? (
                       <div className="px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-ot-btn text-sm text-red-600 font-medium">
-                        Fully booked
+                        No tables available
                       </div>
                     ) : (
                       <div className="relative">
@@ -323,17 +318,14 @@ const BookingPage: React.FC = () => {
                           onChange={e => setPartySize(e.target.value)}
                           className="w-full pl-9 pr-8 py-3 border border-ot-iron dark:border-dark-border rounded-ot-btn text-sm text-ot-charade dark:text-dark-text appearance-none focus:outline-none focus:ring-2 focus:ring-ot-primary dark:ring-dark-primary bg-white dark:bg-dark-surface"
                         >
-                          {(availableSeats !== null && !availabilityLoading
-                            ? PARTY_SIZES.slice(0, availableSeats)
-                            : PARTY_SIZES
-                          ).map(s => <option key={s}>{s}</option>)}
+                          {PARTY_SIZES.map(s => <option key={s}>{s}</option>)}
                         </select>
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><ChevronIcon /></div>
                       </div>
                     )}
-                    {availableSeats !== null && availableSeats > 0 && availableSeats <= 3 && (
+                    {availableTables !== null && availableTables > 0 && availableTables <= 3 && (
                       <p className="mt-1.5 text-xs text-amber-600 font-medium">
-                        Only {availableSeats} seat{availableSeats === 1 ? '' : 's'} left
+                        Only {availableTables} table{availableTables === 1 ? '' : 's'} left
                       </p>
                     )}
                   </div>
@@ -402,7 +394,7 @@ const BookingPage: React.FC = () => {
 
               <button
                 type="submit"
-                disabled={isSubmitting || !guestPhone || availableSeats === 0}
+                disabled={isSubmitting || !guestPhone || availableTables === 0}
                 className="w-full py-4 text-sm font-bold text-white bg-ot-primary rounded-ot-btn hover:bg-ot-primary-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (

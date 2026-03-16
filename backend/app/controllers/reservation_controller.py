@@ -70,12 +70,13 @@ def cancel_reservation(
 def get_slot_availability(
     reservation_date: date = Query(...),
     reservation_time: time = Query(...),
+    party_size: int = Query(default=2, ge=1),
     restaurant: Restaurant = Depends(get_restaurant_by_slug),
     _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     return reservation_service.get_slot_availability(
-        db, restaurant, reservation_date, reservation_time
+        db, restaurant, reservation_date, reservation_time, party_size
     )
 
 

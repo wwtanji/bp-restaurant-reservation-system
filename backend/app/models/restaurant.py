@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from app.models.reservation import Reservation
     from app.models.review import Review
     from app.models.favorite import Favorite
+    from app.models.table import Table
 
 
 class Restaurant(Base):
@@ -60,6 +61,10 @@ class Restaurant(Base):
 
     reservations: Mapped[list["Reservation"]] = relationship(
         "Reservation", back_populates="restaurant", cascade="all, delete-orphan"
+    )
+
+    tables: Mapped[list["Table"]] = relationship(
+        "Table", back_populates="restaurant", cascade="all, delete-orphan"
     )
 
     reviews: Mapped[list["Review"]] = relationship(

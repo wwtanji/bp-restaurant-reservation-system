@@ -97,6 +97,12 @@ const DashboardRestaurantsPage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <Link
+                    to={`/dashboard/restaurants/${restaurant.id}/tables`}
+                    className="border border-ot-iron dark:border-dark-border text-ot-charade dark:text-dark-text px-4 py-2 rounded-ot-btn text-sm font-medium hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
+                  >
+                    Tables
+                  </Link>
+                  <Link
                     to={`/dashboard/restaurants/${restaurant.id}/edit`}
                     className="border border-ot-iron dark:border-dark-border text-ot-charade dark:text-dark-text px-4 py-2 rounded-ot-btn text-sm font-medium hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
                   >

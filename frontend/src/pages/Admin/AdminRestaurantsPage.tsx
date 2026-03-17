@@ -57,28 +57,32 @@ const AdminRestaurantsPage: React.FC = () => {
             <input
               type="text"
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search restaurants..."
               className="w-full text-sm border border-ot-iron dark:border-dark-border rounded-ot-btn px-3 py-2 bg-white dark:bg-dark-surface text-ot-charade dark:text-dark-text outline-none focus:ring-2 focus:ring-ot-charade/30 dark:focus:ring-dark-primary/30 placeholder-gray-400 dark:placeholder-dark-text-secondary"
             />
           </div>
           <select
             value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
+            onChange={(e) => setStatusFilter(e.target.value)}
             className="text-sm border border-ot-iron dark:border-dark-border rounded-ot-btn px-3 py-2 bg-white dark:bg-dark-surface text-ot-charade dark:text-dark-text outline-none focus:ring-2 focus:ring-ot-charade/30 dark:focus:ring-dark-primary/30"
           >
-            {STATUS_OPTIONS.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            {STATUS_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
             ))}
           </select>
           <select
             value={cityFilter}
-            onChange={e => setCityFilter(e.target.value)}
+            onChange={(e) => setCityFilter(e.target.value)}
             className="text-sm border border-ot-iron dark:border-dark-border rounded-ot-btn px-3 py-2 bg-white dark:bg-dark-surface text-ot-charade dark:text-dark-text outline-none focus:ring-2 focus:ring-ot-charade/30 dark:focus:ring-dark-primary/30"
           >
             <option value="">All Cities</option>
-            {(cities ?? []).map(city => (
-              <option key={city} value={city}>{city}</option>
+            {(cities ?? []).map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
             ))}
           </select>
         </div>
@@ -99,40 +103,75 @@ const AdminRestaurantsPage: React.FC = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-ot-iron dark:border-dark-border bg-ot-athens-gray dark:bg-dark-surface">
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">Name</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">Owner</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">City</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">Cuisine</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">Rating</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">Status</th>
-                    <th className="text-right px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">Actions</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">
+                      Name
+                    </th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">
+                      Owner
+                    </th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">
+                      City
+                    </th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">
+                      Cuisine
+                    </th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">
+                      Rating
+                    </th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">
+                      Status
+                    </th>
+                    <th className="text-right px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(restaurants ?? []).map(r => (
-                    <tr key={r.id} className="border-b border-ot-iron/50 dark:border-dark-border last:border-0">
+                  {(restaurants ?? []).map((r) => (
+                    <tr
+                      key={r.id}
+                      className="border-b border-ot-iron/50 dark:border-dark-border last:border-0"
+                    >
                       <td className="px-4 py-3">
                         <div>
-                          <p className="font-medium text-ot-charade dark:text-dark-text">{r.name}</p>
+                          <p className="font-medium text-ot-charade dark:text-dark-text">
+                            {r.name}
+                          </p>
                           <p className="text-xs text-gray-400 dark:text-dark-text-secondary">
                             {PRICE_SYMBOLS[r.price_range] ?? ''} · Cap: {r.max_capacity}
                           </p>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-gray-500 dark:text-dark-text-secondary whitespace-nowrap">{r.owner_name}</td>
-                      <td className="px-4 py-3 text-gray-500 dark:text-dark-text-secondary">{r.city}</td>
-                      <td className="px-4 py-3 text-gray-500 dark:text-dark-text-secondary">{r.cuisine}</td>
+                      <td className="px-4 py-3 text-gray-500 dark:text-dark-text-secondary whitespace-nowrap">
+                        {r.owner_name}
+                      </td>
+                      <td className="px-4 py-3 text-gray-500 dark:text-dark-text-secondary">
+                        {r.city}
+                      </td>
+                      <td className="px-4 py-3 text-gray-500 dark:text-dark-text-secondary">
+                        {r.cuisine}
+                      </td>
                       <td className="px-4 py-3">
                         {r.rating !== null ? (
                           <div className="flex items-center gap-1">
-                            <svg className="w-3.5 h-3.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                            <svg
+                              className="w-3.5 h-3.5 text-amber-500"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
                               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z" />
                             </svg>
-                            <span className="text-ot-charade dark:text-dark-text font-medium">{r.rating.toFixed(1)}</span>
-                            <span className="text-gray-400 dark:text-dark-text-secondary">({r.review_count})</span>
+                            <span className="text-ot-charade dark:text-dark-text font-medium">
+                              {r.rating.toFixed(1)}
+                            </span>
+                            <span className="text-gray-400 dark:text-dark-text-secondary">
+                              ({r.review_count})
+                            </span>
                           </div>
                         ) : (
-                          <span className="text-gray-400 dark:text-dark-text-secondary">No ratings</span>
+                          <span className="text-gray-400 dark:text-dark-text-secondary">
+                            No ratings
+                          </span>
                         )}
                       </td>
                       <td className="px-4 py-3">

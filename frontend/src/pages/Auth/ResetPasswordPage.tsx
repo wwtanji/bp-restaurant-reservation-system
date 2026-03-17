@@ -74,7 +74,9 @@ const ResetPasswordPage: React.FC = () => {
         navigate('/login');
       }, 3000);
     } catch (error: any) {
-      setErrors({ form: error.message || 'Failed to reset password. The link may be invalid or expired.' });
+      setErrors({
+        form: error.message || 'Failed to reset password. The link may be invalid or expired.',
+      });
     } finally {
       setLoading(false);
     }
@@ -87,11 +89,23 @@ const ResetPasswordPage: React.FC = () => {
         <div className="min-h-screen flex items-center justify-center bg-ot-athens-gray dark:bg-dark-bg p-6">
           <div className="w-full max-w-md bg-white dark:bg-dark-paper border border-ot-iron dark:border-dark-border rounded-ot-card shadow-lg p-8 sm:p-10 text-center">
             <div className="mb-6 flex justify-center">
-              <svg className="h-16 w-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="h-16 w-16 text-red-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
-            <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mb-4">Invalid Reset Link</h2>
+            <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mb-4">
+              Invalid Reset Link
+            </h2>
             <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary mb-6">
               The password reset link is invalid or missing. Please request a new one.
             </p>
@@ -115,8 +129,12 @@ const ResetPasswordPage: React.FC = () => {
           {!success ? (
             <>
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text">Reset Password</h2>
-                <p className="mt-2 text-sm text-ot-pale-sky dark:text-dark-text-secondary">Enter your new password below.</p>
+                <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text">
+                  Reset Password
+                </h2>
+                <p className="mt-2 text-sm text-ot-pale-sky dark:text-dark-text-secondary">
+                  Enter your new password below.
+                </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -149,7 +167,9 @@ const ResetPasswordPage: React.FC = () => {
                     }}
                     placeholder="Confirm New Password"
                     className={`w-full px-4 py-3 border rounded-ot-btn focus:outline-none focus:ring-2 focus:ring-ot-primary dark:focus:ring-dark-primary text-sm text-ot-charade dark:text-dark-text placeholder-ot-manatee dark:placeholder-dark-text-secondary dark:bg-dark-surface ${
-                      errors.confirmPassword ? 'border-red-500' : 'border-ot-iron dark:border-dark-border'
+                      errors.confirmPassword
+                        ? 'border-red-500'
+                        : 'border-ot-iron dark:border-dark-border'
                     }`}
                     required
                   />
@@ -175,7 +195,10 @@ const ResetPasswordPage: React.FC = () => {
 
               <p className="text-center text-sm text-ot-pale-sky dark:text-dark-text-secondary mt-6">
                 Remember your password?{' '}
-                <Link to="/login" className="text-ot-primary dark:text-dark-primary font-bold hover:underline">
+                <Link
+                  to="/login"
+                  className="text-ot-primary dark:text-dark-primary font-bold hover:underline"
+                >
                   Log In
                 </Link>
               </p>
@@ -183,15 +206,30 @@ const ResetPasswordPage: React.FC = () => {
           ) : (
             <div className="text-center">
               <div className="mb-6 flex justify-center">
-                <svg className="h-16 w-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="h-16 w-16 text-green-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
-              <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mb-4">Password Reset Successful!</h2>
+              <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mb-4">
+                Password Reset Successful!
+              </h2>
               <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary mb-6">
-                Your password has been reset successfully. You can now log in with your new password.
+                Your password has been reset successfully. You can now log in with your new
+                password.
               </p>
-              <p className="text-xs text-ot-manatee dark:text-dark-text-secondary">Redirecting to login page...</p>
+              <p className="text-xs text-ot-manatee dark:text-dark-text-secondary">
+                Redirecting to login page...
+              </p>
             </div>
           )}
         </div>

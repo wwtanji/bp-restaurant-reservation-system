@@ -36,7 +36,9 @@ const RestaurantCard = React.memo<{
       <img
         src={resolveImageUrl(restaurant.cover_image) || getFallbackImage(restaurant.id)}
         alt={restaurant.name}
-        onError={e => { (e.target as HTMLImageElement).src = getFallbackImage(restaurant.id); }}
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = getFallbackImage(restaurant.id);
+        }}
         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
       />
     </div>
@@ -62,8 +64,18 @@ const RestaurantCard = React.memo<{
       </p>
 
       <div className="flex items-center h-6">
-        <svg className="w-6 h-6 text-ot-charade dark:text-dark-text flex-shrink-0 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        <svg
+          className="w-6 h-6 text-ot-charade dark:text-dark-text flex-shrink-0 mr-1"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
         </svg>
         <span className="text-[13.5px] font-medium leading-5 text-ot-charade dark:text-dark-text">
           Booked {bookedToday} {bookedToday === 1 ? 'time' : 'times'} today
@@ -71,10 +83,10 @@ const RestaurantCard = React.memo<{
       </div>
 
       <div className="flex gap-1 pt-2 self-stretch">
-        {QUICK_TIME_SLOTS.slice(0, 3).map(slot => (
+        {QUICK_TIME_SLOTS.slice(0, 3).map((slot) => (
           <button
             key={slot}
-            onClick={e => {
+            onClick={(e) => {
               e.stopPropagation();
               onClick();
             }}
@@ -103,11 +115,8 @@ const RestaurantRow: React.FC<{
 
       <div className="relative">
         <ScrollArrow direction="left" onClick={() => scroll('left')} visible={canScrollLeft} />
-        <div
-          ref={scrollRef}
-          className="flex gap-4 overflow-x-auto scrollbar-hide pb-2"
-        >
-          {restaurants.map(r => (
+        <div ref={scrollRef} className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
+          {restaurants.map((r) => (
             <RestaurantCard
               key={r.id}
               restaurant={r}
@@ -124,8 +133,11 @@ const RestaurantRow: React.FC<{
 
 const TopRatedSection: React.FC = () => {
   const navigate = useNavigate();
-  const { data: fetchedRestaurants, isLoading: restaurantsLoading } = useFetch<Restaurant[]>('/restaurants/?limit=50');
-  const { data: fetchedBookedTodayMap } = useFetch<Record<number, number>>('/restaurants/booked-today');
+  const { data: fetchedRestaurants, isLoading: restaurantsLoading } =
+    useFetch<Restaurant[]>('/restaurants/?limit=50');
+  const { data: fetchedBookedTodayMap } = useFetch<Record<number, number>>(
+    '/restaurants/booked-today',
+  );
 
   const restaurants = fetchedRestaurants ?? [];
   const bookedTodayMap = fetchedBookedTodayMap ?? {};
@@ -145,7 +157,7 @@ const TopRatedSection: React.FC = () => {
   if (restaurants.length === 0) return null;
 
   const topRated = [...restaurants]
-    .filter(r => (r.rating ?? 0) >= 3.5)
+    .filter((r) => (r.rating ?? 0) >= 3.5)
     .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
 
   const cuisineGroups: Record<string, Restaurant[]> = {};

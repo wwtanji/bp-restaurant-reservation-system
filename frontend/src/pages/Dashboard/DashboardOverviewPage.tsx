@@ -28,16 +28,28 @@ const DashboardOverviewPage: React.FC = () => {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-white dark:bg-dark-paper rounded-xl p-6 border border-ot-iron dark:border-dark-border">
-                <p className="text-sm text-gray-500 dark:text-dark-text-secondary">Total Restaurants</p>
-                <p className="text-3xl font-bold text-ot-charade dark:text-dark-text mt-1">{stats.total_restaurants}</p>
+                <p className="text-sm text-gray-500 dark:text-dark-text-secondary">
+                  Total Restaurants
+                </p>
+                <p className="text-3xl font-bold text-ot-charade dark:text-dark-text mt-1">
+                  {stats.total_restaurants}
+                </p>
               </div>
               <div className="bg-white dark:bg-dark-paper rounded-xl p-6 border border-ot-iron dark:border-dark-border">
-                <p className="text-sm text-gray-500 dark:text-dark-text-secondary">Total Reservations</p>
-                <p className="text-3xl font-bold text-ot-charade dark:text-dark-text mt-1">{stats.total_reservations}</p>
+                <p className="text-sm text-gray-500 dark:text-dark-text-secondary">
+                  Total Reservations
+                </p>
+                <p className="text-3xl font-bold text-ot-charade dark:text-dark-text mt-1">
+                  {stats.total_reservations}
+                </p>
               </div>
               <div className="bg-white dark:bg-dark-paper rounded-xl p-6 border border-ot-iron dark:border-dark-border">
-                <p className="text-sm text-gray-500 dark:text-dark-text-secondary">Today's Reservations</p>
-                <p className="text-3xl font-bold text-ot-charade dark:text-dark-text mt-1">{stats.todays_reservations}</p>
+                <p className="text-sm text-gray-500 dark:text-dark-text-secondary">
+                  Today's Reservations
+                </p>
+                <p className="text-3xl font-bold text-ot-charade dark:text-dark-text mt-1">
+                  {stats.todays_reservations}
+                </p>
               </div>
             </div>
 
@@ -57,7 +69,9 @@ const DashboardOverviewPage: React.FC = () => {
             </div>
           </>
         ) : (
-          <p className="text-gray-500 dark:text-dark-text-secondary">Failed to load dashboard stats.</p>
+          <p className="text-gray-500 dark:text-dark-text-secondary">
+            Failed to load dashboard stats.
+          </p>
         )}
       </div>
     </DashboardLayout>

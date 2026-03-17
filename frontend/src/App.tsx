@@ -25,11 +25,17 @@ const BookingPage = React.lazy(() => import('./pages/BookingPage'));
 const MyReservationsPage = React.lazy(() => import('./pages/MyReservationsPage'));
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
 const DashboardOverviewPage = React.lazy(() => import('./pages/Dashboard/DashboardOverviewPage'));
-const DashboardRestaurantsPage = React.lazy(() => import('./pages/Dashboard/DashboardRestaurantsPage'));
-const DashboardRestaurantFormPage = React.lazy(() => import('./pages/Dashboard/DashboardRestaurantFormPage'));
+const DashboardRestaurantsPage = React.lazy(
+  () => import('./pages/Dashboard/DashboardRestaurantsPage'),
+);
+const DashboardRestaurantFormPage = React.lazy(
+  () => import('./pages/Dashboard/DashboardRestaurantFormPage'),
+);
 const DashboardTablesPage = React.lazy(() => import('./pages/Dashboard/DashboardTablesPage'));
 const DashboardTableFormPage = React.lazy(() => import('./pages/Dashboard/DashboardTableFormPage'));
-const DashboardReservationsPage = React.lazy(() => import('./pages/Dashboard/DashboardReservationsPage'));
+const DashboardReservationsPage = React.lazy(
+  () => import('./pages/Dashboard/DashboardReservationsPage'),
+);
 const AdminOverviewPage = React.lazy(() => import('./pages/Admin/AdminOverviewPage'));
 const AdminUsersPage = React.lazy(() => import('./pages/Admin/AdminUsersPage'));
 const AdminRestaurantsPage = React.lazy(() => import('./pages/Admin/AdminRestaurantsPage'));
@@ -64,114 +70,177 @@ const AppRoutes = () => {
   return (
     <Suspense fallback={<PageLoadingSpinner />}>
       <Routes>
-        <Route path="/" element={
-          <ProtectedRoute>
-            <MainPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/login" element={
-          <PublicRoute>
-            <LoginPage />
-          </PublicRoute>
-        } />
-        <Route path="/signup" element={
-          <PublicRoute>
-            <RegisterPage />
-          </PublicRoute>
-        } />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <MainPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <LoginPage />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <PublicRoute>
+              <RegisterPage />
+            </PublicRoute>
+          }
+        />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/search" element={
-          <ProtectedRoute>
-            <SearchPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/restaurant/:slug" element={
-          <ProtectedRoute>
-            <RestaurantDetailPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/restaurant/:slug/book" element={
-          <ProtectedRoute>
-            <BookingPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/my-reservations" element={
-          <ProtectedRoute>
-            <MyReservationsPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <ProfilePage />
-          </ProtectedRoute>
-        } />
-        <Route path="/dashboard" element={
-          <OwnerRoute>
-            <DashboardOverviewPage />
-          </OwnerRoute>
-        } />
-        <Route path="/dashboard/reservations" element={
-          <OwnerRoute>
-            <DashboardReservationsPage />
-          </OwnerRoute>
-        } />
-        <Route path="/dashboard/restaurants" element={
-          <OwnerRoute>
-            <DashboardRestaurantsPage />
-          </OwnerRoute>
-        } />
-        <Route path="/dashboard/restaurants/new" element={
-          <OwnerRoute>
-            <DashboardRestaurantFormPage />
-          </OwnerRoute>
-        } />
-        <Route path="/dashboard/restaurants/:id/edit" element={
-          <OwnerRoute>
-            <DashboardRestaurantFormPage />
-          </OwnerRoute>
-        } />
-        <Route path="/dashboard/restaurants/:restaurantId/tables" element={
-          <OwnerRoute>
-            <DashboardTablesPage />
-          </OwnerRoute>
-        } />
-        <Route path="/dashboard/restaurants/:restaurantId/tables/new" element={
-          <OwnerRoute>
-            <DashboardTableFormPage />
-          </OwnerRoute>
-        } />
-        <Route path="/dashboard/restaurants/:restaurantId/tables/:tableId/edit" element={
-          <OwnerRoute>
-            <DashboardTableFormPage />
-          </OwnerRoute>
-        } />
-        <Route path="/admin" element={
-          <AdminRoute>
-            <AdminOverviewPage />
-          </AdminRoute>
-        } />
-        <Route path="/admin/users" element={
-          <AdminRoute>
-            <AdminUsersPage />
-          </AdminRoute>
-        } />
-        <Route path="/admin/restaurants" element={
-          <AdminRoute>
-            <AdminRestaurantsPage />
-          </AdminRoute>
-        } />
-        <Route path="/admin/reservations" element={
-          <AdminRoute>
-            <AdminReservationsPage />
-          </AdminRoute>
-        } />
-        <Route path="/admin/reviews" element={
-          <AdminRoute>
-            <AdminReviewsPage />
-          </AdminRoute>
-        } />
+        <Route
+          path="/search"
+          element={
+            <ProtectedRoute>
+              <SearchPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/restaurant/:slug"
+          element={
+            <ProtectedRoute>
+              <RestaurantDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/restaurant/:slug/book"
+          element={
+            <ProtectedRoute>
+              <BookingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-reservations"
+          element={
+            <ProtectedRoute>
+              <MyReservationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <OwnerRoute>
+              <DashboardOverviewPage />
+            </OwnerRoute>
+          }
+        />
+        <Route
+          path="/dashboard/reservations"
+          element={
+            <OwnerRoute>
+              <DashboardReservationsPage />
+            </OwnerRoute>
+          }
+        />
+        <Route
+          path="/dashboard/restaurants"
+          element={
+            <OwnerRoute>
+              <DashboardRestaurantsPage />
+            </OwnerRoute>
+          }
+        />
+        <Route
+          path="/dashboard/restaurants/new"
+          element={
+            <OwnerRoute>
+              <DashboardRestaurantFormPage />
+            </OwnerRoute>
+          }
+        />
+        <Route
+          path="/dashboard/restaurants/:id/edit"
+          element={
+            <OwnerRoute>
+              <DashboardRestaurantFormPage />
+            </OwnerRoute>
+          }
+        />
+        <Route
+          path="/dashboard/restaurants/:restaurantId/tables"
+          element={
+            <OwnerRoute>
+              <DashboardTablesPage />
+            </OwnerRoute>
+          }
+        />
+        <Route
+          path="/dashboard/restaurants/:restaurantId/tables/new"
+          element={
+            <OwnerRoute>
+              <DashboardTableFormPage />
+            </OwnerRoute>
+          }
+        />
+        <Route
+          path="/dashboard/restaurants/:restaurantId/tables/:tableId/edit"
+          element={
+            <OwnerRoute>
+              <DashboardTableFormPage />
+            </OwnerRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminOverviewPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute>
+              <AdminUsersPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/restaurants"
+          element={
+            <AdminRoute>
+              <AdminRestaurantsPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/reservations"
+          element={
+            <AdminRoute>
+              <AdminReservationsPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/reviews"
+          element={
+            <AdminRoute>
+              <AdminReviewsPage />
+            </AdminRoute>
+          }
+        />
       </Routes>
     </Suspense>
   );

@@ -9,6 +9,7 @@ from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.user import User
     from app.models.restaurant import Restaurant
+    from app.models.table import Table
 
 
 class ReservationStatus(str, enum.Enum):
@@ -32,6 +33,9 @@ class Reservation(Base):
     )
     restaurant_id: Mapped[int] = mapped_column(
         ForeignKey("restaurants.id"), nullable=False, index=True
+    )
+    table_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("restaurant_tables.id"), nullable=True, index=True
     )
 
     party_size: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -57,4 +61,7 @@ class Reservation(Base):
     user: Mapped["User"] = relationship("User", back_populates="reservations")
     restaurant: Mapped["Restaurant"] = relationship(
         "Restaurant", back_populates="reservations"
+    )
+    table: Mapped[Optional["Table"]] = relationship(
+        "Table", back_populates="reservations"
     )

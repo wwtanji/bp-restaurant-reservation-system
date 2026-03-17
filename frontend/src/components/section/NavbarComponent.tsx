@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Dialog, DialogPanel, Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import React, { useState } from 'react';
+import { Dialog, DialogPanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import {
   Bars3Icon,
   XMarkIcon,
@@ -7,15 +7,15 @@ import {
   MoonIcon,
   CalendarIcon,
   BellIcon,
-} from "@heroicons/react/24/outline";
-import { useAuth } from "../../context/AuthContext";
-import { useNotification } from "../../context/NotificationContext";
-import { useThemeMode } from "../../context/ThemeContext";
-import { Link, useNavigate } from "react-router-dom";
-import NotificationComponent from "../notification/NotificationComponent";
-import { OWNER_ROLE } from "../../constants/dashboard";
-import { ADMIN_ROLE } from "../../constants/admin";
-import { STORAGE_KEY_JUST_LOGGED_IN } from "../../constants/storage";
+} from '@heroicons/react/24/outline';
+import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
+import { useThemeMode } from '../../context/ThemeContext';
+import { Link, useNavigate } from 'react-router-dom';
+import NotificationComponent from '../notification/NotificationComponent';
+import { OWNER_ROLE } from '../../constants/dashboard';
+import { ADMIN_ROLE } from '../../constants/admin';
+import { STORAGE_KEY_JUST_LOGGED_IN } from '../../constants/storage';
 
 const NavbarComponent: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -25,24 +25,24 @@ const NavbarComponent: React.FC = () => {
   const navigate = useNavigate();
 
   const navigation = [
-    { name: "Search", href: "/search" },
-    { name: "My Reservations", href: "/my-reservations" },
-    ...(user?.role === OWNER_ROLE ? [{ name: "Dashboard", href: "/dashboard" }] : []),
-    ...(user?.role === ADMIN_ROLE ? [{ name: "Admin", href: "/admin" }] : []),
+    { name: 'Search', href: '/search' },
+    { name: 'My Reservations', href: '/my-reservations' },
+    ...(user?.role === OWNER_ROLE ? [{ name: 'Dashboard', href: '/dashboard' }] : []),
+    ...(user?.role === ADMIN_ROLE ? [{ name: 'Admin', href: '/admin' }] : []),
   ];
 
   const handleLogout = () => {
     authLogout();
     localStorage.removeItem(STORAGE_KEY_JUST_LOGGED_IN);
-    show("You have successfully logged out", "error");
-    navigate("/");
+    show('You have successfully logged out', 'error');
+    navigate('/');
   };
 
   const handleLoginClick = () => {
-    navigate("/login");
+    navigate('/login');
   };
 
-  const userInitials = user ? `${user.first_name[0]}${user.last_name[0]}` : "";
+  const userInitials = user ? `${user.first_name[0]}${user.last_name[0]}` : '';
 
   const ThemeToggleButton = () => (
     <button
@@ -50,16 +50,20 @@ const NavbarComponent: React.FC = () => {
       className="p-2 rounded-lg text-ot-pale-sky hover:text-ot-charade dark:text-dark-text-secondary dark:hover:text-dark-text hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      {isDark ? (
-        <SunIcon className="size-5" />
-      ) : (
-        <MoonIcon className="size-5" />
-      )}
+      {isDark ? <SunIcon className="size-5" /> : <MoonIcon className="size-5" />}
     </button>
   );
 
-  const AvatarCircle = ({ size = "w-9 h-9", textSize = "text-xs" }: { size?: string; textSize?: string }) => (
-    <div className={`${size} rounded-full bg-gradient-to-br from-ot-primary to-ot-primary-dark flex items-center justify-center`}>
+  const AvatarCircle = ({
+    size = 'w-9 h-9',
+    textSize = 'text-xs',
+  }: {
+    size?: string;
+    textSize?: string;
+  }) => (
+    <div
+      className={`${size} rounded-full bg-gradient-to-br from-ot-primary to-ot-primary-dark flex items-center justify-center`}
+    >
       <span className={`${textSize} font-bold text-white leading-none`}>{userInitials}</span>
     </div>
   );
@@ -130,9 +134,7 @@ const NavbarComponent: React.FC = () => {
                   <CalendarIcon className="size-5" />
                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
                 </Link>
-                <button
-                  className="relative p-2 rounded-lg text-ot-pale-sky hover:text-ot-charade dark:text-dark-text-secondary dark:hover:text-dark-text hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
-                >
+                <button className="relative p-2 rounded-lg text-ot-pale-sky hover:text-ot-charade dark:text-dark-text-secondary dark:hover:text-dark-text hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors">
                   <BellIcon className="size-5" />
                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
                 </button>
@@ -213,11 +215,7 @@ const NavbarComponent: React.FC = () => {
           </div>
         </nav>
 
-        <Dialog
-          open={mobileMenuOpen}
-          onClose={setMobileMenuOpen}
-          className="lg:hidden"
-        >
+        <Dialog open={mobileMenuOpen} onClose={setMobileMenuOpen} className="lg:hidden">
           <div className="fixed inset-0 z-50" />
           <DialogPanel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white dark:bg-dark-paper p-6 sm:max-w-sm sm:border-l sm:border-ot-iron dark:border-dark-border">
             <div className="flex items-center justify-between">
@@ -289,7 +287,10 @@ const NavbarComponent: React.FC = () => {
                   {!user ? (
                     <>
                       <button
-                        onClick={() => { handleLoginClick(); setMobileMenuOpen(false); }}
+                        onClick={() => {
+                          handleLoginClick();
+                          setMobileMenuOpen(false);
+                        }}
                         className="block w-full text-left rounded-ot-btn px-3 py-2.5 text-sm font-medium text-ot-charade dark:text-dark-text hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
                       >
                         Sign in
@@ -304,7 +305,10 @@ const NavbarComponent: React.FC = () => {
                     </>
                   ) : (
                     <button
-                      onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                      onClick={() => {
+                        handleLogout();
+                        setMobileMenuOpen(false);
+                      }}
                       className="block w-full text-left rounded-ot-btn px-3 py-2.5 text-sm font-medium text-red-500 hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
                     >
                       Sign out

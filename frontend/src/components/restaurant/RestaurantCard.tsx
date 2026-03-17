@@ -31,7 +31,7 @@ const StarIcon: React.FC<{ filled: boolean }> = ({ filled }) => (
 
 const Stars: React.FC<{ rating: number | null }> = ({ rating }) => (
   <div className="flex items-center gap-0.5">
-    {[1, 2, 3, 4, 5].map(i => (
+    {[1, 2, 3, 4, 5].map((i) => (
       <StarIcon key={i} filled={i <= Math.round(rating ?? 0)} />
     ))}
   </div>
@@ -65,12 +65,17 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, isActive, o
 
           <div className="flex items-center gap-1.5 mt-1">
             <Stars rating={restaurant.rating} />
-            <span className="text-xs font-bold text-ot-charade dark:text-dark-text">{ratingLabel(restaurant.rating)}</span>
-            <span className="text-xs text-ot-manatee dark:text-dark-text-secondary">({restaurant.review_count})</span>
+            <span className="text-xs font-bold text-ot-charade dark:text-dark-text">
+              {ratingLabel(restaurant.rating)}
+            </span>
+            <span className="text-xs text-ot-manatee dark:text-dark-text-secondary">
+              ({restaurant.review_count})
+            </span>
           </div>
 
           <p className="text-xs text-ot-pale-sky dark:text-dark-text-secondary mt-0.5">
-            {PRICE_SYMBOL[restaurant.price_range]} &middot; {restaurant.cuisine} &middot; {restaurant.city}
+            {PRICE_SYMBOL[restaurant.price_range]} &middot; {restaurant.cuisine} &middot;{' '}
+            {restaurant.city}
           </p>
         </div>
       </div>

@@ -15,7 +15,13 @@ const ScrollArrow: React.FC<ScrollArrowProps> = React.memo(({ direction, onClick
         direction === 'left' ? 'left-0' : 'right-0'
       }`}
     >
-      <svg className="w-5 h-5 text-ot-charade" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <svg
+        className="w-5 h-5 text-ot-charade"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
         {direction === 'left' ? (
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
         ) : (

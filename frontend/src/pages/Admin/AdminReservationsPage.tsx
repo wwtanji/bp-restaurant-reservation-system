@@ -63,7 +63,7 @@ const AdminReservationsPage: React.FC = () => {
         <h1 className="text-2xl font-bold text-ot-charade dark:text-dark-text">Reservations</h1>
 
         <div className="flex gap-1 overflow-x-auto bg-white dark:bg-dark-paper rounded-ot-btn p-1 border border-ot-iron dark:border-dark-border">
-          {STATUS_TABS.map(t => (
+          {STATUS_TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setStatusFilter(t.key)}
@@ -80,26 +80,33 @@ const AdminReservationsPage: React.FC = () => {
 
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2">
-            <label className="text-xs font-medium text-gray-500 dark:text-dark-text-secondary">From</label>
+            <label className="text-xs font-medium text-gray-500 dark:text-dark-text-secondary">
+              From
+            </label>
             <input
               type="date"
               value={dateFrom}
-              onChange={e => setDateFrom(e.target.value)}
+              onChange={(e) => setDateFrom(e.target.value)}
               className="text-sm border border-ot-iron dark:border-dark-border rounded-ot-btn px-3 py-2 bg-white dark:bg-dark-surface text-ot-charade dark:text-dark-text outline-none focus:ring-2 focus:ring-ot-charade/30 dark:focus:ring-dark-primary/30"
             />
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-xs font-medium text-gray-500 dark:text-dark-text-secondary">To</label>
+            <label className="text-xs font-medium text-gray-500 dark:text-dark-text-secondary">
+              To
+            </label>
             <input
               type="date"
               value={dateTo}
-              onChange={e => setDateTo(e.target.value)}
+              onChange={(e) => setDateTo(e.target.value)}
               className="text-sm border border-ot-iron dark:border-dark-border rounded-ot-btn px-3 py-2 bg-white dark:bg-dark-surface text-ot-charade dark:text-dark-text outline-none focus:ring-2 focus:ring-ot-charade/30 dark:focus:ring-dark-primary/30"
             />
           </div>
           {(dateFrom || dateTo) && (
             <button
-              onClick={() => { setDateFrom(''); setDateTo(''); }}
+              onClick={() => {
+                setDateFrom('');
+                setDateTo('');
+              }}
               className="text-xs text-red-500 font-medium hover:underline"
             >
               Clear dates
@@ -123,33 +130,65 @@ const AdminReservationsPage: React.FC = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-ot-iron dark:border-dark-border bg-ot-athens-gray dark:bg-dark-surface">
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">Guest</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">Restaurant</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">Date</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">Time</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">Party</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">Status</th>
-                    <th className="text-right px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">Actions</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">
+                      Guest
+                    </th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">
+                      Restaurant
+                    </th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">
+                      Date
+                    </th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">
+                      Time
+                    </th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">
+                      Party
+                    </th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">
+                      Status
+                    </th>
+                    <th className="text-right px-4 py-3 font-medium text-gray-500 dark:text-dark-text-secondary">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(reservations ?? []).map(r => {
-                    const badge = STATUS_BADGE[r.status] ?? STATUS_BADGE[RESERVATION_STATUS_PENDING];
+                  {(reservations ?? []).map((r) => {
+                    const badge =
+                      STATUS_BADGE[r.status] ?? STATUS_BADGE[RESERVATION_STATUS_PENDING];
                     const isUpdating = updatingId === r.id;
                     return (
-                      <tr key={r.id} className="border-b border-ot-iron/50 dark:border-dark-border last:border-0 hover:bg-ot-athens-gray/50 dark:hover:bg-dark-surface/50 transition-colors">
+                      <tr
+                        key={r.id}
+                        className="border-b border-ot-iron/50 dark:border-dark-border last:border-0 hover:bg-ot-athens-gray/50 dark:hover:bg-dark-surface/50 transition-colors"
+                      >
                         <td className="px-4 py-3">
-                          <p className="font-medium text-ot-charade dark:text-dark-text">{r.guest_name ?? r.user_name}</p>
+                          <p className="font-medium text-ot-charade dark:text-dark-text">
+                            {r.guest_name ?? r.user_name}
+                          </p>
                           {r.guest_phone && (
-                            <p className="text-xs text-gray-400 dark:text-dark-text-secondary">{r.guest_phone}</p>
+                            <p className="text-xs text-gray-400 dark:text-dark-text-secondary">
+                              {r.guest_phone}
+                            </p>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-gray-500 dark:text-dark-text-secondary">{r.restaurant_name}</td>
-                        <td className="px-4 py-3 text-gray-500 dark:text-dark-text-secondary whitespace-nowrap">{formatDate(r.reservation_date)}</td>
-                        <td className="px-4 py-3 text-gray-500 dark:text-dark-text-secondary whitespace-nowrap">{fromApiTime(r.reservation_time)}</td>
-                        <td className="px-4 py-3 text-gray-500 dark:text-dark-text-secondary">{r.party_size}</td>
+                        <td className="px-4 py-3 text-gray-500 dark:text-dark-text-secondary">
+                          {r.restaurant_name}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 dark:text-dark-text-secondary whitespace-nowrap">
+                          {formatDate(r.reservation_date)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 dark:text-dark-text-secondary whitespace-nowrap">
+                          {fromApiTime(r.reservation_time)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 dark:text-dark-text-secondary">
+                          {r.party_size}
+                        </td>
                         <td className="px-4 py-3">
-                          <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold ${badge.bg} ${badge.text}`}>
+                          <span
+                            className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold ${badge.bg} ${badge.text}`}
+                          >
                             {badge.label}
                           </span>
                         </td>
@@ -158,14 +197,18 @@ const AdminReservationsPage: React.FC = () => {
                             {r.status === RESERVATION_STATUS_PENDING && (
                               <>
                                 <button
-                                  onClick={() => handleStatusUpdate(r.id, RESERVATION_STATUS_CONFIRMED)}
+                                  onClick={() =>
+                                    handleStatusUpdate(r.id, RESERVATION_STATUS_CONFIRMED)
+                                  }
                                   disabled={isUpdating}
                                   className="px-3 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded-ot-btn transition-colors disabled:opacity-50"
                                 >
                                   Confirm
                                 </button>
                                 <button
-                                  onClick={() => handleStatusUpdate(r.id, RESERVATION_STATUS_CANCELLED)}
+                                  onClick={() =>
+                                    handleStatusUpdate(r.id, RESERVATION_STATUS_CANCELLED)
+                                  }
                                   disabled={isUpdating}
                                   className="px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-ot-btn transition-colors disabled:opacity-50"
                                 >
@@ -176,21 +219,27 @@ const AdminReservationsPage: React.FC = () => {
                             {r.status === RESERVATION_STATUS_CONFIRMED && (
                               <>
                                 <button
-                                  onClick={() => handleStatusUpdate(r.id, RESERVATION_STATUS_COMPLETED)}
+                                  onClick={() =>
+                                    handleStatusUpdate(r.id, RESERVATION_STATUS_COMPLETED)
+                                  }
                                   disabled={isUpdating}
                                   className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-ot-btn transition-colors disabled:opacity-50"
                                 >
                                   Complete
                                 </button>
                                 <button
-                                  onClick={() => handleStatusUpdate(r.id, RESERVATION_STATUS_NO_SHOW)}
+                                  onClick={() =>
+                                    handleStatusUpdate(r.id, RESERVATION_STATUS_NO_SHOW)
+                                  }
                                   disabled={isUpdating}
                                   className="px-3 py-1.5 text-xs font-bold text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-ot-btn transition-colors disabled:opacity-50"
                                 >
                                   No Show
                                 </button>
                                 <button
-                                  onClick={() => handleStatusUpdate(r.id, RESERVATION_STATUS_CANCELLED)}
+                                  onClick={() =>
+                                    handleStatusUpdate(r.id, RESERVATION_STATUS_CANCELLED)
+                                  }
                                   disabled={isUpdating}
                                   className="px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-ot-btn transition-colors disabled:opacity-50"
                                 >

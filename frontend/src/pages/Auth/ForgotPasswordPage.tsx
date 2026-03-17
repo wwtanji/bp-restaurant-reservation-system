@@ -39,7 +39,9 @@ const ForgotPasswordPage: React.FC = () => {
           {!submitted ? (
             <>
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text">Forgot Password?</h2>
+                <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text">
+                  Forgot Password?
+                </h2>
                 <p className="mt-2 text-sm text-ot-pale-sky dark:text-dark-text-secondary">
                   Enter your email and we'll send you a link to reset your password.
                 </p>
@@ -72,7 +74,10 @@ const ForgotPasswordPage: React.FC = () => {
 
               <p className="text-center text-sm text-ot-pale-sky dark:text-dark-text-secondary mt-6">
                 Remember your password?{' '}
-                <Link to="/login" className="text-ot-primary dark:text-dark-primary font-bold hover:underline">
+                <Link
+                  to="/login"
+                  className="text-ot-primary dark:text-dark-primary font-bold hover:underline"
+                >
                   Log In
                 </Link>
               </p>
@@ -80,14 +85,26 @@ const ForgotPasswordPage: React.FC = () => {
           ) : (
             <div className="text-center">
               <div className="mb-6 flex justify-center">
-                <svg className="h-16 w-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                <svg
+                  className="h-16 w-16 text-green-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
                 </svg>
               </div>
-              <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mb-4">Check Your Email</h2>
+              <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mb-4">
+                Check Your Email
+              </h2>
               <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary mb-6">
-                If an account exists with this email, a password reset link has been sent.
-                Please check your inbox and follow the instructions.
+                If an account exists with this email, a password reset link has been sent. Please
+                check your inbox and follow the instructions.
               </p>
               <Link
                 to="/login"

@@ -65,7 +65,7 @@ const RegisterPage: React.FC = () => {
       } catch (error) {
         if (error instanceof FieldValidationError) {
           const fieldErrors = error.fieldErrors;
-          setErrors(prev => ({ ...prev, ...fieldErrors }));
+          setErrors((prev) => ({ ...prev, ...fieldErrors }));
         }
       }
     }
@@ -73,9 +73,9 @@ const RegisterPage: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
@@ -83,11 +83,18 @@ const RegisterPage: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-ot-athens-gray dark:bg-dark-bg p-6">
       <div className="w-full max-w-md bg-white dark:bg-dark-paper border border-ot-iron dark:border-dark-border rounded-ot-card shadow-lg p-8 sm:p-10">
         <div className="text-center mb-8">
-          <Link to="/" className="text-2xl font-extrabold text-ot-primary dark:text-dark-primary tracking-tight">
+          <Link
+            to="/"
+            className="text-2xl font-extrabold text-ot-primary dark:text-dark-primary tracking-tight"
+          >
             Reservelt
           </Link>
-          <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mt-4">Sign Up</h2>
-          <p className="mt-2 text-sm text-ot-pale-sky dark:text-dark-text-secondary">Create your account to get started</p>
+          <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mt-4">
+            Sign Up
+          </h2>
+          <p className="mt-2 text-sm text-ot-pale-sky dark:text-dark-text-secondary">
+            Create your account to get started
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -122,9 +129,7 @@ const RegisterPage: React.FC = () => {
                 }`}
                 required
               />
-              {errors.last_name && (
-                <p className="mt-1 text-xs text-red-500">{errors.last_name}</p>
-              )}
+              {errors.last_name && <p className="mt-1 text-xs text-red-500">{errors.last_name}</p>}
             </div>
           </div>
 
@@ -159,7 +164,13 @@ const RegisterPage: React.FC = () => {
 
               {isPasswordValid && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <svg
+                    className="w-3 h-3 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
@@ -168,21 +179,28 @@ const RegisterPage: React.FC = () => {
 
             {showPasswordError && (
               <div className="flex items-center gap-1.5 mt-1">
-                <svg className="w-4 h-4 text-red-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                <svg
+                  className="w-4 h-4 text-red-500 flex-shrink-0"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 <p className="text-sm text-red-500">{passwordError}</p>
               </div>
             )}
 
             <p className="text-xs text-ot-manatee dark:text-dark-text-secondary mt-1.5">
-              Password must be at least 8 characters and include an uppercase letter, a lowercase letter and a number.
+              Password must be at least 8 characters and include an uppercase letter, a lowercase
+              letter and a number.
             </p>
           </div>
 
-          {errors._general && (
-            <p className="text-sm text-red-500 text-center">{errors._general}</p>
-          )}
+          {errors._general && <p className="text-sm text-red-500 text-center">{errors._general}</p>}
 
           <button
             type="submit"
@@ -195,7 +213,10 @@ const RegisterPage: React.FC = () => {
 
         <p className="text-center text-sm text-ot-pale-sky dark:text-dark-text-secondary mt-6">
           Already have an account?{' '}
-          <Link to="/login" className="text-ot-primary dark:text-dark-primary font-bold hover:underline">
+          <Link
+            to="/login"
+            className="text-ot-primary dark:text-dark-primary font-bold hover:underline"
+          >
             Log In
           </Link>
         </p>

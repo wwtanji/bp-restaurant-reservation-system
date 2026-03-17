@@ -9,7 +9,12 @@ interface PhotoGalleryModalProps {
   onClose: () => void;
 }
 
-const PhotoGalleryModal: React.FC<PhotoGalleryModalProps> = ({ images, restaurantName, isOpen, onClose }) => {
+const PhotoGalleryModal: React.FC<PhotoGalleryModalProps> = ({
+  images,
+  restaurantName,
+  isOpen,
+  onClose,
+}) => {
   if (images.length === 0) return null;
 
   return (
@@ -28,7 +33,9 @@ const PhotoGalleryModal: React.FC<PhotoGalleryModalProps> = ({ images, restauran
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-ot-iron dark:border-dark-border flex-shrink-0">
               <div>
-                <h3 className="text-lg font-bold text-ot-charade dark:text-dark-text">{images.length} Photos</h3>
+                <h3 className="text-lg font-bold text-ot-charade dark:text-dark-text">
+                  {images.length} Photos
+                </h3>
                 <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary">
                   Explore {restaurantName}'s photos.
                 </p>

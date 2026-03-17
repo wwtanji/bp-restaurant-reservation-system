@@ -7,9 +7,16 @@ export interface ReservationRestaurant {
   cover_image: string | null;
 }
 
+export interface TableBrief {
+  id: number;
+  table_number: number;
+  capacity: number;
+}
+
 export interface Reservation {
   id: number;
   restaurant: ReservationRestaurant;
+  table: TableBrief | null;
   party_size: number;
   reservation_date: string;
   reservation_time: string;
@@ -22,6 +29,6 @@ export interface Reservation {
 }
 
 export interface SlotAvailability {
-  available_seats: number;
-  max_capacity: number;
+  available_tables: number;
+  total_tables: number;
 }

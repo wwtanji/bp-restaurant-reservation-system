@@ -20,7 +20,10 @@ const UNFAVORITED_ICON_CLASSES = {
   surface: 'text-ot-charade dark:text-dark-text hover:text-ot-charade dark:hover:text-dark-text',
 };
 
-const BookmarkIcon: React.FC<{ filled: boolean; className?: string }> = ({ filled, className = '' }) => (
+const BookmarkIcon: React.FC<{ filled: boolean; className?: string }> = ({
+  filled,
+  className = '',
+}) => (
   <svg
     className={className}
     viewBox="0 0 24 24"
@@ -36,7 +39,12 @@ const BookmarkIcon: React.FC<{ filled: boolean; className?: string }> = ({ fille
   </svg>
 );
 
-const FavoriteButton: React.FC<FavoriteButtonProps> = ({ restaurantId, size = 'md', variant = 'overlay', className = '' }) => {
+const FavoriteButton: React.FC<FavoriteButtonProps> = ({
+  restaurantId,
+  size = 'md',
+  variant = 'overlay',
+  className = '',
+}) => {
   const { isAuthenticated } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
 
@@ -61,7 +69,10 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({ restaurantId, size = 'm
         } ${className}`}
         aria-label={favorited ? 'Remove from favorites' : 'Add to favorites'}
       >
-        <BookmarkIcon filled={favorited} className={`w-5 h-5 flex-shrink-0 transition-colors ${favorited ? 'text-ot-primary dark:text-dark-primary' : 'text-ot-charade dark:text-dark-text'}`} />
+        <BookmarkIcon
+          filled={favorited}
+          className={`w-5 h-5 flex-shrink-0 transition-colors ${favorited ? 'text-ot-primary dark:text-dark-primary' : 'text-ot-charade dark:text-dark-text'}`}
+        />
         <span className="text-sm font-semibold whitespace-nowrap">
           {favorited ? 'Restaurant saved' : 'Save this restaurant'}
         </span>
@@ -80,7 +91,10 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({ restaurantId, size = 'm
       className={`group/fav flex items-center justify-center transition-transform hover:scale-110 active:scale-95 ${className}`}
       aria-label={favorited ? 'Remove from favorites' : 'Add to favorites'}
     >
-      <BookmarkIcon filled={favorited} className={`${sizeClass} transition-colors ${iconClasses}`} />
+      <BookmarkIcon
+        filled={favorited}
+        className={`${sizeClass} transition-colors ${iconClasses}`}
+      />
     </button>
   );
 };

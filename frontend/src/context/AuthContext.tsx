@@ -1,9 +1,22 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '../interfaces/user';
 import { useNotification } from './NotificationContext';
 import { API_URL } from '../utils/api';
-import { STORAGE_KEY_TOKEN, STORAGE_KEY_REFRESH_TOKEN, STORAGE_KEY_JUST_LOGGED_IN } from '../constants/storage';
+import {
+  STORAGE_KEY_TOKEN,
+  STORAGE_KEY_REFRESH_TOKEN,
+  STORAGE_KEY_JUST_LOGGED_IN,
+} from '../constants/storage';
 
 interface LoginData {
   user_email: string;
@@ -116,22 +129,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return promise;
   }, []);
 
-  const fetchUserProfile = useCallback(async (token: string): Promise<User | null> => {
-    const response = await fetch(`${API_URL}/authentication/me`, {
-      headers: { 'Authorization': `Bearer ${token}` },
-      mode: 'cors',
-    });
-    if (!response.ok) {
+  const fetchUserProfile = useCallback(
+    async (token: string): Promise<User | null> => {
+      const response = await fetch(`${API_URL}/authentication/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+        mode: 'cors',
+      });
+      if (!response.ok) {
         if (response.status === 401) {
-            const newToken = await refreshAccessToken();
-            if (newToken) {
-                return fetchUserProfile(newToken);
-            }
+          const newToken = await refreshAccessToken();
+          if (newToken) {
+            return fetchUserProfile(newToken);
+          }
         }
-      throw new Error('Failed to fetch user profile');
-    }
-    return response.json();
-  }, [refreshAccessToken]);
+        throw new Error('Failed to fetch user profile');
+      }
+      return response.json();
+    },
+    [refreshAccessToken],
+  );
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -145,7 +161,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userData = await fetchUserProfile(localStorage.getItem(STORAGE_KEY_TOKEN) || '');
         setUser(userData);
       } catch (error) {
-        console.error("Could not initialize auth:", error);
+        console.error('Could not initialize auth:', error);
       }
 
       setIsLoading(false);
@@ -154,99 +170,111 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, [fetchUserProfile]);
 
-  const login = useCallback(async (data: LoginData) => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/authentication/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-        mode: 'cors',
-      });
+  const login = useCallback(
+    async (data: LoginData) => {
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_URL}/authentication/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+          mode: 'cors',
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
+        if (!response.ok) {
+          const errorData = await response.json();
 
-        if (response.status === 403) {
-          throw new Error(errorData.detail || 'Email not verified. Please check your email for verification link.');
-        }
-        if (response.status === 423) {
-          throw new Error(errorData.detail || 'Account temporarily locked. Please try again later.');
-        }
-
-        throw new Error(errorData.detail || 'Login failed');
-      }
-
-      const tokenData: TokenResponse = await response.json();
-      localStorage.setItem(STORAGE_KEY_TOKEN, tokenData.access_token);
-      localStorage.setItem(STORAGE_KEY_REFRESH_TOKEN, tokenData.refresh_token);
-
-      const userData = await fetchUserProfile(tokenData.access_token);
-      setUser(userData);
-
-      localStorage.setItem(STORAGE_KEY_JUST_LOGGED_IN, 'true');
-      show(`Welcome back, ${userData?.first_name}! You're now logged into Reservelt.`, 'success');
-      navigate('/');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Invalid email or password';
-      show(message, 'error');
-      console.error('Login error:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchUserProfile, navigate, show]);
-
-  const register = useCallback(async (data: RegisterData) => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/authentication/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, role: 0 }),
-        mode: 'cors',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        const detail = errorData.detail;
-
-        if (response.status === 422) {
-          const fieldErrors: Record<string, string> = {};
-          if (Array.isArray(detail)) {
-            for (const err of detail) {
-              const field = err.loc?.[err.loc.length - 1] as string | undefined;
-              if (field && field !== 'body') {
-                fieldErrors[field] = err.msg;
-              } else {
-                fieldErrors._general = err.msg;
-              }
-            }
-          } else {
-            fieldErrors._general = typeof detail === 'string' ? detail : 'Registration failed';
+          if (response.status === 403) {
+            throw new Error(
+              errorData.detail ||
+                'Email not verified. Please check your email for verification link.',
+            );
           }
-          throw new FieldValidationError(fieldErrors);
+          if (response.status === 423) {
+            throw new Error(
+              errorData.detail || 'Account temporarily locked. Please try again later.',
+            );
+          }
+
+          throw new Error(errorData.detail || 'Login failed');
         }
 
-        throw new Error(typeof detail === 'string' ? detail : 'Registration failed');
-      }
+        const tokenData: TokenResponse = await response.json();
+        localStorage.setItem(STORAGE_KEY_TOKEN, tokenData.access_token);
+        localStorage.setItem(STORAGE_KEY_REFRESH_TOKEN, tokenData.refresh_token);
 
-      await response.json();
-      show('Registration successful! You can now log in immediately.', 'success');
-      navigate('/login');
-    } catch (error) {
-      if (error instanceof FieldValidationError) {
-        throw error;
+        const userData = await fetchUserProfile(tokenData.access_token);
+        setUser(userData);
+
+        localStorage.setItem(STORAGE_KEY_JUST_LOGGED_IN, 'true');
+        show(`Welcome back, ${userData?.first_name}! You're now logged into Reservelt.`, 'success');
+        navigate('/');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Invalid email or password';
+        show(message, 'error');
+        console.error('Login error:', error);
+      } finally {
+        setLoading(false);
       }
-      const message = error instanceof Error ? error.message : 'Registration failed. Please try again.';
-      show(message, 'error');
-      console.error('Registration error:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [navigate, show]);
+    },
+    [fetchUserProfile, navigate, show],
+  );
+
+  const register = useCallback(
+    async (data: RegisterData) => {
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_URL}/authentication/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...data, role: 0 }),
+          mode: 'cors',
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          const detail = errorData.detail;
+
+          if (response.status === 422) {
+            const fieldErrors: Record<string, string> = {};
+            if (Array.isArray(detail)) {
+              for (const err of detail) {
+                const field = err.loc?.[err.loc.length - 1] as string | undefined;
+                if (field && field !== 'body') {
+                  fieldErrors[field] = err.msg;
+                } else {
+                  fieldErrors._general = err.msg;
+                }
+              }
+            } else {
+              fieldErrors._general = typeof detail === 'string' ? detail : 'Registration failed';
+            }
+            throw new FieldValidationError(fieldErrors);
+          }
+
+          throw new Error(typeof detail === 'string' ? detail : 'Registration failed');
+        }
+
+        await response.json();
+        show('Registration successful! You can now log in immediately.', 'success');
+        navigate('/login');
+      } catch (error) {
+        if (error instanceof FieldValidationError) {
+          throw error;
+        }
+        const message =
+          error instanceof Error ? error.message : 'Registration failed. Please try again.';
+        show(message, 'error');
+        console.error('Registration error:', error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [navigate, show],
+  );
 
   const updateUser = useCallback((updates: Partial<User>) => {
-    setUser(prev => prev ? { ...prev, ...updates } : null);
+    setUser((prev) => (prev ? { ...prev, ...updates } : null));
   }, []);
 
   const logout = useCallback(() => {
@@ -257,25 +285,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     navigate('/login');
   }, [navigate]);
 
-  const stateValue = useMemo<AuthStateContextType>(() => ({
-    user,
-    isAuthenticated: !!user,
-    isLoading,
-    loading,
-  }), [user, isLoading, loading]);
+  const stateValue = useMemo<AuthStateContextType>(
+    () => ({
+      user,
+      isAuthenticated: !!user,
+      isLoading,
+      loading,
+    }),
+    [user, isLoading, loading],
+  );
 
-  const actionsValue = useMemo<AuthActionsContextType>(() => ({
-    login,
-    register,
-    logout,
-    updateUser,
-  }), [login, register, logout, updateUser]);
+  const actionsValue = useMemo<AuthActionsContextType>(
+    () => ({
+      login,
+      register,
+      logout,
+      updateUser,
+    }),
+    [login, register, logout, updateUser],
+  );
 
   return (
     <AuthStateContext.Provider value={stateValue}>
-      <AuthActionsContext.Provider value={actionsValue}>
-        {children}
-      </AuthActionsContext.Provider>
+      <AuthActionsContext.Provider value={actionsValue}>{children}</AuthActionsContext.Provider>
     </AuthStateContext.Provider>
   );
 };

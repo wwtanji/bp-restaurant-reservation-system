@@ -7,8 +7,13 @@ from sqlalchemy import func
 
 from app.models.restaurant import Restaurant
 from app.models.reservation import Reservation, ACTIVE_STATUSES
+from app.models.table import Table
 from app.models.user import User
 from app.schemas.owner_restaurant_schema import RestaurantCreate, RestaurantUpdate
+
+TABLE_SIZE_LARGE = 6
+TABLE_SIZE_MEDIUM = 4
+TABLE_SIZE_SMALL = 2
 
 
 def get_active_restaurant_or_404(db: Session, restaurant_id: int) -> Restaurant:
@@ -31,6 +36,49 @@ def generate_unique_slug(db: Session, name: str) -> str:
         slug = f"{base_slug}-{counter}"
         counter += 1
     return slug
+
+
+def _generate_table_layout(max_capacity: int) -> list[int]:
+    capacities: list[int] = []
+    remaining = max_capacity
+
+    if remaining >= 18:
+        large_count = max(1, remaining // 20)
+        capacities.extend([TABLE_SIZE_LARGE] * large_count)
+        remaining -= large_count * TABLE_SIZE_LARGE
+
+    medium_count = round(remaining * 0.6) // TABLE_SIZE_MEDIUM
+    capacities.extend([TABLE_SIZE_MEDIUM] * medium_count)
+    remaining -= medium_count * TABLE_SIZE_MEDIUM
+
+    small_count = max(remaining // TABLE_SIZE_SMALL, int(remaining > 0))
+    capacities.extend([TABLE_SIZE_SMALL] * small_count)
+
+    return capacities
+
+
+def _create_tables_for_restaurant(
+    db: Session, restaurant_id: int, max_capacity: int
+) -> None:
+    layout = _generate_table_layout(max_capacity)
+    for table_number, capacity in enumerate(layout, start=1):
+        db.add(
+            Table(
+                restaurant_id=restaurant_id,
+                table_number=table_number,
+                capacity=capacity,
+            )
+        )
+
+
+def _replace_tables_for_restaurant(
+    db: Session, restaurant_id: int, new_capacity: int
+) -> None:
+    db.query(Table).filter(
+        Table.restaurant_id == restaurant_id,
+        Table.is_active.is_(True),
+    ).update({Table.is_active: False})
+    _create_tables_for_restaurant(db, restaurant_id, new_capacity)
 
 
 def create_restaurant(db: Session, owner: User, data: RestaurantCreate) -> Restaurant:
@@ -58,6 +106,8 @@ def create_restaurant(db: Session, owner: User, data: RestaurantCreate) -> Resta
         opening_hours=opening_hours_dict,
     )
     db.add(restaurant)
+    db.flush()
+    _create_tables_for_restaurant(db, restaurant.id, data.max_capacity)
     db.commit()
     db.refresh(restaurant)
     return restaurant
@@ -99,8 +149,16 @@ def update_restaurant(
     if "name" in update_data and update_data["name"] != restaurant.name:
         update_data["slug"] = generate_unique_slug(db, update_data["name"])
 
+    capacity_changed = (
+        "max_capacity" in update_data
+        and update_data["max_capacity"] != restaurant.max_capacity
+    )
+
     for field, value in update_data.items():
         setattr(restaurant, field, value)
+
+    if capacity_changed:
+        _replace_tables_for_restaurant(db, restaurant.id, restaurant.max_capacity)
 
     db.commit()
     db.refresh(restaurant)

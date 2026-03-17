@@ -9,11 +9,13 @@ interface OpeningHoursEditorProps {
 
 const OpeningHoursEditor: React.FC<OpeningHoursEditorProps> = ({ value, onChange }) => {
   const getDayHours = (day: string): OpeningHourDay => {
-    return (value as Record<string, OpeningHourDay | null | undefined>)[day] ?? {
-      open: '09:00',
-      close: '22:00',
-      is_closed: false,
-    };
+    return (
+      (value as Record<string, OpeningHourDay | null | undefined>)[day] ?? {
+        open: '09:00',
+        close: '22:00',
+        is_closed: false,
+      }
+    );
   };
 
   const updateDay = (day: string, updates: Partial<OpeningHourDay>) => {

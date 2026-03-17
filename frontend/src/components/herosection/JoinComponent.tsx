@@ -15,7 +15,8 @@ const JoinComponent: React.FC = () => {
         </h2>
 
         <p className="text-base sm:text-lg text-ot-iron mb-8 max-w-2xl mx-auto">
-          Join hundreds of restaurants already filling their tables and reaching new guests through our platform.
+          Join hundreds of restaurants already filling their tables and reaching new guests through
+          our platform.
         </p>
 
         <div className="grid grid-cols-3 gap-4 mb-8 max-w-md mx-auto">

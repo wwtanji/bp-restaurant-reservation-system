@@ -3,7 +3,13 @@ import { OpeningHours, OpeningHourDay } from '../interfaces/restaurant';
 export const OWNER_ROLE = 1;
 
 export const DAYS_OF_WEEK = [
-  'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday',
 ] as const;
 
 export const DAY_LABELS: Record<string, string> = {
@@ -23,7 +29,5 @@ const DEFAULT_DAY: OpeningHourDay = {
 };
 
 export function createDefaultOpeningHours(): OpeningHours {
-  return Object.fromEntries(
-    DAYS_OF_WEEK.map((day) => [day, { ...DEFAULT_DAY }])
-  ) as OpeningHours;
+  return Object.fromEntries(DAYS_OF_WEEK.map((day) => [day, { ...DEFAULT_DAY }])) as OpeningHours;
 }

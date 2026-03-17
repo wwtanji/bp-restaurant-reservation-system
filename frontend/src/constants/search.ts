@@ -3,7 +3,11 @@ export const SORT_RATING_DESC = 'rating_desc';
 export const SORT_REVIEWS_DESC = 'reviews_desc';
 export const SORT_NAME_ASC = 'name_asc';
 
-export type SortKey = typeof SORT_RELEVANCE | typeof SORT_RATING_DESC | typeof SORT_REVIEWS_DESC | typeof SORT_NAME_ASC;
+export type SortKey =
+  | typeof SORT_RELEVANCE
+  | typeof SORT_RATING_DESC
+  | typeof SORT_REVIEWS_DESC
+  | typeof SORT_NAME_ASC;
 
 export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: SORT_RELEVANCE, label: 'Relevance' },

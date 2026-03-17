@@ -17,7 +17,7 @@ const LoginPage: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -27,11 +27,18 @@ const LoginPage: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-ot-athens-gray dark:bg-dark-bg p-6">
       <div className="w-full max-w-md bg-white dark:bg-dark-paper border border-ot-iron dark:border-dark-border rounded-ot-card shadow-lg p-8 sm:p-10">
         <div className="text-center mb-8">
-          <Link to="/" className="text-2xl font-extrabold text-ot-primary dark:text-dark-primary tracking-tight">
+          <Link
+            to="/"
+            className="text-2xl font-extrabold text-ot-primary dark:text-dark-primary tracking-tight"
+          >
             Reservelt
           </Link>
-          <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mt-4">Sign In</h2>
-          <p className="mt-2 text-sm text-ot-pale-sky dark:text-dark-text-secondary">Welcome back! Please log in to your account.</p>
+          <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mt-4">
+            Sign In
+          </h2>
+          <p className="mt-2 text-sm text-ot-pale-sky dark:text-dark-text-secondary">
+            Welcome back! Please log in to your account.
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -66,14 +73,20 @@ const LoginPage: React.FC = () => {
         </form>
 
         <div className="text-center text-sm text-ot-pale-sky dark:text-dark-text-secondary mt-4">
-          <Link to="/forgot-password" className="text-ot-primary dark:text-dark-primary hover:underline">
+          <Link
+            to="/forgot-password"
+            className="text-ot-primary dark:text-dark-primary hover:underline"
+          >
             Forgot password?
           </Link>
         </div>
 
         <p className="text-center text-sm text-ot-pale-sky dark:text-dark-text-secondary mt-4">
           Don't have an account?{' '}
-          <Link to="/signup" className="text-ot-primary dark:text-dark-primary font-bold hover:underline">
+          <Link
+            to="/signup"
+            className="text-ot-primary dark:text-dark-primary font-bold hover:underline"
+          >
             Sign Up
           </Link>
         </p>

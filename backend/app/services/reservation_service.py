@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.reservation import Reservation, ReservationStatus, ACTIVE_STATUSES
 from app.models.restaurant import Restaurant
+from app.models.table import Table
 from app.models.user import User, UserRole
 from app.schemas.reservation_schema import ReservationCreate
 
@@ -38,40 +39,63 @@ def build_overlap_filters(reservation_date: date, reservation_time: time) -> lis
     ]
 
 
+def _get_occupied_table_ids(
+    db: Session,
+    restaurant_id: int,
+    overlap_filters: list,
+    exclude_reservation_id: int | None = None,
+) -> list[int]:
+    query = db.query(Reservation.table_id).filter(
+        Reservation.restaurant_id == restaurant_id,
+        Reservation.table_id.isnot(None),
+        *overlap_filters,
+    )
+    if exclude_reservation_id:
+        query = query.filter(Reservation.id != exclude_reservation_id)
+    return [row[0] for row in query.all()]
+
+
+def _find_best_table(
+    db: Session,
+    restaurant_id: int,
+    party_size: int,
+    overlap_filters: list,
+    exclude_reservation_id: int | None = None,
+) -> Table:
+    occupied_ids = _get_occupied_table_ids(
+        db, restaurant_id, overlap_filters, exclude_reservation_id
+    )
+
+    query = db.query(Table).filter(
+        Table.restaurant_id == restaurant_id,
+        Table.is_active.is_(True),
+        Table.capacity >= party_size,
+    )
+
+    if occupied_ids:
+        query = query.filter(Table.id.notin_(occupied_ids))
+
+    table = query.order_by(Table.capacity.asc()).with_for_update().first()
+
+    if not table:
+        raise HTTPException(
+            status_code=409,
+            detail="No suitable table available for this time slot and party size.",
+        )
+
+    return table
+
+
 def get_reservation_with_restaurant(db: Session, reservation_id: int) -> Reservation:
     reservation = (
         db.query(Reservation)
-        .options(joinedload(Reservation.restaurant))
+        .options(joinedload(Reservation.restaurant), joinedload(Reservation.table))
         .filter(Reservation.id == reservation_id)
         .first()
     )
     if not reservation:
         raise HTTPException(status_code=404, detail="Reservation not found")
     return reservation
-
-
-def _check_capacity(
-    db: Session,
-    restaurant_id: int,
-    max_capacity: int,
-    party_size: int,
-    overlap_filters: list,
-    exclude_reservation_id: int | None = None,
-) -> None:
-    query = db.query(Reservation).filter(
-        Reservation.restaurant_id == restaurant_id, *overlap_filters
-    )
-    if exclude_reservation_id:
-        query = query.filter(Reservation.id != exclude_reservation_id)
-
-    overlapping = query.with_for_update().all()
-    booked_seats = sum(r.party_size for r in overlapping)
-    if booked_seats + party_size > max_capacity:
-        available = max(0, max_capacity - booked_seats)
-        raise HTTPException(
-            status_code=409,
-            detail=f"Not enough capacity. {available} seat(s) available for this time slot.",
-        )
 
 
 def _check_user_conflict(
@@ -100,6 +124,19 @@ def _validate_reservation_date(reservation_date: date) -> None:
         )
 
 
+def _check_restaurant_has_tables(db: Session, restaurant_id: int) -> None:
+    has_tables = (
+        db.query(Table)
+        .filter(Table.restaurant_id == restaurant_id, Table.is_active.is_(True))
+        .first()
+    )
+    if not has_tables:
+        raise HTTPException(
+            status_code=409,
+            detail="This restaurant has no tables configured for booking.",
+        )
+
+
 def create_reservation(
     db: Session,
     current_user: User,
@@ -110,15 +147,15 @@ def create_reservation(
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
     _validate_reservation_date(data.reservation_date)
+    _check_restaurant_has_tables(db, restaurant.id)
     overlap_filters = build_overlap_filters(data.reservation_date, data.reservation_time)
     _check_user_conflict(db, current_user.id, overlap_filters)
-    _check_capacity(
-        db, restaurant.id, restaurant.max_capacity, data.party_size, overlap_filters
-    )
+    table = _find_best_table(db, restaurant.id, data.party_size, overlap_filters)
 
     reservation = Reservation(
         user_id=current_user.id,
         restaurant_id=restaurant.id,
+        table_id=table.id,
         party_size=data.party_size,
         reservation_date=data.reservation_date,
         reservation_time=data.reservation_time,
@@ -143,7 +180,7 @@ def list_user_reservations(
 ) -> list[Reservation]:
     query = (
         db.query(Reservation)
-        .options(joinedload(Reservation.restaurant))
+        .options(joinedload(Reservation.restaurant), joinedload(Reservation.table))
         .filter(Reservation.user_id == user_id)
     )
 
@@ -186,15 +223,11 @@ def update_reservation(
     _validate_reservation_date(data.reservation_date)
     overlap_filters = build_overlap_filters(data.reservation_date, data.reservation_time)
     _check_user_conflict(db, current_user.id, overlap_filters, reservation_id)
-    _check_capacity(
-        db,
-        reservation.restaurant_id,
-        reservation.restaurant.max_capacity,
-        data.party_size,
-        overlap_filters,
-        reservation_id,
+    table = _find_best_table(
+        db, reservation.restaurant_id, data.party_size, overlap_filters, reservation_id
     )
 
+    reservation.table_id = table.id
     reservation.party_size = data.party_size
     reservation.reservation_date = data.reservation_date
     reservation.reservation_time = data.reservation_time
@@ -234,17 +267,34 @@ def get_slot_availability(
     restaurant: Restaurant,
     reservation_date: date,
     reservation_time: time,
+    party_size: int,
 ) -> dict[str, int]:
-    overlap_filters = build_overlap_filters(reservation_date, reservation_time)
-    overlapping = (
-        db.query(Reservation)
-        .filter(Reservation.restaurant_id == restaurant.id, *overlap_filters)
-        .all()
+    total_tables = (
+        db.query(Table)
+        .filter(
+            Table.restaurant_id == restaurant.id,
+            Table.is_active.is_(True),
+            Table.capacity >= party_size,
+        )
+        .count()
     )
-    booked = sum(r.party_size for r in overlapping)
+
+    overlap_filters = build_overlap_filters(reservation_date, reservation_time)
+    occupied_ids = _get_occupied_table_ids(db, restaurant.id, overlap_filters)
+
+    query = db.query(Table).filter(
+        Table.restaurant_id == restaurant.id,
+        Table.is_active.is_(True),
+        Table.capacity >= party_size,
+    )
+    if occupied_ids:
+        query = query.filter(Table.id.notin_(occupied_ids))
+
+    available_tables = query.count()
+
     return {
-        "available_seats": max(0, restaurant.max_capacity - booked),
-        "max_capacity": restaurant.max_capacity,
+        "available_tables": available_tables,
+        "total_tables": total_tables,
     }
 
 
@@ -258,7 +308,7 @@ def list_restaurant_reservations(
 
     return (
         db.query(Reservation)
-        .options(joinedload(Reservation.restaurant))
+        .options(joinedload(Reservation.restaurant), joinedload(Reservation.table))
         .filter(Reservation.restaurant_id == restaurant.id)
         .order_by(Reservation.reservation_date.desc())
         .all()

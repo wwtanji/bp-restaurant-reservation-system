@@ -74,8 +74,12 @@ class TestBestFitTableSelection:
 
         blocker = create_user()
         create_reservation(
-            blocker.id, restaurant.id, table_2.id,
-            future_date, default_time, party_size=2,
+            blocker.id,
+            restaurant.id,
+            table_2.id,
+            future_date,
+            default_time,
+            party_size=2,
         )
 
         data = build_reservation_data(future_date, default_time, party_size=2)
@@ -182,8 +186,12 @@ class TestTableUnavailability:
 
         blocker = create_user()
         create_reservation(
-            blocker.id, restaurant.id, table.id,
-            future_date, default_time, party_size=2,
+            blocker.id,
+            restaurant.id,
+            table.id,
+            future_date,
+            default_time,
+            party_size=2,
         )
 
         data = build_reservation_data(future_date, default_time, party_size=2)
@@ -255,8 +263,11 @@ class TestTimeSlotOverlapDetection:
 
         blocker = create_user()
         create_reservation(
-            blocker.id, restaurant.id, table_a.id,
-            future_date, default_time,
+            blocker.id,
+            restaurant.id,
+            table_a.id,
+            future_date,
+            default_time,
         )
 
         data = build_reservation_data(future_date, default_time, party_size=2)
@@ -281,8 +292,11 @@ class TestTimeSlotOverlapDetection:
 
         blocker = create_user()
         create_reservation(
-            blocker.id, restaurant.id, table.id,
-            future_date, first_time,
+            blocker.id,
+            restaurant.id,
+            table.id,
+            future_date,
+            first_time,
         )
 
         minutes_outside_window = int(TURN_HOURS * 60) + 1
@@ -310,8 +324,11 @@ class TestTimeSlotOverlapDetection:
 
         blocker = create_user()
         create_reservation(
-            blocker.id, restaurant.id, table.id,
-            future_date, default_time,
+            blocker.id,
+            restaurant.id,
+            table.id,
+            future_date,
+            default_time,
         )
 
         next_day = future_date + timedelta(days=1)
@@ -337,8 +354,11 @@ class TestTimeSlotOverlapDetection:
 
         blocker = create_user()
         create_reservation(
-            blocker.id, restaurant.id, table.id,
-            future_date, time(18, 0),
+            blocker.id,
+            restaurant.id,
+            table.id,
+            future_date,
+            time(18, 0),
         )
 
         minutes_inside_window = int(TURN_HOURS * 60) - 1
@@ -366,8 +386,11 @@ class TestTimeSlotOverlapDetection:
 
         blocker = create_user()
         create_reservation(
-            blocker.id, restaurant.id, table.id,
-            future_date, time(12, 0),
+            blocker.id,
+            restaurant.id,
+            table.id,
+            future_date,
+            time(12, 0),
         )
 
         minutes_outside_window = int(TURN_HOURS * 60) + 1
@@ -383,11 +406,14 @@ class TestTimeSlotOverlapDetection:
 
 
 class TestTerminalStatusFreesTable:
-    @pytest.mark.parametrize("terminal_status", [
-        ReservationStatus.CANCELLED,
-        ReservationStatus.COMPLETED,
-        ReservationStatus.NO_SHOW,
-    ])
+    @pytest.mark.parametrize(
+        "terminal_status",
+        [
+            ReservationStatus.CANCELLED,
+            ReservationStatus.COMPLETED,
+            ReservationStatus.NO_SHOW,
+        ],
+    )
     def test_terminal_reservation_does_not_block_table(
         self,
         db_session: Session,
@@ -404,8 +430,12 @@ class TestTerminalStatusFreesTable:
 
         previous_guest = create_user()
         create_reservation(
-            previous_guest.id, restaurant.id, table.id,
-            future_date, default_time, status=terminal_status,
+            previous_guest.id,
+            restaurant.id,
+            table.id,
+            future_date,
+            default_time,
+            status=terminal_status,
         )
 
         data = build_reservation_data(future_date, default_time, party_size=2)
@@ -430,9 +460,7 @@ class TestUserDoubleBookingPrevention:
         create_table(restaurant.id, table_number=2, capacity=4)
 
         data = build_reservation_data(future_date, default_time, party_size=2)
-        reservation_service.create_reservation(
-            db_session, customer, restaurant, data
-        )
+        reservation_service.create_reservation(db_session, customer, restaurant, data)
 
         with pytest.raises(HTTPException) as exc:
             reservation_service.create_reservation(
@@ -501,8 +529,11 @@ class TestSlotAvailabilityQuery:
         create_table(restaurant.id, table_number=2, capacity=4)
 
         create_reservation(
-            customer.id, restaurant.id, table.id,
-            future_date, default_time,
+            customer.id,
+            restaurant.id,
+            table.id,
+            future_date,
+            default_time,
         )
 
         result = reservation_service.get_slot_availability(
@@ -546,12 +577,18 @@ class TestSlotAvailabilityQuery:
         guest_a = create_user()
         guest_b = create_user()
         create_reservation(
-            guest_a.id, restaurant.id, table_a.id,
-            future_date, default_time,
+            guest_a.id,
+            restaurant.id,
+            table_a.id,
+            future_date,
+            default_time,
         )
         create_reservation(
-            guest_b.id, restaurant.id, table_b.id,
-            future_date, default_time,
+            guest_b.id,
+            restaurant.id,
+            table_b.id,
+            future_date,
+            default_time,
         )
 
         result = reservation_service.get_slot_availability(

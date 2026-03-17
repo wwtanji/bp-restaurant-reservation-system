@@ -1,8 +1,21 @@
 export const TIME_OPTIONS = [
-  '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM',
-  '1:00 PM',  '1:30 PM',  '2:00 PM',  '2:30 PM',
-  '5:00 PM',  '5:30 PM',  '6:00 PM',  '6:30 PM',
-  '7:00 PM',  '7:30 PM',  '8:00 PM',  '8:30 PM', '9:00 PM',
+  '11:00 AM',
+  '11:30 AM',
+  '12:00 PM',
+  '12:30 PM',
+  '1:00 PM',
+  '1:30 PM',
+  '2:00 PM',
+  '2:30 PM',
+  '5:00 PM',
+  '5:30 PM',
+  '6:00 PM',
+  '6:30 PM',
+  '7:00 PM',
+  '7:30 PM',
+  '8:00 PM',
+  '8:30 PM',
+  '9:00 PM',
 ];
 
 export const QUICK_TIME_SLOTS = ['6:30 PM', '6:45 PM', '7:00 PM', '7:15 PM', '7:30 PM'];
@@ -10,7 +23,7 @@ export const QUICK_TIME_SLOTS = ['6:30 PM', '6:45 PM', '7:00 PM', '7:15 PM', '7:
 export const MAX_PARTY_SIZE = 10;
 
 export const PARTY_SIZES = Array.from({ length: MAX_PARTY_SIZE }, (_, i) =>
-  i === 0 ? '1 person' : `${i + 1} people`
+  i === 0 ? '1 person' : `${i + 1} people`,
 );
 
 export const RESERVATION_STATUS_PENDING = 'pending';
@@ -47,7 +60,10 @@ export function todayISO(): string {
 
 export function formatDate(iso: string): string {
   return new Date(iso + 'T00:00:00').toLocaleDateString('en-US', {
-    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   });
 }
 
@@ -56,13 +72,36 @@ export function formatTime(apiTime: string): string {
 }
 
 export const PRICE_SYMBOLS: Record<number, string> = {
-  1: '\u20AC', 2: '\u20AC\u20AC', 3: '\u20AC\u20AC\u20AC', 4: '\u20AC\u20AC\u20AC\u20AC',
+  1: '\u20AC',
+  2: '\u20AC\u20AC',
+  3: '\u20AC\u20AC\u20AC',
+  4: '\u20AC\u20AC\u20AC\u20AC',
 };
 
 export const STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> = {
-  [RESERVATION_STATUS_PENDING]:   { bg: 'bg-amber-100 dark:bg-yellow-900/20',  text: 'text-amber-700',  label: 'Pending' },
-  [RESERVATION_STATUS_CONFIRMED]: { bg: 'bg-green-100 dark:bg-green-900/20',  text: 'text-green-700',  label: 'Confirmed' },
-  [RESERVATION_STATUS_CANCELLED]: { bg: 'bg-gray-100 dark:bg-dark-surface',   text: 'text-gray-500 dark:text-dark-text-secondary',   label: 'Cancelled' },
-  [RESERVATION_STATUS_COMPLETED]: { bg: 'bg-blue-100 dark:bg-blue-900/20',   text: 'text-blue-700',   label: 'Completed' },
-  [RESERVATION_STATUS_NO_SHOW]:   { bg: 'bg-red-100 dark:bg-red-900/20',    text: 'text-red-600',    label: 'No Show' },
+  [RESERVATION_STATUS_PENDING]: {
+    bg: 'bg-amber-100 dark:bg-yellow-900/20',
+    text: 'text-amber-700',
+    label: 'Pending',
+  },
+  [RESERVATION_STATUS_CONFIRMED]: {
+    bg: 'bg-green-100 dark:bg-green-900/20',
+    text: 'text-green-700',
+    label: 'Confirmed',
+  },
+  [RESERVATION_STATUS_CANCELLED]: {
+    bg: 'bg-gray-100 dark:bg-dark-surface',
+    text: 'text-gray-500 dark:text-dark-text-secondary',
+    label: 'Cancelled',
+  },
+  [RESERVATION_STATUS_COMPLETED]: {
+    bg: 'bg-blue-100 dark:bg-blue-900/20',
+    text: 'text-blue-700',
+    label: 'Completed',
+  },
+  [RESERVATION_STATUS_NO_SHOW]: {
+    bg: 'bg-red-100 dark:bg-red-900/20',
+    text: 'text-red-600',
+    label: 'No Show',
+  },
 };

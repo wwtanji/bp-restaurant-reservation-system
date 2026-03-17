@@ -42,7 +42,9 @@ const AdminOverviewPage: React.FC = () => {
                   {Object.entries(stats.users_by_role).map(([role, count]) => (
                     <div key={role} className="flex items-center justify-between text-sm">
                       <span className="capitalize text-ot-charade dark:text-dark-text">{role}</span>
-                      <span className="font-semibold text-ot-charade dark:text-dark-text">{count}</span>
+                      <span className="font-semibold text-ot-charade dark:text-dark-text">
+                        {count}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -72,7 +74,11 @@ const AdminOverviewPage: React.FC = () => {
   );
 };
 
-const StatCard: React.FC<{ label: string; value: number; subtitle?: string }> = ({ label, value, subtitle }) => (
+const StatCard: React.FC<{ label: string; value: number; subtitle?: string }> = ({
+  label,
+  value,
+  subtitle,
+}) => (
   <div className="bg-white dark:bg-dark-paper rounded-xl p-6 border border-ot-iron dark:border-dark-border">
     <p className="text-sm text-gray-500 dark:text-dark-text-secondary">{label}</p>
     <p className="text-3xl font-bold text-ot-charade dark:text-dark-text mt-1">{value}</p>

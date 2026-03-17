@@ -193,7 +193,10 @@ const DashboardRestaurantFormPage: React.FC = () => {
         setUploadingPhotos(false);
       }
 
-      show(isEditing ? 'Restaurant updated successfully' : 'Restaurant created successfully', 'success');
+      show(
+        isEditing ? 'Restaurant updated successfully' : 'Restaurant created successfully',
+        'success',
+      );
       navigate('/dashboard/restaurants');
     } catch {
       show(isEditing ? 'Failed to update restaurant' : 'Failed to create restaurant', 'error');
@@ -213,7 +216,8 @@ const DashboardRestaurantFormPage: React.FC = () => {
     );
   }
 
-  const inputClasses = "w-full border border-ot-iron dark:border-dark-border rounded-ot-btn px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ot-charade/20 focus:border-ot-charade dark:bg-dark-surface dark:text-dark-text";
+  const inputClasses =
+    'w-full border border-ot-iron dark:border-dark-border rounded-ot-btn px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ot-charade/20 focus:border-ot-charade dark:bg-dark-surface dark:text-dark-text';
 
   return (
     <DashboardLayout>
@@ -224,9 +228,13 @@ const DashboardRestaurantFormPage: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-8">
           <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-ot-charade dark:text-dark-text">Basic Info</h2>
+            <h2 className="text-lg font-semibold text-ot-charade dark:text-dark-text">
+              Basic Info
+            </h2>
             <div>
-              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Name *</label>
+              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">
+                Name *
+              </label>
               <input
                 type="text"
                 value={form.name}
@@ -236,7 +244,9 @@ const DashboardRestaurantFormPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Description</label>
+              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">
+                Description
+              </label>
               <textarea
                 value={form.description}
                 onChange={(e) => updateField('description', e.target.value)}
@@ -246,7 +256,9 @@ const DashboardRestaurantFormPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Cuisine *</label>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">
+                  Cuisine *
+                </label>
                 <input
                   type="text"
                   value={form.cuisine}
@@ -256,7 +268,9 @@ const DashboardRestaurantFormPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Price Range</label>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">
+                  Price Range
+                </label>
                 <select
                   value={form.price_range}
                   onChange={(e) => updateField('price_range', parseInt(e.target.value))}
@@ -275,7 +289,9 @@ const DashboardRestaurantFormPage: React.FC = () => {
             <h2 className="text-lg font-semibold text-ot-charade dark:text-dark-text">Contact</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Phone</label>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">
+                  Phone
+                </label>
                 <input
                   type="tel"
                   value={form.phone_number}
@@ -284,7 +300,9 @@ const DashboardRestaurantFormPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Email</label>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">
+                  Email
+                </label>
                 <input
                   type="email"
                   value={form.email}
@@ -298,7 +316,9 @@ const DashboardRestaurantFormPage: React.FC = () => {
           <section className="space-y-4">
             <h2 className="text-lg font-semibold text-ot-charade dark:text-dark-text">Location</h2>
             <div>
-              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Address *</label>
+              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">
+                Address *
+              </label>
               <input
                 type="text"
                 value={form.address}
@@ -309,7 +329,9 @@ const DashboardRestaurantFormPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">City *</label>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">
+                  City *
+                </label>
                 <input
                   type="text"
                   value={form.city}
@@ -319,7 +341,9 @@ const DashboardRestaurantFormPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Country</label>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">
+                  Country
+                </label>
                 <input
                   type="text"
                   value={form.country}
@@ -330,7 +354,9 @@ const DashboardRestaurantFormPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Latitude</label>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">
+                  Latitude
+                </label>
                 <input
                   type="text"
                   value={form.latitude}
@@ -340,7 +366,9 @@ const DashboardRestaurantFormPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Longitude</label>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">
+                  Longitude
+                </label>
                 <input
                   type="text"
                   value={form.longitude}
@@ -355,7 +383,9 @@ const DashboardRestaurantFormPage: React.FC = () => {
           <section className="space-y-4">
             <h2 className="text-lg font-semibold text-ot-charade dark:text-dark-text">Capacity</h2>
             <div>
-              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">Max Capacity</label>
+              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">
+                Max Capacity
+              </label>
               <input
                 type="number"
                 min={1}
@@ -370,7 +400,9 @@ const DashboardRestaurantFormPage: React.FC = () => {
             <h2 className="text-lg font-semibold text-ot-charade dark:text-dark-text">Photos</h2>
 
             <div>
-              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-2">Cover Photo</label>
+              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-2">
+                Cover Photo
+              </label>
               {coverPreview ? (
                 <div className="relative inline-block">
                   <img
@@ -383,7 +415,13 @@ const DashboardRestaurantFormPage: React.FC = () => {
                     onClick={handleRemoveCover}
                     className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -394,8 +432,18 @@ const DashboardRestaurantFormPage: React.FC = () => {
                   onClick={() => coverInputRef.current?.click()}
                   className="w-48 h-32 border-2 border-dashed border-ot-iron dark:border-dark-border rounded-ot-btn flex flex-col items-center justify-center gap-1 text-ot-manatee dark:text-dark-text-secondary hover:border-ot-charade hover:text-ot-charade dark:hover:border-dark-primary dark:hover:text-dark-text transition-colors"
                 >
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                    />
                   </svg>
                   <span className="text-xs font-medium">Upload cover</span>
                 </button>
@@ -410,7 +458,9 @@ const DashboardRestaurantFormPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-2">Gallery Photos</label>
+              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-2">
+                Gallery Photos
+              </label>
               <div className="grid grid-cols-4 gap-3">
                 {existingGallery.map((url) => (
                   <div key={url} className="relative group">
@@ -424,8 +474,18 @@ const DashboardRestaurantFormPage: React.FC = () => {
                       onClick={() => handleDeleteExistingGallery(url)}
                       className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                     </button>
                   </div>
@@ -442,8 +502,18 @@ const DashboardRestaurantFormPage: React.FC = () => {
                       onClick={() => handleRemoveGalleryPending(i)}
                       className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                     </button>
                     <span className="absolute bottom-1 left-1 bg-ot-primary text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
@@ -456,7 +526,13 @@ const DashboardRestaurantFormPage: React.FC = () => {
                   onClick={() => galleryInputRef.current?.click()}
                   className="w-full h-24 border-2 border-dashed border-ot-iron dark:border-dark-border rounded-ot-btn flex flex-col items-center justify-center gap-1 text-ot-manatee dark:text-dark-text-secondary hover:border-ot-charade hover:text-ot-charade dark:hover:border-dark-primary dark:hover:text-dark-text transition-colors"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                   </svg>
                   <span className="text-[10px] font-medium">Add photos</span>
@@ -474,7 +550,9 @@ const DashboardRestaurantFormPage: React.FC = () => {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-ot-charade dark:text-dark-text">Opening Hours</h2>
+            <h2 className="text-lg font-semibold text-ot-charade dark:text-dark-text">
+              Opening Hours
+            </h2>
             <OpeningHoursEditor
               value={form.opening_hours}
               onChange={(hours) => updateField('opening_hours', hours)}
@@ -490,8 +568,12 @@ const DashboardRestaurantFormPage: React.FC = () => {
               {uploadingPhotos
                 ? 'Uploading photos...'
                 : loading
-                  ? (isEditing ? 'Saving...' : 'Creating...')
-                  : (isEditing ? 'Save Changes' : 'Create Restaurant')}
+                  ? isEditing
+                    ? 'Saving...'
+                    : 'Creating...'
+                  : isEditing
+                    ? 'Save Changes'
+                    : 'Create Restaurant'}
             </button>
             <button
               type="button"

@@ -56,7 +56,9 @@ const DashboardRestaurantsPage: React.FC = () => {
           </div>
         ) : restaurants.length === 0 ? (
           <div className="bg-white dark:bg-dark-paper rounded-xl border border-ot-iron dark:border-dark-border p-12 text-center">
-            <p className="text-gray-500 dark:text-dark-text-secondary mb-4">You don't have any restaurants yet.</p>
+            <p className="text-gray-500 dark:text-dark-text-secondary mb-4">
+              You don't have any restaurants yet.
+            </p>
             <Link
               to="/dashboard/restaurants/new"
               className="bg-ot-charade dark:bg-dark-primary text-white px-5 py-2.5 rounded-ot-btn text-sm font-bold hover:bg-ot-primary-dark transition-colors"
@@ -80,19 +82,39 @@ const DashboardRestaurantsPage: React.FC = () => {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+                      <svg
+                        className="w-8 h-8"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={1.5}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
+                        />
                       </svg>
                     </div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-ot-charade dark:text-dark-text truncate">{restaurant.name}</h3>
-                  <p className="text-sm text-gray-500 dark:text-dark-text-secondary truncate">{restaurant.address}, {restaurant.city}</p>
+                  <h3 className="font-semibold text-ot-charade dark:text-dark-text truncate">
+                    {restaurant.name}
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-dark-text-secondary truncate">
+                    {restaurant.address}, {restaurant.city}
+                  </p>
                   <div className="flex items-center gap-3 mt-1">
-                    <span className="text-xs text-gray-500 dark:text-dark-text-secondary">{restaurant.cuisine}</span>
-                    <span className="text-xs text-gray-500 dark:text-dark-text-secondary">{PRICE_SYMBOLS[restaurant.price_range] || ''}</span>
-                    <span className="text-xs text-gray-500 dark:text-dark-text-secondary">Capacity: {restaurant.max_capacity}</span>
+                    <span className="text-xs text-gray-500 dark:text-dark-text-secondary">
+                      {restaurant.cuisine}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-dark-text-secondary">
+                      {PRICE_SYMBOLS[restaurant.price_range] || ''}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-dark-text-secondary">
+                      Capacity: {restaurant.max_capacity}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -129,7 +151,8 @@ const DashboardRestaurantsPage: React.FC = () => {
               Delete Restaurant
             </DialogTitle>
             <p className="text-sm text-gray-500 dark:text-dark-text-secondary mt-2">
-              Are you sure you want to delete <strong>{deleteTarget?.name}</strong>? This action cannot be undone.
+              Are you sure you want to delete <strong>{deleteTarget?.name}</strong>? This action
+              cannot be undone.
             </p>
             <div className="flex justify-end gap-3 mt-6">
               <button

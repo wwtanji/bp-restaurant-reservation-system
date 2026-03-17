@@ -3,7 +3,10 @@ import { STORAGE_KEY_TOKEN, STORAGE_KEY_REFRESH_TOKEN } from '../constants/stora
 export const API_URL = 'http://localhost:8000/api';
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
     super(message);
   }
 }
@@ -46,10 +49,7 @@ export function resolveImageUrl(url: string | null): string {
   return url;
 }
 
-export async function apiFetch<T = unknown>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
+export async function apiFetch<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
   const buildHeaders = (token: string | null) => {
     const headers = new Headers(options.headers);
     if (token) headers.set('Authorization', `Bearer ${token}`);

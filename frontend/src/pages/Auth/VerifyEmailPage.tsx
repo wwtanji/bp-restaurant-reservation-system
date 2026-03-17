@@ -57,7 +57,9 @@ const VerifyEmailPage: React.FC = () => {
               <div className="mb-6 flex justify-center">
                 <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-ot-primary" />
               </div>
-              <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mb-4">Verifying Email</h2>
+              <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mb-4">
+                Verifying Email
+              </h2>
               <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary">{message}</p>
             </>
           )}
@@ -65,25 +67,55 @@ const VerifyEmailPage: React.FC = () => {
           {status === 'success' && (
             <>
               <div className="mb-6 flex justify-center">
-                <svg className="h-16 w-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="h-16 w-16 text-green-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
-              <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mb-4">Email Verified!</h2>
-              <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary mb-6">{message}</p>
-              <p className="text-xs text-ot-manatee dark:text-dark-text-secondary">Redirecting to login page...</p>
+              <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mb-4">
+                Email Verified!
+              </h2>
+              <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary mb-6">
+                {message}
+              </p>
+              <p className="text-xs text-ot-manatee dark:text-dark-text-secondary">
+                Redirecting to login page...
+              </p>
             </>
           )}
 
           {status === 'error' && (
             <>
               <div className="mb-6 flex justify-center">
-                <svg className="h-16 w-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="h-16 w-16 text-red-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
-              <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mb-4">Verification Failed</h2>
-              <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary mb-6">{message}</p>
+              <h2 className="text-2xl font-extrabold text-ot-charade dark:text-dark-text mb-4">
+                Verification Failed
+              </h2>
+              <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary mb-6">
+                {message}
+              </p>
               <Link
                 to="/login"
                 className="inline-block bg-ot-primary hover:bg-ot-primary-dark dark:hover:bg-dark-primary-dark text-white font-bold py-3 px-8 rounded-ot-btn transition-colors"

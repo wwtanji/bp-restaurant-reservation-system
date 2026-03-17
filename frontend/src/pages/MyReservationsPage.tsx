@@ -23,7 +23,12 @@ const MyReservationsPage: React.FC = () => {
   const [cancellingId, setCancellingId] = useState<number | null>(null);
   const [cancelError, setCancelError] = useState<string | null>(null);
 
-  const { data: fetchedReservations, isLoading, error: fetchError, refetch } = useFetch<Reservation[]>('/reservations/my');
+  const {
+    data: fetchedReservations,
+    isLoading,
+    error: fetchError,
+    refetch,
+  } = useFetch<Reservation[]>('/reservations/my');
   const reservations = fetchedReservations ?? [];
   const error = fetchError || cancelError;
 
@@ -41,15 +46,17 @@ const MyReservationsPage: React.FC = () => {
   };
 
   const today = todayISO();
-  const upcoming = reservations.filter(r =>
-    r.reservation_date >= today &&
-    (r.status === RESERVATION_STATUS_PENDING || r.status === RESERVATION_STATUS_CONFIRMED)
+  const upcoming = reservations.filter(
+    (r) =>
+      r.reservation_date >= today &&
+      (r.status === RESERVATION_STATUS_PENDING || r.status === RESERVATION_STATUS_CONFIRMED),
   );
-  const past = reservations.filter(r =>
-    r.reservation_date < today ||
-    r.status === RESERVATION_STATUS_CANCELLED ||
-    r.status === RESERVATION_STATUS_COMPLETED ||
-    r.status === RESERVATION_STATUS_NO_SHOW
+  const past = reservations.filter(
+    (r) =>
+      r.reservation_date < today ||
+      r.status === RESERVATION_STATUS_CANCELLED ||
+      r.status === RESERVATION_STATUS_COMPLETED ||
+      r.status === RESERVATION_STATUS_NO_SHOW,
   );
   const displayed = tab === 'upcoming' ? upcoming : past;
 
@@ -58,25 +65,31 @@ const MyReservationsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-ot-athens-gray dark:bg-dark-bg">
-
       <div className="bg-white dark:bg-dark-paper border-b border-ot-iron dark:border-dark-border px-4 py-4">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <button
             onClick={() => navigate('/')}
             className="text-ot-manatee dark:text-dark-text-secondary hover:text-ot-charade dark:hover:text-dark-text transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 className="text-lg font-extrabold text-ot-charade dark:text-dark-text">My Reservations</h1>
+          <h1 className="text-lg font-extrabold text-ot-charade dark:text-dark-text">
+            My Reservations
+          </h1>
         </div>
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-6">
-
         <div className="flex gap-1 bg-white dark:bg-dark-paper rounded-ot-btn p-1 mb-6 border border-ot-iron dark:border-dark-border">
-          {(['upcoming', 'past'] as Tab[]).map(t => (
+          {(['upcoming', 'past'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -103,8 +116,18 @@ const MyReservationsPage: React.FC = () => {
           </div>
         ) : displayed.length === 0 ? (
           <div className="text-center py-20">
-            <svg className="w-16 h-16 text-ot-iron mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <svg
+              className="w-16 h-16 text-ot-iron mx-auto mb-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
             </svg>
             <h3 className="text-base font-bold text-ot-charade dark:text-dark-text mb-1">
               {tab === 'upcoming' ? 'No upcoming reservations' : 'No past reservations'}
@@ -119,8 +142,18 @@ const MyReservationsPage: React.FC = () => {
                 to="/search"
                 className="inline-flex items-center gap-2 bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-6 py-3 rounded-ot-btn transition-colors text-sm"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
                 Find restaurants
               </Link>
@@ -128,8 +161,9 @@ const MyReservationsPage: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {displayed.map(reservation => {
-              const badge = STATUS_BADGE[reservation.status] ?? STATUS_BADGE[RESERVATION_STATUS_PENDING];
+            {displayed.map((reservation) => {
+              const badge =
+                STATUS_BADGE[reservation.status] ?? STATUS_BADGE[RESERVATION_STATUS_PENDING];
               const isCancelling = cancellingId === reservation.id;
 
               return (
@@ -150,38 +184,87 @@ const MyReservationsPage: React.FC = () => {
                           {reservation.restaurant.address}, {reservation.restaurant.city}
                         </p>
                       </div>
-                      <span className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-bold ${badge.bg} ${badge.text}`}>
+                      <span
+                        className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-bold ${badge.bg} ${badge.text}`}
+                      >
                         {badge.label}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-4 text-sm text-ot-pale-sky dark:text-dark-text-secondary mb-4">
                       <div className="flex items-center gap-1.5">
-                        <svg className="w-4 h-4 text-ot-manatee dark:text-dark-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span className="font-medium">{formatDate(reservation.reservation_date)}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <svg className="w-4 h-4 text-ot-manatee dark:text-dark-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span className="font-medium">{fromApiTime(reservation.reservation_time)}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <svg className="w-4 h-4 text-ot-manatee dark:text-dark-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        <svg
+                          className="w-4 h-4 text-ot-manatee dark:text-dark-text-secondary"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
                         </svg>
                         <span className="font-medium">
-                          {reservation.party_size} {reservation.party_size === 1 ? 'person' : 'people'}
+                          {formatDate(reservation.reservation_date)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <svg
+                          className="w-4 h-4 text-ot-manatee dark:text-dark-text-secondary"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        <span className="font-medium">
+                          {fromApiTime(reservation.reservation_time)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <svg
+                          className="w-4 h-4 text-ot-manatee dark:text-dark-text-secondary"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                        <span className="font-medium">
+                          {reservation.party_size}{' '}
+                          {reservation.party_size === 1 ? 'person' : 'people'}
                         </span>
                       </div>
                       {reservation.table && (
                         <div className="flex items-center gap-1.5">
-                          <svg className="w-4 h-4 text-ot-manatee dark:text-dark-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h7" />
+                          <svg
+                            className="w-4 h-4 text-ot-manatee dark:text-dark-text-secondary"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M4 6h16M4 12h16M4 18h7"
+                            />
                           </svg>
-                          <span className="font-medium">Table {reservation.table.table_number}</span>
+                          <span className="font-medium">
+                            Table {reservation.table.table_number}
+                          </span>
                         </div>
                       )}
                     </div>

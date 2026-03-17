@@ -38,7 +38,7 @@ const DashboardTableFormPage: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: parseInt(value) || 0 }));
+    setForm((prev) => ({ ...prev, [name]: parseInt(value) || 0 }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,7 +83,13 @@ const DashboardTableFormPage: React.FC = () => {
             onClick={() => navigate(`/dashboard/restaurants/${restaurantId}/tables`)}
             className="text-ot-manatee dark:text-dark-text-secondary hover:text-ot-charade dark:hover:text-dark-text transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
@@ -92,7 +98,10 @@ const DashboardTableFormPage: React.FC = () => {
           </h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white dark:bg-dark-paper rounded-xl border border-ot-iron dark:border-dark-border p-6 space-y-5">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white dark:bg-dark-paper rounded-xl border border-ot-iron dark:border-dark-border p-6 space-y-5"
+        >
           <div>
             <label className="block text-sm font-bold text-ot-charade dark:text-dark-text mb-1.5">
               Table Number
@@ -133,8 +142,12 @@ const DashboardTableFormPage: React.FC = () => {
             className="w-full py-3 text-sm font-bold text-white bg-ot-charade dark:bg-dark-primary rounded-ot-btn hover:bg-ot-primary-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loading
-              ? (isEditing ? 'Updating...' : 'Creating...')
-              : (isEditing ? 'Update Table' : 'Create Table')}
+              ? isEditing
+                ? 'Updating...'
+                : 'Creating...'
+              : isEditing
+                ? 'Update Table'
+                : 'Create Table'}
           </button>
         </form>
       </div>

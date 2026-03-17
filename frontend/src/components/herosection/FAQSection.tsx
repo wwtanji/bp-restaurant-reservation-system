@@ -37,7 +37,9 @@ const FAQItem: React.FC<{
         onClick={onToggle}
         className="w-full flex items-center justify-between py-5 text-left"
       >
-        <span className="text-sm font-bold text-ot-charade dark:text-dark-text pr-4">{question}</span>
+        <span className="text-sm font-bold text-ot-charade dark:text-dark-text pr-4">
+          {question}
+        </span>
         <svg
           className={`w-5 h-5 text-ot-manatee dark:text-dark-text-secondary flex-shrink-0 transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
@@ -50,7 +52,10 @@ const FAQItem: React.FC<{
       </button>
       <div
         className="overflow-hidden transition-all duration-300 ease-in-out"
-        style={{ maxHeight: isOpen ? contentRef.current?.scrollHeight ?? 200 : 0, opacity: isOpen ? 1 : 0 }}
+        style={{
+          maxHeight: isOpen ? (contentRef.current?.scrollHeight ?? 200) : 0,
+          opacity: isOpen ? 1 : 0,
+        }}
       >
         <div ref={contentRef}>
           <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary leading-relaxed pb-5">
@@ -66,7 +71,7 @@ const FAQSection: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const toggle = (index: number) => {
-    setOpenIndex(prev => (prev === index ? null : index));
+    setOpenIndex((prev) => (prev === index ? null : index));
   };
 
   const leftColumn = FAQ_ITEMS.filter((_, i) => i % 2 === 0);

@@ -52,7 +52,6 @@ const createPillMarker = (rating: number | null, isActive: boolean): L.DivIcon =
     iconAnchor: [20, 14],
   });
 
-
 interface PopupCardProps {
   restaurant: Restaurant;
   onClose: () => void;
@@ -72,7 +71,9 @@ const PopupCard: React.FC<PopupCardProps> = ({ restaurant, onClose, onClick }) =
   useEffect(() => {
     updatePosition();
     map.on('move zoom viewreset', updatePosition);
-    return () => { map.off('move zoom viewreset', updatePosition); };
+    return () => {
+      map.off('move zoom viewreset', updatePosition);
+    };
   }, [map, updatePosition]);
 
   useEffect(() => {
@@ -89,10 +90,13 @@ const PopupCard: React.FC<PopupCardProps> = ({ restaurant, onClose, onClick }) =
   if (!position) return null;
 
   const ratingLabel = restaurant.rating
-    ? restaurant.rating >= 4.5 ? 'Exceptional'
-      : restaurant.rating >= 4.0 ? 'Awesome'
-      : restaurant.rating >= 3.5 ? 'Very Good'
-      : 'Good'
+    ? restaurant.rating >= 4.5
+      ? 'Exceptional'
+      : restaurant.rating >= 4.0
+        ? 'Awesome'
+        : restaurant.rating >= 3.5
+          ? 'Very Good'
+          : 'Good'
     : null;
 
   return (
@@ -143,7 +147,6 @@ const PopupCard: React.FC<PopupCardProps> = ({ restaurant, onClose, onClick }) =
   );
 };
 
-
 interface FlyToActiveProps {
   restaurants: Restaurant[];
   activeId: number | null;
@@ -154,7 +157,7 @@ const FlyToActive: React.FC<FlyToActiveProps> = ({ restaurants, activeId }) => {
 
   useEffect(() => {
     if (activeId === null) return;
-    const r = restaurants.find(r => r.id === activeId);
+    const r = restaurants.find((r) => r.id === activeId);
     if (r?.latitude && r?.longitude) {
       map.panTo([r.latitude, r.longitude], { animate: true, duration: 0.4 });
     }
@@ -162,7 +165,6 @@ const FlyToActive: React.FC<FlyToActiveProps> = ({ restaurants, activeId }) => {
 
   return null;
 };
-
 
 interface RestaurantMarkerProps {
   restaurant: Restaurant;
@@ -200,7 +202,6 @@ const RestaurantMarker: React.FC<RestaurantMarkerProps> = ({
   );
 };
 
-
 interface MapViewProps {
   restaurants: Restaurant[];
   activeId: number | null;
@@ -220,12 +221,12 @@ const MapView: React.FC<MapViewProps> = ({
 }) => {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const selectedRestaurant = useMemo(
-    () => restaurants.find(r => r.id === selectedId) ?? null,
+    () => restaurants.find((r) => r.id === selectedId) ?? null,
     [restaurants, selectedId],
   );
 
   const handleSelect = useCallback((id: number) => {
-    setSelectedId(prev => (prev === id ? null : id));
+    setSelectedId((prev) => (prev === id ? null : id));
   }, []);
 
   const handleClosePopup = useCallback(() => setSelectedId(null), []);
@@ -242,7 +243,7 @@ const MapView: React.FC<MapViewProps> = ({
 
       <FlyToActive restaurants={restaurants} activeId={activeId} />
 
-      {restaurants.map(r => (
+      {restaurants.map((r) => (
         <RestaurantMarker
           key={r.id}
           restaurant={r}

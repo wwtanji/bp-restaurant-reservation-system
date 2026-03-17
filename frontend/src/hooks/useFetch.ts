@@ -14,7 +14,7 @@ export default function useFetch<T>(path: string | null): UseFetchResult<T> {
   const [error, setError] = useState<string | null>(null);
   const [fetchKey, setFetchKey] = useState(0);
 
-  const refetch = useCallback(() => setFetchKey(k => k + 1), []);
+  const refetch = useCallback(() => setFetchKey((k) => k + 1), []);
 
   useEffect(() => {
     if (path === null) {
@@ -29,11 +29,19 @@ export default function useFetch<T>(path: string | null): UseFetchResult<T> {
     setError(null);
 
     apiFetch<T>(path)
-      .then(result => { if (!cancelled) setData(result); })
-      .catch(err => { if (!cancelled) setError(err instanceof Error ? err.message : 'Request failed'); })
-      .finally(() => { if (!cancelled) setIsLoading(false); });
+      .then((result) => {
+        if (!cancelled) setData(result);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Request failed');
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [path, fetchKey]);
 
   return { data, isLoading, error, refetch };

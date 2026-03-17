@@ -28,9 +28,9 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     setIsLoading(true);
     apiFetch<FavoriteOut[]>('/favorites/')
-      .then(data => {
+      .then((data) => {
         setFavorites(data);
-        setFavoriteIds(new Set(data.map(f => f.restaurant_id)));
+        setFavoriteIds(new Set(data.map((f) => f.restaurant_id)));
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
@@ -41,45 +41,52 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     [favoriteIds],
   );
 
-  const toggleFavorite = useCallback(async (restaurantId: number) => {
-    const wasFavorited = favoriteIds.has(restaurantId);
+  const toggleFavorite = useCallback(
+    async (restaurantId: number) => {
+      const wasFavorited = favoriteIds.has(restaurantId);
 
-    if (wasFavorited) {
-      setFavoriteIds(prev => {
-        const next = new Set(prev);
-        next.delete(restaurantId);
-        return next;
-      });
-      setFavorites(prev => prev.filter(f => f.restaurant_id !== restaurantId));
-    } else {
-      setFavoriteIds(prev => new Set(prev).add(restaurantId));
-    }
-
-    try {
       if (wasFavorited) {
-        await apiFetch(`/favorites/${restaurantId}`, { method: 'DELETE' });
-      } else {
-        const added = await apiFetch<FavoriteOut>(`/favorites/${restaurantId}`, { method: 'POST' });
-        setFavorites(prev => [added, ...prev]);
-      }
-    } catch {
-      if (wasFavorited) {
-        setFavoriteIds(prev => new Set(prev).add(restaurantId));
-        const data = await apiFetch<FavoriteOut[]>('/favorites/').catch(() => []);
-        setFavorites(data);
-      } else {
-        setFavoriteIds(prev => {
+        setFavoriteIds((prev) => {
           const next = new Set(prev);
           next.delete(restaurantId);
           return next;
         });
-        setFavorites(prev => prev.filter(f => f.restaurant_id !== restaurantId));
+        setFavorites((prev) => prev.filter((f) => f.restaurant_id !== restaurantId));
+      } else {
+        setFavoriteIds((prev) => new Set(prev).add(restaurantId));
       }
-    }
-  }, [favoriteIds]);
+
+      try {
+        if (wasFavorited) {
+          await apiFetch(`/favorites/${restaurantId}`, { method: 'DELETE' });
+        } else {
+          const added = await apiFetch<FavoriteOut>(`/favorites/${restaurantId}`, {
+            method: 'POST',
+          });
+          setFavorites((prev) => [added, ...prev]);
+        }
+      } catch {
+        if (wasFavorited) {
+          setFavoriteIds((prev) => new Set(prev).add(restaurantId));
+          const data = await apiFetch<FavoriteOut[]>('/favorites/').catch(() => []);
+          setFavorites(data);
+        } else {
+          setFavoriteIds((prev) => {
+            const next = new Set(prev);
+            next.delete(restaurantId);
+            return next;
+          });
+          setFavorites((prev) => prev.filter((f) => f.restaurant_id !== restaurantId));
+        }
+      }
+    },
+    [favoriteIds],
+  );
 
   return (
-    <FavoritesContext.Provider value={{ favorites, favoriteIds, isFavorite, toggleFavorite, isLoading }}>
+    <FavoritesContext.Provider
+      value={{ favorites, favoriteIds, isFavorite, toggleFavorite, isLoading }}
+    >
       {children}
     </FavoritesContext.Provider>
   );

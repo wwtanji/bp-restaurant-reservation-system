@@ -13,7 +13,9 @@ import {
   RESERVATION_STATUS_COMPLETED,
   RESERVATION_STATUS_NO_SHOW,
   STATUS_BADGE,
+  PAYMENT_STATUS_PAID,
 } from '../constants/reservation';
+import usePayment from '../hooks/usePayment';
 
 type Tab = 'upcoming' | 'past';
 
@@ -22,6 +24,7 @@ const MyReservationsPage: React.FC = () => {
   const [tab, setTab] = useState<Tab>('upcoming');
   const [cancellingId, setCancellingId] = useState<number | null>(null);
   const [cancelError, setCancelError] = useState<string | null>(null);
+  const { initiatePayment, isLoading: isPaymentLoading, error: paymentError } = usePayment();
 
   const {
     data: fetchedReservations,
@@ -30,7 +33,7 @@ const MyReservationsPage: React.FC = () => {
     refetch,
   } = useFetch<Reservation[]>('/reservations/my');
   const reservations = fetchedReservations ?? [];
-  const error = fetchError || cancelError;
+  const error = fetchError || cancelError || paymentError;
 
   const handleCancel = async (id: number) => {
     setCancellingId(id);
@@ -282,19 +285,31 @@ const MyReservationsPage: React.FC = () => {
 
                   {canCancel(reservation.status) && (
                     <div className="border-t border-ot-iron dark:border-dark-border px-5 py-3 flex justify-between items-center">
-                      <Link
-                        to={`/restaurant/${reservation.restaurant.slug}/book`}
-                        state={{ editReservation: reservation }}
-                        className="text-sm font-bold text-ot-primary dark:text-dark-primary hover:text-ot-primary-dark hover:bg-indigo-50 dark:hover:bg-dark-surface px-4 py-2 rounded-ot-btn transition-colors"
-                      >
-                        Edit reservation
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          to={`/restaurant/${reservation.restaurant.slug}/book`}
+                          state={{ editReservation: reservation }}
+                          className="text-sm font-bold text-ot-primary dark:text-dark-primary hover:text-ot-primary-dark hover:bg-indigo-50 dark:hover:bg-dark-surface px-4 py-2 rounded-ot-btn transition-colors"
+                        >
+                          Edit
+                        </Link>
+                        {reservation.status === RESERVATION_STATUS_PENDING &&
+                          reservation.payment?.status !== PAYMENT_STATUS_PAID && (
+                            <button
+                              onClick={() => initiatePayment(reservation.id)}
+                              disabled={isPaymentLoading}
+                              className="text-sm font-bold text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-ot-btn transition-colors disabled:opacity-50"
+                            >
+                              {isPaymentLoading ? 'Processing...' : 'Pay Now'}
+                            </button>
+                          )}
+                      </div>
                       <button
                         onClick={() => handleCancel(reservation.id)}
                         disabled={isCancelling}
                         className="text-sm font-bold text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 px-4 py-2 rounded-ot-btn transition-colors disabled:opacity-50"
                       >
-                        {isCancelling ? 'Cancelling...' : 'Cancel reservation'}
+                        {isCancelling ? 'Cancelling...' : 'Cancel'}
                       </button>
                     </div>
                   )}

@@ -13,10 +13,18 @@ export interface TableBrief {
   capacity: number;
 }
 
+export interface ReservationPaymentBrief {
+  id: number;
+  status: string;
+  amount: number;
+  currency: string;
+}
+
 export interface Reservation {
   id: number;
   restaurant: ReservationRestaurant;
   table: TableBrief | null;
+  payment: ReservationPaymentBrief | null;
   party_size: number;
   reservation_date: string;
   reservation_time: string;

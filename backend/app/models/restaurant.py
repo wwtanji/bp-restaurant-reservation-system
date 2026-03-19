@@ -46,6 +46,7 @@ class Restaurant(Base):
     rating: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     review_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     max_capacity: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
+    reservation_fee: Mapped[int] = mapped_column(Integer, nullable=False, default=500)
     opening_hours: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)

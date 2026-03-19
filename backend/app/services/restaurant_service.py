@@ -103,6 +103,7 @@ def create_restaurant(db: Session, owner: User, data: RestaurantCreate) -> Resta
         longitude=data.longitude,
         cover_image=data.cover_image,
         max_capacity=data.max_capacity,
+        reservation_fee=data.reservation_fee,
         opening_hours=opening_hours_dict,
     )
     db.add(restaurant)

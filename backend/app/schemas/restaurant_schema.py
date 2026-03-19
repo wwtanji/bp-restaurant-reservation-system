@@ -21,6 +21,7 @@ class RestaurantOut(BaseModel):
     rating: Optional[float]
     review_count: int
     max_capacity: int
+    reservation_fee: int
     is_active: bool
     opening_hours: Optional[dict] = None
 

@@ -17,6 +17,7 @@ export interface Restaurant {
   rating: number | null;
   review_count: number;
   max_capacity: number;
+  reservation_fee: number;
   is_active: boolean;
   opening_hours: OpeningHours | null;
 }
@@ -64,6 +65,7 @@ export interface RestaurantFormData {
   longitude: string;
   cover_image: string;
   max_capacity: number;
+  reservation_fee: string;
   opening_hours: OpeningHours;
 }
 

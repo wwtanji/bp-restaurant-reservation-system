@@ -41,6 +41,8 @@ const AdminUsersPage = React.lazy(() => import('./pages/Admin/AdminUsersPage'));
 const AdminRestaurantsPage = React.lazy(() => import('./pages/Admin/AdminRestaurantsPage'));
 const AdminReservationsPage = React.lazy(() => import('./pages/Admin/AdminReservationsPage'));
 const AdminReviewsPage = React.lazy(() => import('./pages/Admin/AdminReviewsPage'));
+const PaymentSuccessPage = React.lazy(() => import('./pages/Payment/PaymentSuccessPage'));
+const PaymentCancelPage = React.lazy(() => import('./pages/Payment/PaymentCancelPage'));
 
 const PageLoadingSpinner: React.FC = () => (
   <div className="min-h-screen flex items-center justify-center bg-white dark:bg-dark-bg">
@@ -134,6 +136,22 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payment/success"
+          element={
+            <ProtectedRoute>
+              <PaymentSuccessPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payment/cancel"
+          element={
+            <ProtectedRoute>
+              <PaymentCancelPage />
             </ProtectedRoute>
           }
         />

@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from app.models.user import User
     from app.models.restaurant import Restaurant
     from app.models.table import Table
+    from app.models.payment import Payment
 
 
 class ReservationStatus(str, enum.Enum):
@@ -64,4 +65,7 @@ class Reservation(Base):
     )
     table: Mapped[Optional["Table"]] = relationship(
         "Table", back_populates="reservations"
+    )
+    payment: Mapped[Optional["Payment"]] = relationship(
+        "Payment", uselist=False, lazy="joined"
     )

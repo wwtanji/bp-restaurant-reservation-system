@@ -7,6 +7,7 @@ from datetime import date, time, datetime
 from app.models.reservation import ReservationStatus
 from app.schemas.restaurant_schema import RestaurantBrief
 from app.schemas.table_schema import TableBrief
+from app.schemas.payment_schema import PaymentBrief
 
 MAX_PARTY_SIZE = 20
 MAX_GUEST_NAME_LENGTH = 100
@@ -65,6 +66,7 @@ class ReservationOut(BaseModel):
     id: int
     restaurant: RestaurantBrief
     table: Optional[TableBrief] = None
+    payment: Optional[PaymentBrief] = None
     party_size: int
     reservation_date: date
     reservation_time: time

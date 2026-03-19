@@ -32,6 +32,11 @@ export const RESERVATION_STATUS_CANCELLED = 'cancelled';
 export const RESERVATION_STATUS_COMPLETED = 'completed';
 export const RESERVATION_STATUS_NO_SHOW = 'no_show';
 
+export const PAYMENT_STATUS_PENDING = 'pending';
+export const PAYMENT_STATUS_PAID = 'paid';
+export const PAYMENT_STATUS_FAILED = 'failed';
+export const PAYMENT_STATUS_EXPIRED = 'expired';
+
 export function toApiTime(display: string): string {
   const [timePart, period] = display.split(' ');
   let [hours, minutes] = timePart.split(':').map(Number);

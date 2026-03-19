@@ -15,6 +15,7 @@ import {
   fromApiTime,
   RESERVATION_STATUS_PENDING,
 } from '../constants/reservation';
+import usePayment from '../hooks/usePayment';
 
 const CalendarIcon = () => (
   <svg
@@ -112,6 +113,7 @@ const BookingPage: React.FC = () => {
   const [confirmation, setConfirmation] = useState<Reservation | null>(null);
   const [availableTables, setAvailableTables] = useState<number | null>(null);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const { initiatePayment, isLoading: isPaymentLoading, error: paymentError } = usePayment();
 
   useEffect(() => {
     if (user && !isEditMode) setGuestName(`${user.first_name} ${user.last_name}`);
@@ -282,10 +284,49 @@ const BookingPage: React.FC = () => {
             </div>
           </div>
 
+          {paymentError && (
+            <div
+              className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-ot-btn p-3 text-sm text-red-700 mb-2 opacity-0 animate-fade-in-up"
+              style={{ animationDelay: '0.45s' }}
+            >
+              {paymentError}
+            </div>
+          )}
+
           <div
             className="flex flex-col gap-2 opacity-0 animate-fade-in-up"
             style={{ animationDelay: '0.5s' }}
           >
+            {isPending && !isEditMode && restaurant && restaurant.reservation_fee > 0 && (
+              <button
+                onClick={() => initiatePayment(confirmation.id)}
+                disabled={isPaymentLoading}
+                className="w-full py-3 text-sm font-bold text-white bg-green-600 rounded-ot-btn hover:bg-green-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {isPaymentLoading ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
+                    </svg>
+                    Redirecting to payment...
+                  </>
+                ) : (
+                  `Pay to Confirm \u2014 ${(restaurant.reservation_fee / 100).toFixed(2)} \u20AC`
+                )}
+              </button>
+            )}
             <Link
               to="/my-reservations"
               className="w-full py-3 text-sm font-bold text-white bg-ot-primary rounded-ot-btn hover:bg-ot-primary-dark transition-colors text-center"
@@ -548,9 +589,12 @@ const BookingPage: React.FC = () => {
                 )}
               </button>
 
-              <p className="text-xs text-ot-manatee dark:text-dark-text-secondary text-center">
-                You won't be charged until after your visit
-              </p>
+              {restaurant && restaurant.reservation_fee > 0 && (
+                <p className="text-xs text-ot-manatee dark:text-dark-text-secondary text-center">
+                  A deposit of {(restaurant.reservation_fee / 100).toFixed(2)} &euro; is required to
+                  confirm your reservation
+                </p>
+              )}
             </form>
           </div>
 

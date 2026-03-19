@@ -6,6 +6,7 @@ from app.controllers.review_controller import REVIEW_CONTROLLER
 from app.controllers.favorite_controller import FAVORITE_CONTROLLER
 from app.controllers.admin_controller import ADMIN_CONTROLLER
 from app.controllers.table_controller import TABLE_CONTROLLER
+from app.controllers.payment_controller import PAYMENT_CONTROLLER
 
 ALL_CONTROLLERS = [
     AUTH_CONTROLLER,
@@ -16,4 +17,5 @@ ALL_CONTROLLERS = [
     REVIEW_CONTROLLER,
     FAVORITE_CONTROLLER,
     ADMIN_CONTROLLER,
+    PAYMENT_CONTROLLER,
 ]

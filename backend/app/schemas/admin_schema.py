@@ -67,6 +67,7 @@ class AdminRestaurantOut(BaseModel):
     rating: Optional[float]
     review_count: int
     max_capacity: int
+    reservation_fee: int
     is_active: bool
     created_at: datetime
     owner_name: str

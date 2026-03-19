@@ -60,6 +60,7 @@ class RestaurantCreate(BaseModel):
     longitude: Optional[float] = None
     cover_image: Optional[str] = None
     max_capacity: int = 20
+    reservation_fee: int = 500
     opening_hours: Optional[OpeningHoursSchema] = None
 
     @field_validator("price_range")
@@ -71,6 +72,13 @@ class RestaurantCreate(BaseModel):
     @classmethod
     def validate_max_capacity(cls, value: int) -> int:
         return validate_max_capacity_value(value)
+
+    @field_validator("reservation_fee")
+    @classmethod
+    def validate_reservation_fee(cls, value: int) -> int:
+        if value < 0:
+            raise ValueError("Reservation fee cannot be negative")
+        return value
 
 
 class RestaurantUpdate(BaseModel):
@@ -87,6 +95,7 @@ class RestaurantUpdate(BaseModel):
     longitude: Optional[float] = None
     cover_image: Optional[str] = None
     max_capacity: Optional[int] = None
+    reservation_fee: Optional[int] = None
     opening_hours: Optional[OpeningHoursSchema] = None
 
     @field_validator("price_range")
@@ -98,6 +107,13 @@ class RestaurantUpdate(BaseModel):
     @classmethod
     def validate_max_capacity(cls, value: Optional[int]) -> Optional[int]:
         return validate_max_capacity_value(value)
+
+    @field_validator("reservation_fee")
+    @classmethod
+    def validate_reservation_fee(cls, value: Optional[int]) -> Optional[int]:
+        if value is not None and value < 0:
+            raise ValueError("Reservation fee cannot be negative")
+        return value
 
 
 class OwnerRestaurantOut(BaseModel):
@@ -120,6 +136,7 @@ class OwnerRestaurantOut(BaseModel):
     rating: Optional[float]
     review_count: int
     max_capacity: int
+    reservation_fee: int
     opening_hours: Optional[dict]
     is_active: bool
     created_at: datetime

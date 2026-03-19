@@ -21,6 +21,7 @@ const INITIAL_FORM: RestaurantFormData = {
   longitude: '',
   cover_image: '',
   max_capacity: 20,
+  reservation_fee: '5.00',
   opening_hours: createDefaultOpeningHours(),
 };
 
@@ -62,6 +63,7 @@ const DashboardRestaurantFormPage: React.FC = () => {
           longitude: restaurant.longitude?.toString() || '',
           cover_image: restaurant.cover_image || '',
           max_capacity: restaurant.max_capacity,
+          reservation_fee: (restaurant.reservation_fee / 100).toFixed(2),
           opening_hours: restaurant.opening_hours || createDefaultOpeningHours(),
         });
         if (restaurant.cover_image) {
@@ -151,6 +153,7 @@ const DashboardRestaurantFormPage: React.FC = () => {
         longitude: form.longitude ? parseFloat(form.longitude) : null,
         cover_image: form.cover_image.trim() || null,
         max_capacity: form.max_capacity,
+        reservation_fee: Math.round(parseFloat(form.reservation_fee || '0') * 100),
         opening_hours: form.opening_hours,
       };
 
@@ -381,18 +384,39 @@ const DashboardRestaurantFormPage: React.FC = () => {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-ot-charade dark:text-dark-text">Capacity</h2>
-            <div>
-              <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">
-                Max Capacity
-              </label>
-              <input
-                type="number"
-                min={1}
-                value={form.max_capacity}
-                onChange={(e) => updateField('max_capacity', parseInt(e.target.value) || 1)}
-                className={`${inputClasses} max-w-xs`}
-              />
+            <h2 className="text-lg font-semibold text-ot-charade dark:text-dark-text">
+              Capacity & Pricing
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">
+                  Max Capacity
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={form.max_capacity}
+                  onChange={(e) => updateField('max_capacity', parseInt(e.target.value) || 1)}
+                  className={inputClasses}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-ot-charade dark:text-dark-text mb-1">
+                  Reservation Fee (&euro;)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={form.reservation_fee}
+                  onChange={(e) => updateField('reservation_fee', e.target.value)}
+                  className={inputClasses}
+                  placeholder="5.00"
+                />
+                <p className="mt-1 text-xs text-ot-manatee dark:text-dark-text-secondary">
+                  Deposit required to confirm a reservation. Set to 0 for no fee.
+                </p>
+              </div>
             </div>
           </section>
 

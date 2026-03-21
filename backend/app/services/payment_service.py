@@ -135,7 +135,7 @@ def handle_checkout_completed(db: Session, session: stripe.checkout.Session) -> 
         .filter(Payment.stripe_session_id == session.id)
         .first()
     )
-    if not payment:
+    if not payment or payment.status == PaymentStatus.PAID:
         return
 
     payment.status = PaymentStatus.PAID

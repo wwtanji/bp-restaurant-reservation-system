@@ -1,3 +1,9 @@
+import { ComponentType } from 'react';
+import {
+  ChartBarSquareIcon,
+  CalendarDaysIcon,
+  BuildingStorefrontIcon,
+} from '@heroicons/react/24/outline';
 import { OpeningHours, OpeningHourDay } from '../interfaces/restaurant';
 
 export const OWNER_ROLE = 1;
@@ -47,3 +53,38 @@ export const formatEuroCents = (cents: number): string =>
 
 export const formatHourLabel = (hour: number): string =>
   `${hour.toString().padStart(2, '0')}:00`;
+
+export const STORAGE_KEY_SIDEBAR_COLLAPSED = 'dashboard_sidebar_collapsed';
+
+export interface SidebarItem {
+  label: string;
+  href: string;
+  icon: ComponentType<{ className?: string }>;
+  badgeKey?: 'todays_reservations';
+}
+
+export interface SidebarSection {
+  label: string;
+  items: SidebarItem[];
+}
+
+export const SIDEBAR_SECTIONS: SidebarSection[] = [
+  {
+    label: 'Main',
+    items: [
+      { label: 'Overview', href: '/dashboard', icon: ChartBarSquareIcon },
+      {
+        label: 'Reservations',
+        href: '/dashboard/reservations',
+        icon: CalendarDaysIcon,
+        badgeKey: 'todays_reservations',
+      },
+    ],
+  },
+  {
+    label: 'Management',
+    items: [
+      { label: 'My Restaurants', href: '/dashboard/restaurants', icon: BuildingStorefrontIcon },
+    ],
+  },
+];

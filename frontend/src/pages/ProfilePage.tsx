@@ -1,5 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { ComponentType, useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  HomeIcon,
+  CalendarDaysIcon,
+  StarIcon,
+  HeartIcon,
+  CreditCardIcon,
+  Cog6ToothIcon,
+  ArrowRightStartOnRectangleIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from '@heroicons/react/24/outline';
 import NavbarComponent from '../components/section/NavbarComponent';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
@@ -50,123 +61,50 @@ const ROLE_LABELS: Record<number, string> = {
   2: 'Admin',
 };
 
-const SIDEBAR_ITEMS: { key: SidebarSection; label: string; icon: React.ReactNode }[] = [
+interface ProfileSidebarItem {
+  key: SidebarSection;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+}
+
+interface ProfileSidebarSection {
+  label: string;
+  items: ProfileSidebarItem[];
+}
+
+const PROFILE_SIDEBAR_SECTIONS: ProfileSidebarSection[] = [
   {
-    key: 'overview',
-    label: 'Overview',
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-        />
-      </svg>
-    ),
+    label: 'Main',
+    items: [
+      { key: 'overview', label: 'Overview', icon: HomeIcon },
+      { key: 'reservations', label: 'Reservations', icon: CalendarDaysIcon },
+    ],
   },
   {
-    key: 'reservations',
-    label: 'Reservations',
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-        />
-      </svg>
-    ),
+    label: 'Activity',
+    items: [
+      { key: 'reviews', label: 'Review Center', icon: StarIcon },
+      { key: 'saved', label: 'Saved Venues', icon: HeartIcon },
+      { key: 'transactions', label: 'Transactions', icon: CreditCardIcon },
+    ],
   },
   {
-    key: 'reviews',
-    label: 'Review Center',
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-        />
-      </svg>
-    ),
-  },
-  {
-    key: 'saved',
-    label: 'Saved Venues',
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-        />
-      </svg>
-    ),
-  },
-  {
-    key: 'transactions',
-    label: 'Transactions',
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-        />
-      </svg>
-    ),
-  },
-  {
-    key: 'settings',
-    label: 'Settings',
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z"
-        />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
+    label: 'Account',
+    items: [{ key: 'settings', label: 'Settings', icon: Cog6ToothIcon }],
   },
 ];
+
+const ALL_SIDEBAR_ITEMS = PROFILE_SIDEBAR_SECTIONS.flatMap((s) => s.items);
+
+const STORAGE_KEY_PROFILE_SIDEBAR_COLLAPSED = 'profile_sidebar_collapsed';
+
+const getInitialProfileCollapsed = (): boolean => {
+  try {
+    return localStorage.getItem(STORAGE_KEY_PROFILE_SIDEBAR_COLLAPSED) === 'true';
+  } catch {
+    return false;
+  }
+};
 
 const STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> = {
   [RESERVATION_STATUS_PENDING]: {
@@ -247,130 +185,20 @@ const ProfilePage: React.FC = () => {
       <NavbarComponent />
 
       <div className="max-w-ot mx-auto px-4 lg:px-6 py-8">
-        <div className="flex gap-8">
-          <aside className="hidden lg:block w-72 flex-shrink-0">
-            <div className="bg-white dark:bg-dark-paper rounded-2xl border border-ot-iron dark:border-dark-border sticky top-8 overflow-hidden shadow-sm">
-              <div className="bg-gradient-to-br from-ot-primary to-ot-primary-dark p-6 text-center">
-                <div className="w-20 h-20 mx-auto rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-2xl font-bold border-2 border-white/30">
-                  {user?.first_name?.[0]}
-                  {user?.last_name?.[0]}
-                </div>
-                <p className="text-white font-bold text-lg mt-3">
-                  {user?.first_name} {user?.last_name}
-                </p>
-                <p className="text-indigo-200 text-sm mt-0.5">{user?.user_email}</p>
-                {user?.phone_number && (
-                  <p className="text-indigo-300 text-xs mt-1">{user.phone_number}</p>
-                )}
-                <p className="text-indigo-300 text-xs mt-2">
-                  Member since{' '}
-                  {user?.registered_at
-                    ? new Date(user.registered_at).toLocaleDateString('en-US', {
-                        month: 'long',
-                        year: 'numeric',
-                      })
-                    : ''}
-                </p>
-              </div>
+        <div className="flex flex-col lg:flex-row gap-0">
+          <ProfileMobileNav
+            user={user ?? undefined}
+            activeSection={activeSection}
+            onNavigate={setActiveSection}
+          />
 
-              <div className="flex border-b border-ot-iron dark:border-dark-border">
-                <div className="flex-1 text-center py-3.5 border-r border-ot-iron dark:border-dark-border">
-                  <p className="text-lg font-bold text-ot-charade dark:text-dark-text">
-                    {reservationsLoading ? '–' : reservations.length}
-                  </p>
-                  <p className="text-xs text-ot-manatee dark:text-dark-text-secondary">
-                    Reservations
-                  </p>
-                </div>
-                <div className="flex-1 text-center py-3.5">
-                  <p className="text-lg font-bold text-ot-charade dark:text-dark-text">0</p>
-                  <p className="text-xs text-ot-manatee dark:text-dark-text-secondary">Reviews</p>
-                </div>
-              </div>
-
-              <nav className="p-3">
-                {SIDEBAR_ITEMS.map((item) => (
-                  <button
-                    key={item.key}
-                    onClick={() => setActiveSection(item.key)}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                      activeSection === item.key
-                        ? 'bg-indigo-50 dark:bg-dark-surface text-ot-primary dark:text-dark-primary'
-                        : 'text-ot-pale-sky dark:text-dark-text-secondary hover:bg-ot-athens-gray dark:hover:bg-dark-surface hover:text-ot-charade dark:hover:text-dark-text'
-                    }`}
-                  >
-                    <span
-                      className={
-                        activeSection === item.key
-                          ? 'text-ot-primary dark:text-dark-primary'
-                          : 'text-ot-manatee dark:text-dark-text-secondary'
-                      }
-                    >
-                      {item.icon}
-                    </span>
-                    {item.label}
-                  </button>
-                ))}
-              </nav>
-
-              <div className="p-3 border-t border-ot-iron dark:border-dark-border">
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-ot-pale-sky dark:text-dark-text-secondary hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                    />
-                  </svg>
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          </aside>
-
-          <div className="lg:hidden w-full mb-0">
-            <div className="bg-white dark:bg-dark-paper rounded-2xl border border-ot-iron dark:border-dark-border overflow-hidden mb-6 shadow-sm">
-              <div className="bg-gradient-to-r from-ot-primary to-ot-primary-dark p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-sm font-bold border-2 border-white/30 flex-shrink-0">
-                    {user?.first_name?.[0]}
-                    {user?.last_name?.[0]}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-white font-bold truncate">
-                      {user?.first_name} {user?.last_name}
-                    </p>
-                    <p className="text-indigo-200 text-xs truncate">{user?.user_email}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-1 overflow-x-auto p-2 scrollbar-hide">
-                {SIDEBAR_ITEMS.map((item) => (
-                  <button
-                    key={item.key}
-                    onClick={() => setActiveSection(item.key)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                      activeSection === item.key
-                        ? 'bg-ot-primary text-white'
-                        : 'bg-ot-athens-gray dark:bg-dark-surface text-ot-pale-sky dark:text-dark-text-secondary'
-                    }`}
-                  >
-                    {item.icon}
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+          <ProfileDesktopSidebar
+            user={user ?? undefined}
+            activeSection={activeSection}
+            onNavigate={setActiveSection}
+            onLogout={handleLogout}
+            reservationCount={reservationsLoading ? null : reservations.length}
+          />
 
           <main className="flex-1 min-w-0">
             {activeSection === 'overview' && (
@@ -1754,5 +1582,200 @@ const SettingsSection: React.FC = () => {
     </div>
   );
 };
+
+interface ProfileDesktopSidebarProps {
+  user?: User;
+  activeSection: SidebarSection;
+  onNavigate: (section: SidebarSection) => void;
+  onLogout: () => void;
+  reservationCount: number | null;
+}
+
+const ProfileDesktopSidebar: React.FC<ProfileDesktopSidebarProps> = ({
+  user,
+  activeSection,
+  onNavigate,
+  onLogout,
+  reservationCount,
+}) => {
+  const [collapsed, setCollapsed] = useState(getInitialProfileCollapsed);
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(STORAGE_KEY_PROFILE_SIDEBAR_COLLAPSED, String(next));
+      } catch {
+        /* noop */
+      }
+      return next;
+    });
+  };
+
+  return (
+    <aside
+      className={`hidden lg:flex flex-col shrink-0 border-r border-gray-200 dark:border-dark-border pr-6 mr-6 transition-[width] duration-200 ${
+        collapsed ? 'w-[88px]' : 'w-60'
+      }`}
+    >
+      {!collapsed && (
+        <div className="mb-6 px-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
+              {user?.first_name?.[0]}
+              {user?.last_name?.[0]}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-ot-charade dark:text-dark-text truncate">
+                {user?.first_name} {user?.last_name}
+              </p>
+              <p className="text-xs text-gray-400 dark:text-dark-text-secondary truncate">
+                {user?.user_email}
+              </p>
+            </div>
+          </div>
+          {reservationCount !== null && (
+            <div className="flex gap-4 mt-3 text-xs text-gray-500 dark:text-dark-text-secondary">
+              <span>
+                <span className="font-semibold text-ot-charade dark:text-dark-text tabular-nums">
+                  {reservationCount}
+                </span>{' '}
+                reservations
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {collapsed && (
+        <div className="mb-6 flex justify-center">
+          <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-bold">
+            {user?.first_name?.[0]}
+            {user?.last_name?.[0]}
+          </div>
+        </div>
+      )}
+
+      <nav className="flex flex-col gap-6 flex-1">
+        {PROFILE_SIDEBAR_SECTIONS.map((section) => (
+          <div key={section.label}>
+            {!collapsed && (
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-dark-text-secondary mb-2 px-3">
+                {section.label}
+              </p>
+            )}
+            <div className="flex flex-col gap-1">
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const active = activeSection === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    onClick={() => onNavigate(item.key)}
+                    title={collapsed ? item.label : undefined}
+                    className={`relative flex items-center gap-3 min-h-[44px] rounded-lg text-sm font-medium transition-colors w-full ${
+                      collapsed ? 'justify-center px-3' : 'px-3'
+                    } ${
+                      active
+                        ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                        : 'text-gray-600 dark:text-dark-text-secondary hover:bg-gray-50 dark:hover:bg-dark-hover'
+                    }`}
+                  >
+                    {active && (
+                      <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-indigo-500" />
+                    )}
+                    <Icon className="w-5 h-5 shrink-0" />
+                    {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      <div className="border-t border-gray-200 dark:border-dark-border pt-4 mt-auto space-y-1">
+        <button
+          onClick={onLogout}
+          title={collapsed ? 'Sign Out' : undefined}
+          className={`flex items-center gap-3 w-full min-h-[44px] rounded-lg text-sm font-medium text-gray-500 dark:text-dark-text-secondary hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors ${
+            collapsed ? 'justify-center px-3' : 'px-3'
+          }`}
+        >
+          <ArrowRightStartOnRectangleIcon className="w-5 h-5 shrink-0" />
+          {!collapsed && <span>Sign Out</span>}
+        </button>
+        <button
+          onClick={toggleCollapsed}
+          className={`flex items-center gap-2 w-full min-h-[44px] rounded-lg text-sm text-gray-500 dark:text-dark-text-secondary hover:bg-gray-50 dark:hover:bg-dark-hover transition-colors ${
+            collapsed ? 'justify-center px-3' : 'px-3'
+          }`}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {collapsed ? (
+            <ChevronRightIcon className="w-5 h-5 shrink-0" />
+          ) : (
+            <>
+              <ChevronLeftIcon className="w-5 h-5 shrink-0" />
+              <span>Collapse</span>
+            </>
+          )}
+        </button>
+      </div>
+    </aside>
+  );
+};
+
+interface ProfileMobileNavProps {
+  user?: User;
+  activeSection: SidebarSection;
+  onNavigate: (section: SidebarSection) => void;
+}
+
+const ProfileMobileNav: React.FC<ProfileMobileNavProps> = ({
+  user,
+  activeSection,
+  onNavigate,
+}) => (
+  <div className="lg:hidden mb-4">
+    <div className="flex items-center gap-3 mb-4">
+      <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
+        {user?.first_name?.[0]}
+        {user?.last_name?.[0]}
+      </div>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-ot-charade dark:text-dark-text truncate">
+          {user?.first_name} {user?.last_name}
+        </p>
+        <p className="text-xs text-gray-400 dark:text-dark-text-secondary truncate">
+          {user?.user_email}
+        </p>
+      </div>
+    </div>
+    <nav className="flex gap-1 overflow-x-auto pb-4 border-b border-gray-200 dark:border-dark-border">
+      {ALL_SIDEBAR_ITEMS.map((item) => {
+        const Icon = item.icon;
+        const active = activeSection === item.key;
+        return (
+          <button
+            key={item.key}
+            onClick={() => onNavigate(item.key)}
+            className={`relative flex items-center gap-2 whitespace-nowrap px-4 min-h-[44px] rounded-lg text-sm font-medium transition-colors ${
+              active
+                ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                : 'text-gray-600 dark:text-dark-text-secondary hover:bg-gray-50 dark:hover:bg-dark-hover'
+            }`}
+          >
+            {active && (
+              <span className="absolute bottom-0 left-3 right-3 h-[3px] rounded-t-full bg-indigo-500" />
+            )}
+            <Icon className="w-5 h-5 shrink-0" />
+            <span>{item.label}</span>
+          </button>
+        );
+      })}
+    </nav>
+  </div>
+);
 
 export default ProfilePage;

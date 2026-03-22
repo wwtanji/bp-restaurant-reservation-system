@@ -1,7 +1,9 @@
 import re
-from datetime import datetime
+from datetime import date, datetime
 from pydantic import BaseModel, ConfigDict, field_validator
 from typing import Optional
+
+from app.schemas.admin_schema import DailyCount, ReservationStatusBreakdown
 
 
 HH_MM_PATTERN = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
@@ -153,3 +155,45 @@ class DashboardStats(BaseModel):
     total_restaurants: int
     total_reservations: int
     todays_reservations: int
+
+
+class OwnerDashboardStats(BaseModel):
+    total_restaurants: int
+    total_reservations: int
+    todays_reservations: int
+    total_revenue_cents: int
+    average_rating: Optional[float]
+    total_reviews: int
+    current_period_reservations: int
+    previous_period_reservations: int
+    current_period_revenue_cents: int
+    previous_period_revenue_cents: int
+
+
+class DailyRevenue(BaseModel):
+    date: date
+    amount: int
+
+
+class HourlyCount(BaseModel):
+    hour: int
+    count: int
+
+
+class PartySizeCount(BaseModel):
+    party_size: int
+    count: int
+
+
+class CustomerLoyalty(BaseModel):
+    new_customers: int
+    repeat_customers: int
+
+
+class OwnerTrendStats(BaseModel):
+    reservation_trends: list[DailyCount]
+    revenue_trends: list[DailyRevenue]
+    reservation_status_breakdown: ReservationStatusBreakdown
+    peak_hours: list[HourlyCount]
+    party_size_distribution: list[PartySizeCount]
+    customer_loyalty: CustomerLoyalty

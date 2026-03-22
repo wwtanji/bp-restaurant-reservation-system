@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
@@ -10,7 +10,8 @@ from app.schemas.owner_restaurant_schema import (
     RestaurantUpdate,
     OwnerRestaurantOut,
     GalleryImageDelete,
-    DashboardStats,
+    OwnerDashboardStats,
+    OwnerTrendStats,
 )
 from app.services import restaurant_service, upload_service
 from app.utils.rbac import require_restaurant_owner
@@ -36,12 +37,22 @@ def list_restaurants(
     return restaurant_service.list_owner_restaurants(db, current_user.id)
 
 
-@OWNER_CONTROLLER.get("/stats", response_model=DashboardStats)
+@OWNER_CONTROLLER.get("/stats", response_model=OwnerDashboardStats)
 def get_dashboard_stats(
+    restaurant_id: Optional[int] = None,
     current_user: User = Depends(require_restaurant_owner),
     db: Session = Depends(get_db),
 ):
-    return restaurant_service.get_dashboard_stats(db, current_user.id)
+    return restaurant_service.get_dashboard_stats(db, current_user.id, restaurant_id)
+
+
+@OWNER_CONTROLLER.get("/stats/trends", response_model=OwnerTrendStats)
+def get_trend_stats(
+    restaurant_id: Optional[int] = None,
+    current_user: User = Depends(require_restaurant_owner),
+    db: Session = Depends(get_db),
+):
+    return restaurant_service.get_owner_trend_stats(db, current_user.id, restaurant_id)
 
 
 @OWNER_CONTROLLER.get("/{restaurant_id}", response_model=OwnerRestaurantOut)

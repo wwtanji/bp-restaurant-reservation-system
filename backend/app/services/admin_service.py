@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from fastapi import HTTPException
 from sqlalchemy import func, or_
@@ -7,7 +7,7 @@ from typing import Optional
 
 from app.models.user import User, UserRole
 from app.models.restaurant import Restaurant
-from app.models.reservation import Reservation
+from app.models.reservation import Reservation, ReservationStatus
 from app.models.review import Review
 
 LOCK_FOREVER = datetime(2099, 12, 31)
@@ -53,6 +53,73 @@ def get_platform_stats(db: Session) -> dict:
         "todays_reservations": todays_reservations,
         "total_reviews": total_reviews,
         "users_by_role": users_by_role,
+    }
+
+
+def _fill_daily_gaps(
+    rows: list[tuple[date, int]],
+    start: date,
+    days: int,
+) -> list[dict]:
+    counts_by_day = {row[0]: row[1] for row in rows}
+    return [
+        {"date": start + timedelta(days=i), "count": counts_by_day.get(start + timedelta(days=i), 0)}
+        for i in range(days)
+    ]
+
+
+def _count_in_range(db, model_class, date_column, start: date, end: date) -> int:
+    return (
+        db.query(func.count(model_class.id))
+        .filter(func.date(date_column) >= start, func.date(date_column) <= end)
+        .scalar() or 0
+    )
+
+
+def get_trend_stats(db: Session) -> dict:
+    today = date.today()
+    period_days = 30
+    period_start = today - timedelta(days=period_days - 1)
+    previous_end = period_start - timedelta(days=1)
+    previous_start = previous_end - timedelta(days=period_days - 1)
+
+    def _daily_trend(date_column):
+        rows = (
+            db.query(func.date(date_column).label("day"), func.count())
+            .filter(func.date(date_column) >= period_start)
+            .group_by("day")
+            .all()
+        )
+        return _fill_daily_gaps(rows, period_start, period_days)
+
+    reservation_trends = _daily_trend(Reservation.created_at)
+    user_trends = _daily_trend(User.registered_at)
+    review_trends = _daily_trend(Review.created_at)
+
+    status_rows = (
+        db.query(Reservation.status, func.count(Reservation.id))
+        .group_by(Reservation.status)
+        .all()
+    )
+    status_map = {status: count for status, count in status_rows}
+
+    return {
+        "reservation_trends": reservation_trends,
+        "user_trends": user_trends,
+        "review_trends": review_trends,
+        "reservation_status_breakdown": {
+            "pending": status_map.get(ReservationStatus.PENDING, 0),
+            "confirmed": status_map.get(ReservationStatus.CONFIRMED, 0),
+            "completed": status_map.get(ReservationStatus.COMPLETED, 0),
+            "cancelled": status_map.get(ReservationStatus.CANCELLED, 0),
+            "no_show": status_map.get(ReservationStatus.NO_SHOW, 0),
+        },
+        "current_period_reservations": _count_in_range(db, Reservation, Reservation.created_at, period_start, today),
+        "previous_period_reservations": _count_in_range(db, Reservation, Reservation.created_at, previous_start, previous_end),
+        "current_period_users": _count_in_range(db, User, User.registered_at, period_start, today),
+        "previous_period_users": _count_in_range(db, User, User.registered_at, previous_start, previous_end),
+        "current_period_reviews": _count_in_range(db, Review, Review.created_at, period_start, today),
+        "previous_period_reviews": _count_in_range(db, Review, Review.created_at, previous_start, previous_end),
     }
 
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -6,6 +6,7 @@ from app.models.user import User
 from app.schemas.payment_schema import (
     PaymentCreate,
     PaymentOut,
+    TransactionOut,
     CheckoutSessionResponse,
 )
 from app.services import payment_service
@@ -41,6 +42,16 @@ async def stripe_webhook(
         payment_service.handle_checkout_expired(db, event.data.object)
 
     return {"status": "ok"}
+
+
+@PAYMENT_CONTROLLER.get("/my", response_model=list[TransactionOut])
+def list_my_payments(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, le=100),
+    current_user: User = Depends(require_customer),
+    db: Session = Depends(get_db),
+):
+    return payment_service.list_user_payments(db, current_user.id, skip, limit)
 
 
 @PAYMENT_CONTROLLER.get(

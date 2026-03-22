@@ -25,3 +25,25 @@ export const ROLE_OPTIONS = [
   { value: 1, label: 'Owner' },
   { value: 2, label: 'Admin' },
 ] as const;
+
+export const CHART_COLORS = {
+  reservation: { light: '#6366F1', dark: '#818CF8' },
+  user: { light: '#10B981', dark: '#34D399' },
+  review: { light: '#F59E0B', dark: '#FBBF24' },
+} as const;
+
+export const STATUS_CHART_COLORS: Record<string, string> = {
+  pending: '#EAB308',
+  confirmed: '#3B82F6',
+  completed: '#22C55E',
+  cancelled: '#EF4444',
+  no_show: '#8B5CF6',
+};
+
+export const STATUS_LABELS: Record<string, string> = {
+  pending: 'Pending',
+  confirmed: 'Confirmed',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  no_show: 'No Show',
+};

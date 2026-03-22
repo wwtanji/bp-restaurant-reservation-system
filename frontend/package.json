@@ -28,6 +28,7 @@
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.6.3",
     "react-scripts": "^5.0.1",
+    "recharts": "^3.8.0",
     "typescript": "~5.4",
     "web-vitals": "^2.1.4"
   },

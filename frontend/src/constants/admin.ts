@@ -1,3 +1,12 @@
+import { ComponentType } from 'react';
+import {
+  ChartBarSquareIcon,
+  UsersIcon,
+  BuildingStorefrontIcon,
+  CalendarDaysIcon,
+  StarIcon,
+} from '@heroicons/react/24/outline';
+
 export const ADMIN_ROLE = 2;
 
 export const ADMIN_SIDEBAR_ITEMS = [
@@ -7,6 +16,35 @@ export const ADMIN_SIDEBAR_ITEMS = [
   { label: 'Reservations', href: '/admin/reservations' },
   { label: 'Reviews', href: '/admin/reviews' },
 ] as const;
+
+export interface AdminSidebarItem {
+  label: string;
+  href: string;
+  icon: ComponentType<{ className?: string }>;
+}
+
+export interface AdminSidebarSection {
+  label: string;
+  items: AdminSidebarItem[];
+}
+
+export const ADMIN_SIDEBAR_SECTIONS: AdminSidebarSection[] = [
+  {
+    label: 'Overview',
+    items: [{ label: 'Dashboard', href: '/admin', icon: ChartBarSquareIcon }],
+  },
+  {
+    label: 'Management',
+    items: [
+      { label: 'Users', href: '/admin/users', icon: UsersIcon },
+      { label: 'Restaurants', href: '/admin/restaurants', icon: BuildingStorefrontIcon },
+      { label: 'Reservations', href: '/admin/reservations', icon: CalendarDaysIcon },
+      { label: 'Reviews', href: '/admin/reviews', icon: StarIcon },
+    ],
+  },
+];
+
+export const STORAGE_KEY_ADMIN_SIDEBAR_COLLAPSED = 'admin_sidebar_collapsed';
 
 export const ROLE_LABELS: Record<number, string> = {
   0: 'Customer',

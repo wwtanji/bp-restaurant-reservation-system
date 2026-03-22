@@ -217,6 +217,40 @@ def get_payment_by_session(db: Session, session_id: str, user_id: int) -> Paymen
     return payment
 
 
+def refund_payment(db: Session, reservation_id: int) -> None:
+    payment = (
+        db.query(Payment)
+        .filter(
+            Payment.reservation_id == reservation_id,
+            Payment.status == PaymentStatus.PAID,
+        )
+        .first()
+    )
+    if not payment:
+        return
+
+    session = stripe.checkout.Session.retrieve(payment.stripe_session_id)
+    stripe.Refund.create(payment_intent=session.payment_intent)
+    payment.status = PaymentStatus.REFUNDED
+
+
+def handle_charge_refunded(db: Session, charge: stripe.Charge) -> None:
+    payment_intent_id = charge.payment_intent
+    if not payment_intent_id:
+        return
+
+    payments = db.query(Payment).filter(Payment.status == PaymentStatus.PAID).all()
+    for payment in payments:
+        try:
+            session = stripe.checkout.Session.retrieve(payment.stripe_session_id)
+            if session.payment_intent == payment_intent_id:
+                payment.status = PaymentStatus.REFUNDED
+                db.commit()
+                return
+        except stripe.StripeError:
+            continue
+
+
 def get_payment_by_reservation(db: Session, reservation_id: int, user_id: int) -> Payment:
     reservation = db.query(Reservation).filter(
         Reservation.id == reservation_id,

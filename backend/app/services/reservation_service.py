@@ -9,6 +9,7 @@ from app.models.restaurant import Restaurant
 from app.models.table import Table
 from app.models.user import User, UserRole
 from app.schemas.reservation_schema import ReservationCreate
+from app.services.payment_service import refund_payment
 
 TURN_HOURS = 1.5
 
@@ -259,6 +260,7 @@ def cancel_reservation(db: Session, reservation_id: int, user_id: int) -> None:
         )
 
     reservation.status = ReservationStatus.CANCELLED
+    refund_payment(db, reservation_id)
     db.commit()
 
 
@@ -338,6 +340,8 @@ def update_reservation_status(
         )
 
     reservation.status = new_status
+    if new_status == ReservationStatus.CANCELLED:
+        refund_payment(db, reservation_id)
     db.commit()
     db.refresh(reservation)
     return reservation

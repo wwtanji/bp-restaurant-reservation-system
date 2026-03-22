@@ -15,6 +15,7 @@ class PaymentStatus(str, enum.Enum):
     PAID = "paid"
     FAILED = "failed"
     EXPIRED = "expired"
+    REFUNDED = "refunded"
 
 
 class Payment(Base):
@@ -41,4 +42,4 @@ class Payment(Base):
         DateTime, default=get_utc_now, nullable=False
     )
 
-    reservation: Mapped["Reservation"] = relationship("Reservation")
+    reservation: Mapped["Reservation"] = relationship("Reservation", overlaps="payment")

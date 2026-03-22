@@ -36,6 +36,7 @@ export const PAYMENT_STATUS_PENDING = 'pending';
 export const PAYMENT_STATUS_PAID = 'paid';
 export const PAYMENT_STATUS_FAILED = 'failed';
 export const PAYMENT_STATUS_EXPIRED = 'expired';
+export const PAYMENT_STATUS_REFUNDED = 'refunded';
 
 export function toApiTime(display: string): string {
   const [timePart, period] = display.split(' ');

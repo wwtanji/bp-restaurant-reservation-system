@@ -31,3 +31,19 @@ const DEFAULT_DAY: OpeningHourDay = {
 export function createDefaultOpeningHours(): OpeningHours {
   return Object.fromEntries(DAYS_OF_WEEK.map((day) => [day, { ...DEFAULT_DAY }])) as OpeningHours;
 }
+
+export const OWNER_CHART_COLORS = {
+  reservation: { light: '#6366F1', dark: '#818CF8' },
+  revenue: { light: '#10B981', dark: '#34D399' },
+} as const;
+
+export const LOYALTY_COLORS = {
+  new: { light: '#3B82F6', dark: '#60A5FA' },
+  repeat: { light: '#10B981', dark: '#34D399' },
+} as const;
+
+export const formatEuroCents = (cents: number): string =>
+  `${(cents / 100).toFixed(2)} €`;
+
+export const formatHourLabel = (hour: number): string =>
+  `${hour.toString().padStart(2, '0')}:00`;

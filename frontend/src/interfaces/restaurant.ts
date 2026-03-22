@@ -69,8 +69,46 @@ export interface RestaurantFormData {
   opening_hours: OpeningHours;
 }
 
-export interface DashboardStats {
+import { DailyCount, ReservationStatusBreakdown } from './admin';
+
+export interface OwnerDashboardStats {
   total_restaurants: number;
   total_reservations: number;
   todays_reservations: number;
+  total_revenue_cents: number;
+  average_rating: number | null;
+  total_reviews: number;
+  current_period_reservations: number;
+  previous_period_reservations: number;
+  current_period_revenue_cents: number;
+  previous_period_revenue_cents: number;
+}
+
+export interface DailyRevenue {
+  date: string;
+  amount: number;
+}
+
+export interface HourlyCount {
+  hour: number;
+  count: number;
+}
+
+export interface PartySizeCount {
+  party_size: number;
+  count: number;
+}
+
+export interface CustomerLoyalty {
+  new_customers: number;
+  repeat_customers: number;
+}
+
+export interface OwnerTrendStats {
+  reservation_trends: DailyCount[];
+  revenue_trends: DailyRevenue[];
+  reservation_status_breakdown: ReservationStatusBreakdown;
+  peak_hours: HourlyCount[];
+  party_size_distribution: PartySizeCount[];
+  customer_loyalty: CustomerLoyalty;
 }

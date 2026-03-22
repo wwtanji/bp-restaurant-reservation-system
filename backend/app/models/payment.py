@@ -40,3 +40,5 @@ class Payment(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=get_utc_now, nullable=False
     )
+
+    reservation: Mapped["Reservation"] = relationship("Reservation")

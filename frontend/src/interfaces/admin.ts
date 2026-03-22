@@ -8,6 +8,32 @@ export interface AdminPlatformStats {
   users_by_role: Record<string, number>;
 }
 
+export interface DailyCount {
+  date: string;
+  count: number;
+}
+
+export interface ReservationStatusBreakdown {
+  pending: number;
+  confirmed: number;
+  completed: number;
+  cancelled: number;
+  no_show: number;
+}
+
+export interface AdminTrendStats {
+  reservation_trends: DailyCount[];
+  user_trends: DailyCount[];
+  review_trends: DailyCount[];
+  reservation_status_breakdown: ReservationStatusBreakdown;
+  current_period_reservations: number;
+  previous_period_reservations: number;
+  current_period_users: number;
+  previous_period_users: number;
+  current_period_reviews: number;
+  previous_period_reviews: number;
+}
+
 export interface AdminUser {
   id: number;
   role: number;

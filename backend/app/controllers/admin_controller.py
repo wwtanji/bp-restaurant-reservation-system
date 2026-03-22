@@ -8,6 +8,7 @@ from app.db.database import get_db
 from app.models.user import User
 from app.schemas.admin_schema import (
     AdminPlatformStats,
+    AdminTrendStats,
     AdminUserOut,
     AdminUserDetail,
     AdminRoleUpdate,
@@ -31,6 +32,14 @@ def get_stats(
     _: User = Depends(require_admin),
 ):
     return admin_service.get_platform_stats(db)
+
+
+@ADMIN_CONTROLLER.get("/stats/trends", response_model=AdminTrendStats)
+def get_trend_stats(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    return admin_service.get_trend_stats(db)
 
 
 @ADMIN_CONTROLLER.get("/users", response_model=list[AdminUserOut])

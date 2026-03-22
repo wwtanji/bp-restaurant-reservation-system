@@ -16,6 +16,32 @@ class AdminPlatformStats(BaseModel):
     users_by_role: dict[str, int]
 
 
+class DailyCount(BaseModel):
+    date: date
+    count: int
+
+
+class ReservationStatusBreakdown(BaseModel):
+    pending: int
+    confirmed: int
+    completed: int
+    cancelled: int
+    no_show: int
+
+
+class AdminTrendStats(BaseModel):
+    reservation_trends: list[DailyCount]
+    user_trends: list[DailyCount]
+    review_trends: list[DailyCount]
+    reservation_status_breakdown: ReservationStatusBreakdown
+    current_period_reservations: int
+    previous_period_reservations: int
+    current_period_users: int
+    previous_period_users: int
+    current_period_reviews: int
+    previous_period_reviews: int
+
+
 class AdminUserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

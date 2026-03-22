@@ -7,6 +7,7 @@ import { apiFetch, ApiError } from '../utils/api';
 import { User } from '../interfaces/user';
 import { Reservation } from '../interfaces/reservation';
 import { Review } from '../interfaces/review';
+import { Transaction } from '../interfaces/payment';
 import {
   formatDate,
   fromApiTime,
@@ -16,6 +17,10 @@ import {
   RESERVATION_STATUS_CANCELLED,
   RESERVATION_STATUS_COMPLETED,
   RESERVATION_STATUS_NO_SHOW,
+  PAYMENT_STATUS_PAID,
+  PAYMENT_STATUS_PENDING,
+  PAYMENT_STATUS_FAILED,
+  PAYMENT_STATUS_EXPIRED,
   PRICE_SYMBOLS,
 } from '../constants/reservation';
 import { STORAGE_KEY_JUST_LOGGED_IN } from '../constants/storage';
@@ -1346,35 +1351,126 @@ const SavedVenuesSection: React.FC = () => {
   );
 };
 
-const TransactionsSection: React.FC = () => (
-  <div>
-    <h2 className="text-xl font-bold text-ot-charade dark:text-dark-text mb-6">
-      Transaction History
-    </h2>
+const PAYMENT_BADGE: Record<string, { bg: string; text: string; label: string }> = {
+  [PAYMENT_STATUS_PAID]: {
+    bg: 'bg-green-100 dark:bg-green-900/20',
+    text: 'text-green-700 dark:text-green-400',
+    label: 'Paid',
+  },
+  [PAYMENT_STATUS_PENDING]: {
+    bg: 'bg-amber-100 dark:bg-yellow-900/20',
+    text: 'text-amber-700 dark:text-yellow-400',
+    label: 'Pending',
+  },
+  [PAYMENT_STATUS_EXPIRED]: {
+    bg: 'bg-gray-100 dark:bg-gray-800',
+    text: 'text-gray-600 dark:text-gray-400',
+    label: 'Expired',
+  },
+  [PAYMENT_STATUS_FAILED]: {
+    bg: 'bg-red-100 dark:bg-red-900/20',
+    text: 'text-red-700 dark:text-red-400',
+    label: 'Failed',
+  },
+};
 
-    <div className="bg-white dark:bg-dark-paper rounded-xl border border-ot-iron dark:border-dark-border text-center py-16 px-6 shadow-sm">
-      <svg
-        className="w-14 h-14 text-ot-iron dark:text-dark-border mx-auto mb-4"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-        />
-      </svg>
-      <h3 className="text-base font-bold text-ot-charade dark:text-dark-text mb-1">
-        No transactions
-      </h3>
-      <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary">
-        Your booking receipts and invoices will appear here once payments are enabled.
-      </p>
+const TransactionsSection: React.FC = () => {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiFetch<Transaction[]>('/payments/my')
+      .then(setTransactions)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-16">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-ot-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h2 className="text-xl font-bold text-ot-charade dark:text-dark-text mb-6">
+        Transaction History
+      </h2>
+
+      {transactions.length === 0 ? (
+        <div className="bg-white dark:bg-dark-paper rounded-xl border border-ot-iron dark:border-dark-border text-center py-16 px-6 shadow-sm">
+          <svg
+            className="w-14 h-14 text-ot-iron dark:text-dark-border mx-auto mb-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+            />
+          </svg>
+          <h3 className="text-base font-bold text-ot-charade dark:text-dark-text mb-1">
+            No transactions
+          </h3>
+          <p className="text-sm text-ot-pale-sky dark:text-dark-text-secondary">
+            Your booking receipts and payment history will appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {transactions.map((tx) => {
+            const badge = PAYMENT_BADGE[tx.status] ?? PAYMENT_BADGE[PAYMENT_STATUS_PENDING];
+            return (
+              <div
+                key={tx.id}
+                className="bg-white dark:bg-dark-paper rounded-xl border border-ot-iron dark:border-dark-border p-5 shadow-sm"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-bold text-ot-charade dark:text-dark-text">
+                    {tx.restaurant_name}
+                  </h3>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${badge.bg} ${badge.text}`}
+                  >
+                    {badge.label}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-ot-pale-sky dark:text-dark-text-secondary">
+                  <span className="flex items-center gap-1.5">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {formatDate(tx.reservation_date)}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {tx.party_size} {tx.party_size === 1 ? 'person' : 'people'}
+                  </span>
+                  <span className="flex items-center gap-1.5 font-semibold text-ot-charade dark:text-dark-text">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                    {(tx.amount / 100).toFixed(2)} {tx.currency.toUpperCase()}
+                  </span>
+                </div>
+                <p className="text-xs text-ot-pale-sky dark:text-dark-text-secondary mt-2">
+                  {formatDate(tx.created_at)}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 const SettingsSection: React.FC = () => {
   const { user, updateUser } = useAuth();

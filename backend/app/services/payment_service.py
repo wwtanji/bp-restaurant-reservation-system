@@ -163,6 +163,41 @@ def handle_checkout_expired(db: Session, session: stripe.checkout.Session) -> No
     db.commit()
 
 
+def list_user_payments(
+    db: Session, user_id: int, skip: int, limit: int
+) -> list[dict]:
+    from app.models.restaurant import Restaurant
+
+    payments = (
+        db.query(Payment)
+        .join(Reservation, Payment.reservation_id == Reservation.id)
+        .join(Restaurant, Reservation.restaurant_id == Restaurant.id)
+        .filter(Reservation.user_id == user_id)
+        .options(
+            joinedload(Payment.reservation).joinedload(Reservation.restaurant)
+        )
+        .order_by(Payment.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    return [
+        {
+            "id": p.id,
+            "reservation_id": p.reservation_id,
+            "amount": p.amount,
+            "currency": p.currency,
+            "status": p.status,
+            "created_at": p.created_at,
+            "restaurant_name": p.reservation.restaurant.name,
+            "reservation_date": p.reservation.reservation_date,
+            "party_size": p.reservation.party_size,
+        }
+        for p in payments
+    ]
+
+
 def get_payment_by_session(db: Session, session_id: str, user_id: int) -> Payment:
     payment = (
         db.query(Payment)

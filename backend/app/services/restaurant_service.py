@@ -12,7 +12,17 @@ from app.models.payment import Payment, PaymentStatus
 from app.models.review import Review
 from app.models.table import Table
 from app.models.user import User
-from app.schemas.owner_restaurant_schema import RestaurantCreate, RestaurantUpdate
+from app.schemas.owner_restaurant_schema import (
+    RestaurantCreate,
+    RestaurantUpdate,
+    OwnerDashboardStats,
+    OwnerTrendStats,
+    DailyRevenue,
+    HourlyCount,
+    PartySizeCount,
+    CustomerLoyalty,
+)
+from app.schemas.admin_schema import DailyCount, ReservationStatusBreakdown
 from app.services.admin_service import _fill_daily_gaps
 
 TABLE_SIZE_LARGE = 6
@@ -109,6 +119,23 @@ def create_restaurant(db: Session, owner: User, data: RestaurantCreate) -> Resta
         max_capacity=data.max_capacity,
         reservation_fee=data.reservation_fee,
         opening_hours=opening_hours_dict,
+        overview_text=data.overview_text,
+        highlights=data.highlights,
+        website=data.website,
+        dining_style=data.dining_style,
+        dress_code=data.dress_code,
+        parking_details=data.parking_details,
+        payment_options=data.payment_options,
+        neighborhood=data.neighborhood,
+        cross_street=data.cross_street,
+        executive_chef=data.executive_chef,
+        public_transit=data.public_transit,
+        catering_info=data.catering_info,
+        private_party_info=data.private_party_info,
+        additional_info=data.additional_info,
+        delivery_takeout=data.delivery_takeout,
+        menu=data.menu,
+        faqs=data.faqs,
     )
     db.add(restaurant)
     db.flush()
@@ -202,18 +229,6 @@ def _resolve_owner_restaurant_ids(
 
 
 PERIOD_DAYS = 30
-EMPTY_STATS: dict = {
-    "total_restaurants": 0,
-    "total_reservations": 0,
-    "todays_reservations": 0,
-    "total_revenue_cents": 0,
-    "average_rating": None,
-    "total_reviews": 0,
-    "current_period_reservations": 0,
-    "previous_period_reservations": 0,
-    "current_period_revenue_cents": 0,
-    "previous_period_revenue_cents": 0,
-}
 
 
 def _revenue_in_range(
@@ -248,14 +263,25 @@ def _reservation_count_in_range(
 
 def get_dashboard_stats(
     db: Session, owner_id: int, restaurant_id: Optional[int] = None,
-) -> dict:
+) -> OwnerDashboardStats:
     all_ids = _resolve_owner_restaurant_ids(db, owner_id)
     ids = _resolve_owner_restaurant_ids(db, owner_id, restaurant_id)
 
     total_restaurants = len(all_ids)
 
     if not ids:
-        return {**EMPTY_STATS, "total_restaurants": total_restaurants}
+        return OwnerDashboardStats(
+            total_restaurants=total_restaurants,
+            total_reservations=0,
+            todays_reservations=0,
+            total_revenue_cents=0,
+            average_rating=None,
+            total_reviews=0,
+            current_period_reservations=0,
+            previous_period_reservations=0,
+            current_period_revenue_cents=0,
+            previous_period_revenue_cents=0,
+        )
 
     today = date.today()
     period_start = today - timedelta(days=PERIOD_DAYS - 1)
@@ -300,33 +326,33 @@ def get_dashboard_stats(
         .scalar()
     ) or 0
 
-    return {
-        "total_restaurants": total_restaurants,
-        "total_reservations": total_reservations,
-        "todays_reservations": todays_reservations,
-        "total_revenue_cents": total_revenue_cents,
-        "average_rating": round(float(average_rating), 1) if average_rating else None,
-        "total_reviews": total_reviews,
-        "current_period_reservations": _reservation_count_in_range(db, ids, period_start, today),
-        "previous_period_reservations": _reservation_count_in_range(db, ids, previous_start, previous_end),
-        "current_period_revenue_cents": _revenue_in_range(db, ids, period_start, today),
-        "previous_period_revenue_cents": _revenue_in_range(db, ids, previous_start, previous_end),
-    }
+    return OwnerDashboardStats(
+        total_restaurants=total_restaurants,
+        total_reservations=total_reservations,
+        todays_reservations=todays_reservations,
+        total_revenue_cents=total_revenue_cents,
+        average_rating=round(float(average_rating), 1) if average_rating else None,
+        total_reviews=total_reviews,
+        current_period_reservations=_reservation_count_in_range(db, ids, period_start, today),
+        previous_period_reservations=_reservation_count_in_range(db, ids, previous_start, previous_end),
+        current_period_revenue_cents=_revenue_in_range(db, ids, period_start, today),
+        previous_period_revenue_cents=_revenue_in_range(db, ids, previous_start, previous_end),
+    )
 
 
 def _fill_daily_revenue_gaps(
     rows: list[tuple[date, int]], start: date, days: int,
-) -> list[dict]:
+) -> list[DailyRevenue]:
     amounts_by_day = {row[0]: row[1] for row in rows}
     return [
-        {"date": start + timedelta(days=i), "amount": amounts_by_day.get(start + timedelta(days=i), 0)}
+        DailyRevenue(date=start + timedelta(days=i), amount=amounts_by_day.get(start + timedelta(days=i), 0))
         for i in range(days)
     ]
 
 
 def get_owner_trend_stats(
     db: Session, owner_id: int, restaurant_id: Optional[int] = None,
-) -> dict:
+) -> OwnerTrendStats:
     ids = _resolve_owner_restaurant_ids(db, owner_id, restaurant_id)
 
     today = date.today()
@@ -334,16 +360,16 @@ def get_owner_trend_stats(
 
     if not ids:
         empty_days = _fill_daily_gaps([], period_start, PERIOD_DAYS)
-        return {
-            "reservation_trends": empty_days,
-            "revenue_trends": [{"date": d["date"], "amount": 0} for d in empty_days],
-            "reservation_status_breakdown": {
-                "pending": 0, "confirmed": 0, "completed": 0, "cancelled": 0, "no_show": 0,
-            },
-            "peak_hours": [],
-            "party_size_distribution": [],
-            "customer_loyalty": {"new_customers": 0, "repeat_customers": 0},
-        }
+        return OwnerTrendStats(
+            reservation_trends=empty_days,
+            revenue_trends=[DailyRevenue(date=d.date, amount=0) for d in empty_days],
+            reservation_status_breakdown=ReservationStatusBreakdown(
+                pending=0, confirmed=0, completed=0, cancelled=0, no_show=0,
+            ),
+            peak_hours=[],
+            party_size_distribution=[],
+            customer_loyalty=CustomerLoyalty(new_customers=0, repeat_customers=0),
+        )
 
     reservation_rows = (
         db.query(func.date(Reservation.created_at).label("day"), func.count())
@@ -354,7 +380,6 @@ def get_owner_trend_stats(
         .group_by("day")
         .all()
     )
-    reservation_trends = _fill_daily_gaps(reservation_rows, period_start, PERIOD_DAYS)
 
     revenue_rows = (
         db.query(
@@ -370,7 +395,6 @@ def get_owner_trend_stats(
         .group_by("day")
         .all()
     )
-    revenue_trends = _fill_daily_revenue_gaps(revenue_rows, period_start, PERIOD_DAYS)
 
     status_rows = (
         db.query(Reservation.status, func.count(Reservation.id))
@@ -413,20 +437,20 @@ def get_owner_trend_stats(
         func.count(case((user_visits.c.cnt > 1, 1))).label("repeat_customers"),
     ).select_from(user_visits).first()
 
-    return {
-        "reservation_trends": reservation_trends,
-        "revenue_trends": revenue_trends,
-        "reservation_status_breakdown": {
-            "pending": status_map.get(ReservationStatus.PENDING, 0),
-            "confirmed": status_map.get(ReservationStatus.CONFIRMED, 0),
-            "completed": status_map.get(ReservationStatus.COMPLETED, 0),
-            "cancelled": status_map.get(ReservationStatus.CANCELLED, 0),
-            "no_show": status_map.get(ReservationStatus.NO_SHOW, 0),
-        },
-        "peak_hours": [{"hour": h, "count": c} for h, c in peak_rows],
-        "party_size_distribution": [{"party_size": ps, "count": c} for ps, c in party_rows],
-        "customer_loyalty": {
-            "new_customers": loyalty.new_customers if loyalty else 0,
-            "repeat_customers": loyalty.repeat_customers if loyalty else 0,
-        },
-    }
+    return OwnerTrendStats(
+        reservation_trends=_fill_daily_gaps(reservation_rows, period_start, PERIOD_DAYS),
+        revenue_trends=_fill_daily_revenue_gaps(revenue_rows, period_start, PERIOD_DAYS),
+        reservation_status_breakdown=ReservationStatusBreakdown(
+            pending=status_map.get(ReservationStatus.PENDING, 0),
+            confirmed=status_map.get(ReservationStatus.CONFIRMED, 0),
+            completed=status_map.get(ReservationStatus.COMPLETED, 0),
+            cancelled=status_map.get(ReservationStatus.CANCELLED, 0),
+            no_show=status_map.get(ReservationStatus.NO_SHOW, 0),
+        ),
+        peak_hours=[HourlyCount(hour=h, count=c) for h, c in peak_rows],
+        party_size_distribution=[PartySizeCount(party_size=ps, count=c) for ps, c in party_rows],
+        customer_loyalty=CustomerLoyalty(
+            new_customers=loyalty.new_customers if loyalty else 0,
+            repeat_customers=loyalty.repeat_customers if loyalty else 0,
+        ),
+    )

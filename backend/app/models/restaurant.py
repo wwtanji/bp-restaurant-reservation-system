@@ -49,6 +49,24 @@ class Restaurant(Base):
     reservation_fee: Mapped[int] = mapped_column(Integer, nullable=False, default=500)
     opening_hours: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
+    overview_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    highlights: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
+    website: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    dining_style: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    dress_code: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    parking_details: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    payment_options: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    neighborhood: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    cross_street: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    executive_chef: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    public_transit: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    catering_info: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    private_party_info: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    additional_info: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    delivery_takeout: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    menu: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
+    faqs: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
+
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     created_at: Mapped[datetime] = mapped_column(

@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict, field_validator
 from typing import Optional
 
 from app.schemas.admin_schema import DailyCount, ReservationStatusBreakdown
+from app.schemas.restaurant_schema import MenuCategorySchema, FaqItemSchema
 
 
 HH_MM_PATTERN = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
@@ -64,6 +65,23 @@ class RestaurantCreate(BaseModel):
     max_capacity: int = 20
     reservation_fee: int = 500
     opening_hours: Optional[OpeningHoursSchema] = None
+    overview_text: Optional[str] = None
+    highlights: Optional[list[str]] = None
+    website: Optional[str] = None
+    dining_style: Optional[str] = None
+    dress_code: Optional[str] = None
+    parking_details: Optional[str] = None
+    payment_options: Optional[str] = None
+    neighborhood: Optional[str] = None
+    cross_street: Optional[str] = None
+    executive_chef: Optional[str] = None
+    public_transit: Optional[str] = None
+    catering_info: Optional[str] = None
+    private_party_info: Optional[str] = None
+    additional_info: Optional[str] = None
+    delivery_takeout: Optional[str] = None
+    menu: Optional[list[MenuCategorySchema]] = None
+    faqs: Optional[list[FaqItemSchema]] = None
 
     @field_validator("price_range")
     @classmethod
@@ -99,6 +117,23 @@ class RestaurantUpdate(BaseModel):
     max_capacity: Optional[int] = None
     reservation_fee: Optional[int] = None
     opening_hours: Optional[OpeningHoursSchema] = None
+    overview_text: Optional[str] = None
+    highlights: Optional[list[str]] = None
+    website: Optional[str] = None
+    dining_style: Optional[str] = None
+    dress_code: Optional[str] = None
+    parking_details: Optional[str] = None
+    payment_options: Optional[str] = None
+    neighborhood: Optional[str] = None
+    cross_street: Optional[str] = None
+    executive_chef: Optional[str] = None
+    public_transit: Optional[str] = None
+    catering_info: Optional[str] = None
+    private_party_info: Optional[str] = None
+    additional_info: Optional[str] = None
+    delivery_takeout: Optional[str] = None
+    menu: Optional[list[MenuCategorySchema]] = None
+    faqs: Optional[list[FaqItemSchema]] = None
 
     @field_validator("price_range")
     @classmethod
@@ -143,6 +178,23 @@ class OwnerRestaurantOut(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: Optional[datetime]
+    overview_text: Optional[str] = None
+    highlights: Optional[list[str]] = None
+    website: Optional[str] = None
+    dining_style: Optional[str] = None
+    dress_code: Optional[str] = None
+    parking_details: Optional[str] = None
+    payment_options: Optional[str] = None
+    neighborhood: Optional[str] = None
+    cross_street: Optional[str] = None
+    executive_chef: Optional[str] = None
+    public_transit: Optional[str] = None
+    catering_info: Optional[str] = None
+    private_party_info: Optional[str] = None
+    additional_info: Optional[str] = None
+    delivery_takeout: Optional[str] = None
+    menu: Optional[list[MenuCategorySchema]] = None
+    faqs: Optional[list[FaqItemSchema]] = None
 
     model_config = ConfigDict(from_attributes=True)
 

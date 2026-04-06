@@ -1,3 +1,19 @@
+export interface MenuItem {
+  name: string;
+  price: string;
+  description?: string;
+}
+
+export interface MenuCategory {
+  name: string;
+  items: MenuItem[];
+}
+
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
 export interface Restaurant {
   id: number;
   name: string;
@@ -20,6 +36,23 @@ export interface Restaurant {
   reservation_fee: number;
   is_active: boolean;
   opening_hours: OpeningHours | null;
+  overview_text: string | null;
+  highlights: string[] | null;
+  website: string | null;
+  dining_style: string | null;
+  dress_code: string | null;
+  parking_details: string | null;
+  payment_options: string | null;
+  neighborhood: string | null;
+  cross_street: string | null;
+  executive_chef: string | null;
+  public_transit: string | null;
+  catering_info: string | null;
+  private_party_info: string | null;
+  additional_info: string | null;
+  delivery_takeout: string | null;
+  menu: MenuCategory[] | null;
+  faqs: FaqItem[] | null;
 }
 
 export interface SearchFilters {
@@ -67,6 +100,23 @@ export interface RestaurantFormData {
   max_capacity: number;
   reservation_fee: string;
   opening_hours: OpeningHours;
+  overview_text: string;
+  highlights: string[];
+  website: string;
+  dining_style: string;
+  dress_code: string;
+  parking_details: string;
+  payment_options: string;
+  neighborhood: string;
+  cross_street: string;
+  executive_chef: string;
+  public_transit: string;
+  catering_info: string;
+  private_party_info: string;
+  additional_info: string;
+  delivery_takeout: string;
+  menu: MenuCategory[];
+  faqs: FaqItem[];
 }
 
 import { DailyCount, ReservationStatusBreakdown } from './admin';

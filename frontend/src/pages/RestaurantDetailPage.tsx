@@ -3,12 +3,13 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Restaurant } from '../interfaces/restaurant';
+import { Restaurant, MenuCategory, FaqItem, OpeningHours } from '../interfaces/restaurant';
 import { SlotAvailability } from '../interfaces/reservation';
 import { Review } from '../interfaces/review';
 import { apiFetch, ApiError, resolveImageUrl } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import PhotoGalleryModal from '../components/restaurant/PhotoGalleryModal';
+import NavbarComponent from '../components/section/NavbarComponent';
 import useFetch from '../hooks/useFetch';
 import FavoriteButton from '../components/FavoriteButton';
 import StarRating from '../components/common/StarRating';
@@ -23,22 +24,8 @@ import {
   PRICE_SYMBOLS,
 } from '../constants/reservation';
 
-const NAV_TABS = ['Overview', 'Concierge', 'Photos', 'Menu', 'Reviews', 'Details', 'FAQs'];
+const NAV_TABS = ['Overview', 'Photos', 'Menu', 'Reviews', 'Details', 'FAQs'];
 
-const TAGS = [
-  'Vegetarian-friendly',
-  'Vegan-friendly',
-  'Good for groups',
-  'Great for creative dining',
-  'Halal',
-];
-
-const CONCIERGE_SUGGESTIONS = [
-  { emoji: '\u{1F33F}', text: 'Is it suitable for a romantic dinner?' },
-  { emoji: '\u{1F354}', text: 'What are the most popular dishes?' },
-  { emoji: '\u{1F332}', text: 'Tell me about the atmosphere' },
-  { emoji: '\u{1F465}', text: 'Can it accommodate large groups?' },
-];
 
 const AVATAR_COLORS = [
   'from-gray-600 to-gray-800',
@@ -159,6 +146,56 @@ const createPinIcon = () =>
     iconAnchor: [18, 46],
   });
 
+const PRICE_DESCRIPTIONS: Record<number, string> = {
+  1: '€30 and under',
+  2: '€31–€50',
+  3: '€51–€80',
+  4: '€80+',
+};
+
+const DAY_NAMES = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const DAY_LABELS: Record<string, string> = {
+  monday: 'Mon',
+  tuesday: 'Tue',
+  wednesday: 'Wed',
+  thursday: 'Thu',
+  friday: 'Fri',
+  saturday: 'Sat',
+  sunday: 'Sun',
+};
+
+function formatTime12h(time: string): string {
+  const [h, m] = time.split(':').map(Number);
+  const period = h >= 12 ? 'pm' : 'am';
+  const hour = h % 12 || 12;
+  return m === 0 ? `${hour}:00 ${period}` : `${hour}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+function formatOpeningHours(hours: OpeningHours | null): string {
+  if (!hours) return '';
+  const entries = DAY_NAMES.map((day) => hours[day as keyof OpeningHours]);
+  const allSame = entries.every(
+    (e) =>
+      e &&
+      !e.is_closed &&
+      entries[0] &&
+      e.open === entries[0].open &&
+      e.close === entries[0].close,
+  );
+  if (allSame && entries[0]) {
+    return `Daily ${formatTime12h(entries[0].open)}–${formatTime12h(entries[0].close)}`;
+  }
+  return DAY_NAMES.filter((day) => {
+    const e = hours[day as keyof OpeningHours];
+    return e && !e.is_closed;
+  })
+    .map((day) => {
+      const e = hours[day as keyof OpeningHours]!;
+      return `${DAY_LABELS[day]} ${formatTime12h(e.open)}–${formatTime12h(e.close)}`;
+    })
+    .join(', ');
+}
+
 const BRATISLAVA_CENTER: [number, number] = [48.148, 17.107];
 
 const LocationMiniMap: React.FC<{ lat: number | null; lng: number | null; name: string }> = ({
@@ -209,8 +246,6 @@ const RestaurantDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('Overview');
   const [reviewSearch, setReviewSearch] = useState('');
   const [galleryPhotoIndex, setGalleryPhotoIndex] = useState<number | null>(null);
-  const [conciergeQuery, setConciergeQuery] = useState('');
-
   const {
     data: fetchedReviews,
     isLoading: reviewsLoading,
@@ -223,12 +258,19 @@ const RestaurantDetailPage: React.FC = () => {
   const { user } = useAuth();
 
   const overviewRef = useRef<HTMLDivElement>(null);
+  const photosRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const detailsRef = useRef<HTMLDivElement>(null);
+  const faqsRef = useRef<HTMLDivElement>(null);
   const reviewsRef = useRef<HTMLDivElement>(null);
-  const conciergeRef = useRef<HTMLDivElement>(null);
+  const [openFaqIndices, setOpenFaqIndices] = useState<Set<number>>(new Set());
 
   const sectionRefs: Record<string, React.RefObject<HTMLDivElement | null>> = {
     Overview: overviewRef,
-    Concierge: conciergeRef,
+    Photos: photosRef,
+    Menu: menuRef,
+    Details: detailsRef,
+    FAQs: faqsRef,
     Reviews: reviewsRef,
   };
 
@@ -284,8 +326,14 @@ const RestaurantDetailPage: React.FC = () => {
       const scrollY = window.scrollY + 100;
       if (reviewsRef.current && scrollY >= reviewsRef.current.offsetTop) {
         setActiveTab('Reviews');
-      } else if (conciergeRef.current && scrollY >= conciergeRef.current.offsetTop) {
-        setActiveTab('Concierge');
+      } else if (faqsRef.current && scrollY >= faqsRef.current.offsetTop) {
+        setActiveTab('FAQs');
+      } else if (detailsRef.current && scrollY >= detailsRef.current.offsetTop) {
+        setActiveTab('Details');
+      } else if (menuRef.current && scrollY >= menuRef.current.offsetTop) {
+        setActiveTab('Menu');
+      } else if (photosRef.current && scrollY >= photosRef.current.offsetTop) {
+        setActiveTab('Photos');
       } else if (overviewRef.current && scrollY >= overviewRef.current.offsetTop) {
         setActiveTab('Overview');
       }
@@ -361,6 +409,7 @@ const RestaurantDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white dark:bg-dark-paper">
+      <NavbarComponent />
       <div
         className="relative h-64 md:h-[420px] overflow-hidden cursor-pointer"
         onClick={() => allPhotos.length > 0 && setGalleryPhotoIndex(0)}
@@ -490,106 +539,405 @@ const RestaurantDetailPage: React.FC = () => {
 
             <hr className="border-ot-iron/50 dark:border-dark-border mb-8" />
 
-            {restaurant.description && (
+            {(restaurant.overview_text || (restaurant.highlights && restaurant.highlights.length > 0)) && (
               <>
                 <div className="mb-10">
                   <h2 className="text-lg font-extrabold text-ot-charade dark:text-dark-text mb-4">
                     About this restaurant
                   </h2>
-                  <div className="flex flex-wrap gap-2 mb-5">
-                    {TAGS.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-3 py-1.5 bg-ot-athens-gray dark:bg-dark-bg text-ot-charade dark:text-dark-text text-sm rounded-ot-btn border border-ot-iron dark:border-dark-border cursor-default flex items-center gap-1.5"
-                      >
-                        <svg
-                          className="w-3.5 h-3.5 text-ot-manatee dark:text-dark-text-secondary"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
+                  {restaurant.highlights && restaurant.highlights.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-5">
+                      {restaurant.highlights.map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-3 py-1.5 bg-ot-athens-gray dark:bg-dark-bg text-ot-charade dark:text-dark-text text-sm rounded-full border border-ot-iron dark:border-dark-border cursor-default"
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                  <p className="text-ot-pale-sky dark:text-dark-text-secondary text-sm leading-relaxed">
-                    {restaurant.description}
-                  </p>
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {restaurant.overview_text && (
+                    <p className="text-ot-charade dark:text-dark-text text-sm leading-relaxed">
+                      {restaurant.overview_text}
+                    </p>
+                  )}
                 </div>
                 <hr className="border-ot-iron/50 dark:border-dark-border mb-10" />
               </>
             )}
 
-            <div ref={conciergeRef} className="mb-10 scroll-mt-20">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xl">{'\u2728'}</span>
-                <h2 className="text-lg font-extrabold text-ot-charade dark:text-dark-text">
-                  Concierge
-                </h2>
-                <span className="text-xs bg-ot-athens-gray dark:bg-dark-bg text-ot-pale-sky dark:text-dark-text-secondary px-2 py-0.5 rounded-ot-btn font-bold border border-ot-iron dark:border-dark-border">
-                  AI-Powered
-                </span>
-              </div>
-              <p className="text-sm text-ot-manatee dark:text-dark-text-secondary mb-5">
-                Ask me anything about this restaurant
-              </p>
-
-              <div className="bg-ot-athens-gray dark:bg-dark-bg rounded-ot-card p-5 border border-ot-iron dark:border-dark-border">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-                  {CONCIERGE_SUGGESTIONS.map((card, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setConciergeQuery(card.text)}
-                      className="flex items-center gap-3 bg-white dark:bg-dark-paper p-3.5 rounded-ot-card border border-ot-iron dark:border-dark-border text-left hover:shadow-md hover:border-ot-primary/30 transition-all group"
+            {allPhotos.length > 0 && (
+              <>
+                <div ref={photosRef} className="mb-10 scroll-mt-20">
+                  <h2 className="text-lg font-extrabold text-ot-charade dark:text-dark-text mb-1">
+                    {allPhotos.length} {allPhotos.length === 1 ? 'Photo' : 'Photos'}
+                  </h2>
+                  <p className="text-sm text-ot-charade dark:text-dark-text mb-4">
+                    Explore photos from {restaurant.name}.
+                  </p>
+                  <div className="flex gap-2 h-[380px]">
+                    <div
+                      className="w-[45%] flex-shrink-0 rounded-xl overflow-hidden cursor-pointer"
+                      onClick={() => setGalleryPhotoIndex(0)}
                     >
-                      <span className="text-xl flex-shrink-0">{card.emoji}</span>
-                      <span className="text-sm text-ot-charade dark:text-dark-text group-hover:text-ot-charade dark:group-hover:text-dark-text flex-1">
-                        {card.text}
-                      </span>
-                      <svg
-                        className="w-4 h-4 text-ot-iron flex-shrink-0 group-hover:text-ot-primary transition-colors"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={conciergeQuery}
-                    onChange={(e) => setConciergeQuery(e.target.value)}
-                    placeholder="Ask a question about this restaurant..."
-                    className="flex-1 text-sm border border-ot-iron dark:border-dark-border rounded-ot-btn px-4 py-3 bg-white dark:bg-dark-surface dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-ot-primary dark:ring-dark-primary placeholder-ot-manatee dark:placeholder-dark-text-secondary"
-                  />
-                  <button className="bg-ot-primary text-white p-3 rounded-ot-btn hover:bg-ot-primary-dark transition-colors">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                      <img
+                        src={allPhotos[0]}
+                        alt={restaurant.name}
+                        className="w-full h-full object-cover hover:opacity-95 transition-opacity"
                       />
-                    </svg>
-                  </button>
+                    </div>
+                    {allPhotos.length > 1 && (
+                      <div className="flex-1 grid grid-cols-2 grid-rows-2 gap-2">
+                        {allPhotos.slice(1, 5).map((photo, i) => {
+                          const isLast = i === 3 && allPhotos.length > 5;
+                          return (
+                            <div
+                              key={i}
+                              className="relative rounded-xl overflow-hidden cursor-pointer"
+                              onClick={() => setGalleryPhotoIndex(i + 1)}
+                            >
+                              <img
+                                src={photo}
+                                alt={`${restaurant.name} ${i + 2}`}
+                                className="w-full h-full object-cover hover:opacity-95 transition-opacity"
+                              />
+                              {isLast && (
+                                <div className="absolute inset-0 bg-black/55 flex items-center justify-center">
+                                  <span className="text-white font-bold text-xl">
+                                    +{allPhotos.length - 5} More
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
+                <hr className="border-ot-iron/50 dark:border-dark-border mb-10" />
+              </>
+            )}
 
-            <hr className="border-ot-iron/50 dark:border-dark-border mb-10" />
+            {restaurant.menu && restaurant.menu.length > 0 && (
+              <>
+                <div ref={menuRef} className="mb-10 scroll-mt-20">
+                  <h2 className="text-lg font-extrabold text-ot-charade dark:text-dark-text mb-6">
+                    Menu
+                  </h2>
+                  <div className="space-y-8">
+                    {restaurant.menu.map((category: MenuCategory, ci: number) => (
+                      <div key={ci}>
+                        <h3 className="text-xs font-extrabold uppercase tracking-widest text-ot-charade dark:text-dark-text mb-4 border-b border-ot-iron dark:border-dark-border pb-2">
+                          {category.name}
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
+                          {category.items.map((item, ii: number) => (
+                            <div key={ii}>
+                              <div className="flex items-baseline justify-between gap-2 mb-0.5">
+                                <span className="text-sm font-bold text-ot-charade dark:text-dark-text">
+                                  {item.name}
+                                </span>
+                                <span className="text-sm font-bold text-ot-charade dark:text-dark-text flex-shrink-0">
+                                  {item.price}
+                                </span>
+                              </div>
+                              {item.description && (
+                                <p className="text-xs text-ot-manatee dark:text-dark-text-secondary leading-relaxed">
+                                  {item.description}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <hr className="border-ot-iron/50 dark:border-dark-border mb-10" />
+              </>
+            )}
+
+            {(restaurant.address ||
+              restaurant.dining_style ||
+              restaurant.website ||
+              restaurant.payment_options ||
+              restaurant.dress_code ||
+              restaurant.catering_info ||
+              restaurant.private_party_info ||
+              restaurant.delivery_takeout ||
+              restaurant.phone_number ||
+              restaurant.neighborhood ||
+              restaurant.cross_street ||
+              restaurant.parking_details ||
+              restaurant.executive_chef ||
+              restaurant.public_transit ||
+              restaurant.additional_info) && (
+              <>
+                <div ref={detailsRef} className="mb-10 scroll-mt-20">
+                  <h2 className="text-lg font-extrabold text-ot-charade dark:text-dark-text mb-6">
+                    Details
+                  </h2>
+                  {restaurant.latitude && restaurant.longitude && (
+                    <div className="h-48 rounded-ot-card overflow-hidden border border-ot-iron dark:border-dark-border mb-6">
+                      <LocationMiniMap
+                        lat={restaurant.latitude}
+                        lng={restaurant.longitude}
+                        name={restaurant.name}
+                      />
+                    </div>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-6">
+                    {restaurant.address && (
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Location</p>
+                          <p className="text-sm text-ot-primary dark:text-dark-primary">{restaurant.address}, {restaurant.city}</p>
+                        </div>
+                      </div>
+                    )}
+                    {restaurant.phone_number && (
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Phone number</p>
+                          <a href={`tel:${restaurant.phone_number}`} className="text-sm text-ot-primary dark:text-dark-primary">{restaurant.phone_number}</a>
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Price</p>
+                        <p className="text-sm text-ot-charade dark:text-dark-text">{PRICE_DESCRIPTIONS[restaurant.price_range] ?? ''}</p>
+                      </div>
+                    </div>
+                    {restaurant.cuisine && (
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Cuisines</p>
+                          <p className="text-sm text-ot-charade dark:text-dark-text">{restaurant.cuisine}</p>
+                        </div>
+                      </div>
+                    )}
+                    {restaurant.dining_style && (
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Dining style</p>
+                          <p className="text-sm text-ot-charade dark:text-dark-text">{restaurant.dining_style}</p>
+                        </div>
+                      </div>
+                    )}
+                    {restaurant.neighborhood && (
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Neighborhood</p>
+                          <p className="text-sm text-ot-charade dark:text-dark-text">{restaurant.neighborhood}</p>
+                        </div>
+                      </div>
+                    )}
+                    {restaurant.opening_hours && (
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Hours of operation</p>
+                          <p className="text-sm text-ot-charade dark:text-dark-text">{formatOpeningHours(restaurant.opening_hours)}</p>
+                        </div>
+                      </div>
+                    )}
+                    {restaurant.cross_street && (
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Cross street</p>
+                          <p className="text-sm text-ot-charade dark:text-dark-text">{restaurant.cross_street}</p>
+                        </div>
+                      </div>
+                    )}
+                    {restaurant.website && (
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Website</p>
+                          <a href={restaurant.website} target="_blank" rel="noopener noreferrer" className="text-sm text-ot-primary dark:text-dark-primary hover:underline break-all">{restaurant.website}</a>
+                        </div>
+                      </div>
+                    )}
+                    {restaurant.parking_details && (
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Parking details</p>
+                          <p className="text-sm text-ot-charade dark:text-dark-text">{restaurant.parking_details}</p>
+                        </div>
+                      </div>
+                    )}
+                    {restaurant.payment_options && (
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Payment options</p>
+                          <p className="text-sm text-ot-charade dark:text-dark-text">{restaurant.payment_options}</p>
+                        </div>
+                      </div>
+                    )}
+                    {restaurant.executive_chef && (
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Executive chef</p>
+                          <p className="text-sm text-ot-charade dark:text-dark-text">{restaurant.executive_chef}</p>
+                        </div>
+                      </div>
+                    )}
+                    {restaurant.dress_code && (
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Dress code</p>
+                          <p className="text-sm text-ot-charade dark:text-dark-text">{restaurant.dress_code}</p>
+                        </div>
+                      </div>
+                    )}
+                    {restaurant.public_transit && (
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Public transit</p>
+                          <p className="text-sm text-ot-charade dark:text-dark-text">{restaurant.public_transit}</p>
+                        </div>
+                      </div>
+                    )}
+                    {restaurant.delivery_takeout && (
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Delivery &amp; takeout</p>
+                          <p className="text-sm text-ot-charade dark:text-dark-text">{restaurant.delivery_takeout}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {(restaurant.catering_info || restaurant.private_party_info || restaurant.additional_info) && (
+                    <div className="mt-6 space-y-5">
+                      {restaurant.catering_info && (
+                        <div className="flex items-start gap-3">
+                          <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Catering</p>
+                            <p className="text-sm text-ot-charade dark:text-dark-text leading-relaxed break-words">{restaurant.catering_info}</p>
+                          </div>
+                        </div>
+                      )}
+                      {restaurant.private_party_info && (
+                        <div className="flex items-start gap-3">
+                          <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Private party facilities</p>
+                            <p className="text-sm text-ot-charade dark:text-dark-text leading-relaxed break-words">{restaurant.private_party_info}</p>
+                          </div>
+                        </div>
+                      )}
+                      {restaurant.additional_info && (
+                        <div className="flex items-start gap-3">
+                          <svg className="w-5 h-5 text-ot-charade dark:text-dark-text flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                          </svg>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-ot-charade dark:text-dark-text mb-0.5">Additional</p>
+                            <p className="text-sm text-ot-charade dark:text-dark-text leading-relaxed break-words">{restaurant.additional_info}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <hr className="border-ot-iron/50 dark:border-dark-border mb-10" />
+              </>
+            )}
+
+            {restaurant.faqs && restaurant.faqs.length > 0 && (
+              <>
+                <div ref={faqsRef} className="mb-10 scroll-mt-20">
+                  <h2 className="text-lg font-extrabold text-ot-charade dark:text-dark-text mb-6">
+                    FAQs
+                  </h2>
+                  <div className="divide-y divide-ot-iron/50 dark:divide-dark-border">
+                    {restaurant.faqs.map((faq: FaqItem, i: number) => (
+                      <div key={i} className="py-5">
+                        <button
+                          className="w-full flex items-start justify-between gap-4 text-left"
+                          onClick={() => setOpenFaqIndices(prev => {
+                            const next = new Set(prev);
+                            next.has(i) ? next.delete(i) : next.add(i);
+                            return next;
+                          })}
+                        >
+                          <span className="text-base font-bold text-ot-charade dark:text-dark-text">
+                            {faq.question}
+                          </span>
+                          <svg
+                            className={`w-5 h-5 flex-shrink-0 text-ot-charade dark:text-dark-text transition-transform mt-0.5 ${openFaqIndices.has(i) ? 'rotate-180' : ''}`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        {openFaqIndices.has(i) && (
+                          <p className="mt-3 text-sm text-ot-charade dark:text-dark-text leading-relaxed">
+                            {faq.answer}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <hr className="border-ot-iron/50 dark:border-dark-border mb-10" />
+              </>
+            )}
 
             <div ref={reviewsRef} className="scroll-mt-20">
               <h2 className="text-lg font-extrabold text-ot-charade dark:text-dark-text mb-6">

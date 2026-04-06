@@ -26,8 +26,7 @@ const NavbarComponent: React.FC = () => {
 
   const navigation = [
     { name: 'Search', href: '/search' },
-    { name: 'My Reservations', href: '/my-reservations' },
-    ...(user?.role === OWNER_ROLE ? [{ name: 'Dashboard', href: '/dashboard' }] : []),
+...(user?.role === OWNER_ROLE ? [{ name: 'Dashboard', href: '/dashboard' }] : []),
     ...(user?.role === ADMIN_ROLE ? [{ name: 'Admin', href: '/admin' }] : []),
   ];
 

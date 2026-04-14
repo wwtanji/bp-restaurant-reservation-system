@@ -398,7 +398,7 @@ const RestaurantDetailPage: React.FC = () => {
   }
 
   const priceLabel = PRICE_SYMBOLS[restaurant.price_range] ?? '$$';
-  const overallRating = restaurant.rating ?? 4.5;
+  const overallRating = restaurant.rating ?? null;
 
   const allPhotos: string[] = [
     ...(restaurant.cover_image ? [resolveImageUrl(restaurant.cover_image)] : []),
@@ -496,10 +496,14 @@ const RestaurantDetailPage: React.FC = () => {
 
               <div className="flex items-center gap-2 flex-wrap text-sm text-ot-pale-sky dark:text-dark-text-secondary mb-3">
                 <div className="flex items-center gap-1.5">
-                  <StarRating rating={overallRating} size="w-3.5 h-3.5" />
-                  <span className="font-bold text-ot-charade dark:text-dark-text">
-                    {ratingLabel(restaurant.rating)}
-                  </span>
+                  {overallRating !== null && (
+                    <>
+                      <StarRating rating={overallRating} size="w-3.5 h-3.5" />
+                      <span className="font-bold text-ot-charade dark:text-dark-text">
+                        {ratingLabel(overallRating)}
+                      </span>
+                    </>
+                  )}
                   <span className="text-ot-manatee dark:text-dark-text-secondary">
                     ({restaurant.review_count} reviews)
                   </span>
@@ -947,13 +951,21 @@ const RestaurantDetailPage: React.FC = () => {
               <div className="bg-ot-athens-gray dark:bg-dark-bg rounded-ot-card p-6 mb-6 border border-ot-iron dark:border-dark-border">
                 <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
                   <div className="flex flex-col items-center justify-center sm:w-32 flex-shrink-0 text-center">
-                    <span className="text-5xl font-extrabold text-ot-charade dark:text-dark-text tracking-tight mb-1">
-                      {overallRating.toFixed(1)}
-                    </span>
-                    <StarRating rating={overallRating} size="w-5 h-5" />
-                    <span className="text-sm font-bold text-ot-charade dark:text-dark-text mt-1.5">
-                      {ratingLabel(restaurant.rating)}
-                    </span>
+                    {overallRating !== null ? (
+                      <>
+                        <span className="text-5xl font-extrabold text-ot-charade dark:text-dark-text tracking-tight mb-1">
+                          {overallRating.toFixed(1)}
+                        </span>
+                        <StarRating rating={overallRating} size="w-5 h-5" />
+                        <span className="text-sm font-bold text-ot-charade dark:text-dark-text mt-1.5">
+                          {ratingLabel(overallRating)}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-sm text-ot-manatee dark:text-dark-text-secondary">
+                        No ratings yet
+                      </span>
+                    )}
                     <span className="text-xs text-ot-manatee dark:text-dark-text-secondary mt-0.5">
                       {restaurant.review_count} reviews
                     </span>

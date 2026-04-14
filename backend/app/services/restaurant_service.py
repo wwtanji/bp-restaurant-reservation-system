@@ -67,7 +67,9 @@ def _save_restaurant_hours(db: Session, restaurant_id: int, hours_dict: Optional
 
 
 def _save_restaurant_menu(db: Session, restaurant_id: int, menu_data: Optional[list]) -> None:
-    db.query(MenuCategory).filter(MenuCategory.restaurant_id == restaurant_id).delete()
+    for cat in db.query(MenuCategory).filter(MenuCategory.restaurant_id == restaurant_id).all():
+        db.delete(cat)
+    db.flush()
     if not menu_data:
         return
     for position, cat_data in enumerate(menu_data):

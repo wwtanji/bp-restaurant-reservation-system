@@ -1,10 +1,14 @@
 import re
 from datetime import date, datetime
-from pydantic import BaseModel, ConfigDict, field_validator
-from typing import Optional
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from typing import Optional, Any
 
 from app.schemas.admin_schema import DailyCount, ReservationStatusBreakdown
-from app.schemas.restaurant_schema import MenuCategorySchema, FaqItemSchema
+from app.schemas.restaurant_schema import (
+    MenuCategorySchema,
+    FaqItemSchema,
+    populate_restaurant_relations,
+)
 
 
 HH_MM_PATTERN = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
@@ -174,12 +178,11 @@ class OwnerRestaurantOut(BaseModel):
     review_count: int
     max_capacity: int
     reservation_fee: int
-    opening_hours: Optional[dict]
+    opening_hours: Optional[dict] = None
     is_active: bool
     created_at: datetime
     updated_at: Optional[datetime]
-    overview_text: Optional[str] = None
-    highlights: Optional[list[str]] = None
+
     website: Optional[str] = None
     dining_style: Optional[str] = None
     dress_code: Optional[str] = None
@@ -189,14 +192,25 @@ class OwnerRestaurantOut(BaseModel):
     cross_street: Optional[str] = None
     executive_chef: Optional[str] = None
     public_transit: Optional[str] = None
+    delivery_takeout: Optional[str] = None
     catering_info: Optional[str] = None
     private_party_info: Optional[str] = None
     additional_info: Optional[str] = None
-    delivery_takeout: Optional[str] = None
+    overview_text: Optional[str] = None
+    highlights: Optional[list[str]] = None
     menu: Optional[list[MenuCategorySchema]] = None
     faqs: Optional[list[FaqItemSchema]] = None
 
+    details: Optional[Any] = Field(None, exclude=True)
+    hours: list[Any] = Field(default_factory=list, exclude=True)
+    menu_categories: list[Any] = Field(default_factory=list, exclude=True)
+    faq_items: list[Any] = Field(default_factory=list, exclude=True)
+
     model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode="after")
+    def flatten_relations(self) -> "OwnerRestaurantOut":
+        return populate_restaurant_relations(self)
 
 
 class GalleryImageDelete(BaseModel):

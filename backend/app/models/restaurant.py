@@ -11,6 +11,10 @@ if TYPE_CHECKING:
     from app.models.review import Review
     from app.models.favorite import Favorite
     from app.models.table import Table
+    from app.models.restaurant_details import RestaurantDetails
+    from app.models.restaurant_hours import RestaurantHours
+    from app.models.menu import MenuCategory
+    from app.models.faq import FaqItem
 
 
 class Restaurant(Base):
@@ -47,25 +51,6 @@ class Restaurant(Base):
     review_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     max_capacity: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
     reservation_fee: Mapped[int] = mapped_column(Integer, nullable=False, default=500)
-    opening_hours: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
-
-    overview_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    highlights: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
-    website: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    dining_style: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    dress_code: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    parking_details: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
-    payment_options: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    neighborhood: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    cross_street: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    executive_chef: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    public_transit: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
-    catering_info: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    private_party_info: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    additional_info: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    delivery_takeout: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
-    menu: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
-    faqs: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
 
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
@@ -92,4 +77,35 @@ class Restaurant(Base):
 
     favorites: Mapped[list["Favorite"]] = relationship(
         "Favorite", back_populates="restaurant", cascade="all, delete-orphan"
+    )
+
+    details: Mapped[Optional["RestaurantDetails"]] = relationship(
+        "RestaurantDetails",
+        back_populates="restaurant",
+        uselist=False,
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+    hours: Mapped[list["RestaurantHours"]] = relationship(
+        "RestaurantHours",
+        back_populates="restaurant",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+    menu_categories: Mapped[list["MenuCategory"]] = relationship(
+        "MenuCategory",
+        back_populates="restaurant",
+        cascade="all, delete-orphan",
+        order_by="MenuCategory.position",
+        lazy="selectin",
+    )
+
+    faq_items: Mapped[list["FaqItem"]] = relationship(
+        "FaqItem",
+        back_populates="restaurant",
+        cascade="all, delete-orphan",
+        order_by="FaqItem.position",
+        lazy="selectin",
     )

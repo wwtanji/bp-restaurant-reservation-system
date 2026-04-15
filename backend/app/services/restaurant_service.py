@@ -1,5 +1,5 @@
 import re
-from datetime import date, timedelta
+from datetime import date, time, timedelta
 from typing import Optional
 
 from fastapi import HTTPException
@@ -7,6 +7,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy import case, func
 
 from app.models.restaurant import Restaurant
+from app.models.restaurant_details import RestaurantDetails
+from app.models.restaurant_hours import RestaurantHours
+from app.models.menu import MenuCategory, MenuItem
+from app.models.faq import FaqItem
 from app.models.reservation import Reservation, ReservationStatus, ACTIVE_STATUSES
 from app.models.payment import Payment, PaymentStatus
 from app.models.review import Review
@@ -24,6 +28,88 @@ from app.schemas.owner_restaurant_schema import (
 )
 from app.schemas.admin_schema import DailyCount, ReservationStatusBreakdown
 from app.services.admin_service import _fill_daily_gaps
+
+RESTAURANT_CORE_FIELDS = {
+    "name", "description", "cuisine", "price_range", "phone_number", "email",
+    "address", "city", "country", "latitude", "longitude", "cover_image",
+    "gallery_images", "max_capacity", "reservation_fee", "is_active",
+}
+
+DETAIL_FIELDS = {
+    "website", "dining_style", "dress_code", "parking_details", "payment_options",
+    "neighborhood", "cross_street", "executive_chef", "public_transit",
+    "delivery_takeout", "catering_info", "private_party_info", "additional_info",
+    "overview_text", "highlights",
+}
+
+
+def _parse_time(time_str: Optional[str]) -> Optional[time]:
+    if not time_str:
+        return None
+    h, m = time_str.split(":")
+    return time(int(h), int(m))
+
+
+def _save_restaurant_hours(db: Session, restaurant_id: int, hours_dict: Optional[dict]) -> None:
+    db.query(RestaurantHours).filter(RestaurantHours.restaurant_id == restaurant_id).delete()
+    if not hours_dict:
+        return
+    for day, day_hours in hours_dict.items():
+        if day_hours is None:
+            continue
+        db.add(RestaurantHours(
+            restaurant_id=restaurant_id,
+            day_of_week=day,
+            open_time=_parse_time(day_hours.get("open")),
+            close_time=_parse_time(day_hours.get("close")),
+            is_closed=day_hours.get("is_closed", False),
+        ))
+
+
+def _save_restaurant_menu(db: Session, restaurant_id: int, menu_data: Optional[list]) -> None:
+    for cat in db.query(MenuCategory).filter(MenuCategory.restaurant_id == restaurant_id).all():
+        db.delete(cat)
+    db.flush()
+    if not menu_data:
+        return
+    for position, cat_data in enumerate(menu_data):
+        cat = MenuCategory(
+            restaurant_id=restaurant_id,
+            name=cat_data["name"],
+            position=position,
+        )
+        db.add(cat)
+        db.flush()
+        for item_data in cat_data.get("items", []):
+            db.add(MenuItem(
+                category_id=cat.id,
+                name=item_data["name"],
+                price=item_data["price"],
+                description=item_data.get("description"),
+            ))
+
+
+def _save_restaurant_faqs(db: Session, restaurant_id: int, faqs_data: Optional[list]) -> None:
+    db.query(FaqItem).filter(FaqItem.restaurant_id == restaurant_id).delete()
+    if not faqs_data:
+        return
+    for position, faq_data in enumerate(faqs_data):
+        db.add(FaqItem(
+            restaurant_id=restaurant_id,
+            question=faq_data["question"],
+            answer=faq_data["answer"],
+            position=position,
+        ))
+
+
+def _upsert_restaurant_details(
+    db: Session, restaurant: Restaurant, detail_values: dict
+) -> None:
+    if restaurant.details:
+        for field, value in detail_values.items():
+            setattr(restaurant.details, field, value)
+    else:
+        db.add(RestaurantDetails(restaurant_id=restaurant.id, **detail_values))
 
 TABLE_SIZE_LARGE = 6
 TABLE_SIZE_MEDIUM = 4
@@ -97,9 +183,6 @@ def _replace_tables_for_restaurant(
 
 def create_restaurant(db: Session, owner: User, data: RestaurantCreate) -> Restaurant:
     slug = generate_unique_slug(db, data.name)
-    opening_hours_dict = None
-    if data.opening_hours:
-        opening_hours_dict = data.opening_hours.model_dump()
 
     restaurant = Restaurant(
         owner_id=owner.id,
@@ -118,27 +201,24 @@ def create_restaurant(db: Session, owner: User, data: RestaurantCreate) -> Resta
         cover_image=data.cover_image,
         max_capacity=data.max_capacity,
         reservation_fee=data.reservation_fee,
-        opening_hours=opening_hours_dict,
-        overview_text=data.overview_text,
-        highlights=data.highlights,
-        website=data.website,
-        dining_style=data.dining_style,
-        dress_code=data.dress_code,
-        parking_details=data.parking_details,
-        payment_options=data.payment_options,
-        neighborhood=data.neighborhood,
-        cross_street=data.cross_street,
-        executive_chef=data.executive_chef,
-        public_transit=data.public_transit,
-        catering_info=data.catering_info,
-        private_party_info=data.private_party_info,
-        additional_info=data.additional_info,
-        delivery_takeout=data.delivery_takeout,
-        menu=data.menu,
-        faqs=data.faqs,
     )
     db.add(restaurant)
     db.flush()
+
+    db.add(RestaurantDetails(
+        restaurant_id=restaurant.id,
+        **{field: getattr(data, field, None) for field in DETAIL_FIELDS},
+    ))
+
+    if data.opening_hours:
+        _save_restaurant_hours(db, restaurant.id, data.opening_hours.model_dump())
+
+    if data.menu:
+        _save_restaurant_menu(db, restaurant.id, [cat.model_dump() for cat in data.menu])
+
+    if data.faqs:
+        _save_restaurant_faqs(db, restaurant.id, [faq.model_dump() for faq in data.faqs])
+
     _create_tables_for_restaurant(db, restaurant.id, data.max_capacity)
     db.commit()
     db.refresh(restaurant)
@@ -175,9 +255,6 @@ def update_restaurant(
     restaurant = get_owner_restaurant(db, restaurant_id, owner_id)
     update_data = data.model_dump(exclude_unset=True)
 
-    if "opening_hours" in update_data and update_data["opening_hours"] is not None:
-        update_data["opening_hours"] = data.opening_hours.model_dump()
-
     if "name" in update_data and update_data["name"] != restaurant.name:
         update_data["slug"] = generate_unique_slug(db, update_data["name"])
 
@@ -187,10 +264,27 @@ def update_restaurant(
     )
 
     for field, value in update_data.items():
-        setattr(restaurant, field, value)
+        if field in RESTAURANT_CORE_FIELDS or field == "slug":
+            setattr(restaurant, field, value)
 
     if capacity_changed:
         _replace_tables_for_restaurant(db, restaurant.id, restaurant.max_capacity)
+
+    detail_updates = {k: v for k, v in update_data.items() if k in DETAIL_FIELDS}
+    if detail_updates:
+        _upsert_restaurant_details(db, restaurant, detail_updates)
+
+    if "opening_hours" in update_data:
+        hours_dict = data.opening_hours.model_dump() if data.opening_hours else None
+        _save_restaurant_hours(db, restaurant.id, hours_dict)
+
+    if "menu" in update_data:
+        menu_dicts = [cat.model_dump() for cat in data.menu] if data.menu else None
+        _save_restaurant_menu(db, restaurant.id, menu_dicts)
+
+    if "faqs" in update_data:
+        faqs_dicts = [faq.model_dump() for faq in data.faqs] if data.faqs else None
+        _save_restaurant_faqs(db, restaurant.id, faqs_dicts)
 
     db.commit()
     db.refresh(restaurant)

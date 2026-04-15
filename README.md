@@ -82,7 +82,9 @@ CREATE DATABASE restaurant_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 Run Alembic migrations to create all tables:
 
 ```bash
+cd app/db
 alembic upgrade head
+cd ../..
 ```
 
 ---

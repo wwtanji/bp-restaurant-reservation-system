@@ -83,7 +83,7 @@ def register_user(db: Session, user_data: UserRegister) -> User:
         user_password=hashed_password,
         phone_number=user_data.phone_number,
         role=user_data.role,
-        email_verified=True,
+        email_verified=False,
         failed_login_attempts=0,
         registered_at=datetime.now(timezone.utc),
     )

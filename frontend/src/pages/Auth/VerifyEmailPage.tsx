@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import NavbarComponent from '../../components/section/NavbarComponent';
+import { apiFetch, ApiError } from '../../utils/api';
 
 const VerifyEmailPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -19,18 +20,10 @@ const VerifyEmailPage: React.FC = () => {
       }
 
       try {
-        const response = await fetch('http://localhost:8000/api/authentication/verify-email', {
+        const data = await apiFetch<{ message: string }>('/authentication/verify-email', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: token }),
-          mode: 'cors',
+          body: JSON.stringify({ token }),
         });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.detail || 'Failed to verify email');
-        }
 
         setStatus('success');
         setMessage(data.message || 'Email verified successfully! You can now log in.');
@@ -38,9 +31,13 @@ const VerifyEmailPage: React.FC = () => {
         setTimeout(() => {
           navigate('/login');
         }, 3000);
-      } catch (error: any) {
+      } catch (error: unknown) {
         setStatus('error');
-        setMessage(error.message || 'Failed to verify email. The link may be invalid or expired.');
+        setMessage(
+          error instanceof ApiError
+            ? error.message
+            : 'Failed to verify email. The link may be invalid or expired.',
+        );
       }
     };
 

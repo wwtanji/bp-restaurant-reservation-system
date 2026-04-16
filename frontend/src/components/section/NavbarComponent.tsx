@@ -6,12 +6,11 @@ import {
   SunIcon,
   MoonIcon,
   CalendarIcon,
-  BellIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext';
 import { useThemeMode } from '../../context/ThemeContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { OWNER_ROLE } from '../../constants/dashboard';
+import { CUSTOMER_ROLE, OWNER_ROLE } from '../../constants/dashboard';
 import { ADMIN_ROLE } from '../../constants/admin';
 import { STORAGE_KEY_JUST_LOGGED_IN } from '../../constants/storage';
 
@@ -123,17 +122,11 @@ const NavbarComponent: React.FC = () => {
               <div className="flex items-center gap-3">
                 <Link
                   to="/profile?section=reservations"
-                  className="relative p-2 rounded-lg text-ot-pale-sky hover:text-ot-charade dark:text-dark-text-secondary dark:hover:text-dark-text hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
+                  className="p-2 rounded-lg text-ot-pale-sky hover:text-ot-charade dark:text-dark-text-secondary dark:hover:text-dark-text hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
                 >
                   <CalendarIcon className="size-5" />
-                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
                 </Link>
-                <button className="relative p-2 rounded-lg text-ot-pale-sky hover:text-ot-charade dark:text-dark-text-secondary dark:hover:text-dark-text hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors">
-                  <BellIcon className="size-5" />
-                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
-                </button>
-
-                <Menu as="div" className="relative">
+<Menu as="div" className="relative">
                   <MenuButton className="focus:outline-none cursor-pointer">
                     <AvatarCircle />
                   </MenuButton>
@@ -155,22 +148,26 @@ const NavbarComponent: React.FC = () => {
                           My Profile
                         </Link>
                       </MenuItem>
-                      <MenuItem>
-                        <Link
-                          to="/profile?section=reservations"
-                          className="block px-4 py-2 text-sm text-ot-charade dark:text-dark-text data-[focus]:bg-ot-athens-gray dark:data-[focus]:bg-dark-surface transition-colors"
-                        >
-                          My Dining History
-                        </Link>
-                      </MenuItem>
-                      <MenuItem>
-                        <Link
-                          to="/profile?section=saved"
-                          className="block px-4 py-2 text-sm text-ot-charade dark:text-dark-text data-[focus]:bg-ot-athens-gray dark:data-[focus]:bg-dark-surface transition-colors"
-                        >
-                          My Saved Restaurants
-                        </Link>
-                      </MenuItem>
+                      {user.role === CUSTOMER_ROLE && (
+                        <>
+                          <MenuItem>
+                            <Link
+                              to="/profile?section=reservations"
+                              className="block px-4 py-2 text-sm text-ot-charade dark:text-dark-text data-[focus]:bg-ot-athens-gray dark:data-[focus]:bg-dark-surface transition-colors"
+                            >
+                              My Dining History
+                            </Link>
+                          </MenuItem>
+                          <MenuItem>
+                            <Link
+                              to="/profile?section=saved"
+                              className="block px-4 py-2 text-sm text-ot-charade dark:text-dark-text data-[focus]:bg-ot-athens-gray dark:data-[focus]:bg-dark-surface transition-colors"
+                            >
+                              My Saved Restaurants
+                            </Link>
+                          </MenuItem>
+                        </>
+                      )}
                       {user.role === OWNER_ROLE && (
                         <MenuItem>
                           <Link
@@ -260,20 +257,24 @@ const NavbarComponent: React.FC = () => {
                       >
                         My Profile
                       </Link>
-                      <Link
-                        to="/profile?section=reservations"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="block rounded-ot-btn px-3 py-2.5 text-sm font-medium text-ot-charade dark:text-dark-text hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
-                      >
-                        My Dining History
-                      </Link>
-                      <Link
-                        to="/profile?section=saved"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="block rounded-ot-btn px-3 py-2.5 text-sm font-medium text-ot-charade dark:text-dark-text hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
-                      >
-                        My Saved Restaurants
-                      </Link>
+                      {user.role === CUSTOMER_ROLE && (
+                        <>
+                          <Link
+                            to="/profile?section=reservations"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="block rounded-ot-btn px-3 py-2.5 text-sm font-medium text-ot-charade dark:text-dark-text hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
+                          >
+                            My Dining History
+                          </Link>
+                          <Link
+                            to="/profile?section=saved"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="block rounded-ot-btn px-3 py-2.5 text-sm font-medium text-ot-charade dark:text-dark-text hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors"
+                          >
+                            My Saved Restaurants
+                          </Link>
+                        </>
+                      )}
                     </>
                   )}
                 </div>

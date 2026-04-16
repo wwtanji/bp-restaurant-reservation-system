@@ -6,6 +6,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { OpeningHours, OpeningHourDay } from '../interfaces/restaurant';
 
+export const CUSTOMER_ROLE = 0;
 export const OWNER_ROLE = 1;
 
 export const DAYS_OF_WEEK = [

@@ -393,7 +393,7 @@ def get_dashboard_stats(
         .filter(
             Reservation.restaurant_id.in_(ids),
             Reservation.reservation_date == today,
-            Reservation.status.in_(ACTIVE_STATUSES),
+            Reservation.status != ReservationStatus.CANCELLED,
         )
         .scalar()
     ) or 0

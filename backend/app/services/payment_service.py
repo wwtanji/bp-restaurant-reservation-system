@@ -198,6 +198,33 @@ def list_user_payments(
     ]
 
 
+def verify_session(db: Session, session_id: str, user_id: int) -> Payment:
+    payment = (
+        db.query(Payment)
+        .filter(Payment.stripe_session_id == session_id)
+        .first()
+    )
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+
+    reservation = db.query(Reservation).filter(
+        Reservation.id == payment.reservation_id,
+        Reservation.user_id == user_id,
+    ).first()
+    if not reservation:
+        raise HTTPException(status_code=404, detail="Payment not found")
+
+    if payment.status != PaymentStatus.PAID:
+        try:
+            session = stripe.checkout.Session.retrieve(session_id)
+            if session.payment_status == "paid":
+                handle_checkout_completed(db, session)
+                db.refresh(payment)
+        except stripe.StripeError:
+            pass
+
+    return payment
+
 def get_payment_by_session(db: Session, session_id: str, user_id: int) -> Payment:
     payment = (
         db.query(Payment)

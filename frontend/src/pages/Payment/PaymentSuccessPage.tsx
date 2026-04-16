@@ -1,15 +1,21 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import useFetch from '../../hooks/useFetch';
+import { apiFetch } from '../../utils/api';
 import { PaymentOut } from '../../interfaces/payment';
 
 const PaymentSuccessPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
+  const [payment, setPayment] = useState<PaymentOut | null>(null);
+  const [isLoading, setIsLoading] = useState(!!sessionId);
 
-  const { data: payment, isLoading } = useFetch<PaymentOut>(
-    sessionId ? `/payments/by-session/${sessionId}` : null,
-  );
+  useEffect(() => {
+    if (!sessionId) return;
+    apiFetch<PaymentOut>(`/payments/verify-session/${sessionId}`, { method: 'POST' })
+      .then(setPayment)
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  }, [sessionId]);
 
   return (
     <div className="min-h-screen bg-ot-athens-gray dark:bg-dark-bg flex items-center justify-center p-4">

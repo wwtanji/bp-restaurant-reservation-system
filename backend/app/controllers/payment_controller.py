@@ -56,6 +56,17 @@ def list_my_payments(
     return payment_service.list_user_payments(db, current_user.id, skip, limit)
 
 
+@PAYMENT_CONTROLLER.post(
+    "/verify-session/{session_id}", response_model=PaymentOut
+)
+def verify_session(
+    session_id: str,
+    current_user: User = Depends(require_customer),
+    db: Session = Depends(get_db),
+):
+    return payment_service.verify_session(db, session_id, current_user.id)
+
+
 @PAYMENT_CONTROLLER.get(
     "/by-session/{session_id}", response_model=PaymentOut
 )

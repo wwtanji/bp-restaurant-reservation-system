@@ -157,7 +157,6 @@ const TopRatedSection: React.FC = () => {
   if (restaurants.length === 0) return null;
 
   const topRated = [...restaurants]
-    .filter((r) => (r.rating ?? 0) >= 3.5)
     .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
 
   const cuisineGroups: Record<string, Restaurant[]> = {};
@@ -176,14 +175,12 @@ const TopRatedSection: React.FC = () => {
   return (
     <div className="bg-white dark:bg-dark-paper py-12">
       <div className="max-w-ot mx-auto px-4">
-        {topRated.length > 0 && (
-          <RestaurantRow
-            title="Top Rated Restaurants"
-            restaurants={topRated}
-            bookedTodayMap={bookedTodayMap}
-            onCardClick={handleClick}
-          />
-        )}
+        <RestaurantRow
+          title="Top Rated Restaurants"
+          restaurants={topRated}
+          bookedTodayMap={bookedTodayMap}
+          onCardClick={handleClick}
+        />
 
         {cuisineSections.map(([cuisine, items]) => (
           <RestaurantRow

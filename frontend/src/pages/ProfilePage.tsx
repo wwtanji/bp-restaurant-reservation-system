@@ -55,11 +55,20 @@ const VALID_SECTIONS: SidebarSection[] = [
 ];
 type ReservationTab = 'upcoming' | 'past' | 'cancelled';
 
+const ROLE_CUSTOMER = 0;
+
 const ROLE_LABELS: Record<number, string> = {
   0: 'Customer',
   1: 'Restaurant Owner',
   2: 'Admin',
 };
+
+const CUSTOMER_ONLY_SECTIONS = new Set<SidebarSection>([
+  'reservations',
+  'reviews',
+  'saved',
+  'transactions',
+]);
 
 interface ProfileSidebarItem {
   key: SidebarSection;
@@ -93,8 +102,6 @@ const PROFILE_SIDEBAR_SECTIONS: ProfileSidebarSection[] = [
     items: [{ key: 'settings', label: 'Settings', icon: Cog6ToothIcon }],
   },
 ];
-
-const ALL_SIDEBAR_ITEMS = PROFILE_SIDEBAR_SECTIONS.flatMap((s) => s.items);
 
 const STORAGE_KEY_PROFILE_SIDEBAR_COLLAPSED = 'profile_sidebar_collapsed';
 
@@ -145,26 +152,38 @@ const ProfilePage: React.FC = () => {
   const { show } = useNotification();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  const isCustomer = (user?.role ?? ROLE_CUSTOMER) === ROLE_CUSTOMER;
+
+  const visibleSidebarSections = PROFILE_SIDEBAR_SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter((item) => isCustomer || !CUSTOMER_ONLY_SECTIONS.has(item.key)),
+  })).filter((section) => section.items.length > 0);
+
+  const allVisibleItems = visibleSidebarSections.flatMap((s) => s.items);
+  const validSections = allVisibleItems.map((i) => i.key);
+
   const sectionParam = searchParams.get('section') as SidebarSection | null;
   const initialSection =
-    sectionParam && VALID_SECTIONS.includes(sectionParam) ? sectionParam : 'overview';
+    sectionParam && validSections.includes(sectionParam) ? sectionParam : 'overview';
   const [activeSection, setActiveSection] = useState<SidebarSection>(initialSection);
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [reservationsLoading, setReservationsLoading] = useState(true);
+  const [reservationsLoading, setReservationsLoading] = useState(isCustomer);
 
   useEffect(() => {
     const param = searchParams.get('section') as SidebarSection | null;
-    if (param && VALID_SECTIONS.includes(param)) {
+    if (param && validSections.includes(param)) {
       setActiveSection(param);
     }
   }, [searchParams]);
 
   useEffect(() => {
+    if (!isCustomer) return;
     apiFetch<Reservation[]>('/reservations/my')
       .then(setReservations)
       .catch(() => {})
       .finally(() => setReservationsLoading(false));
-  }, []);
+  }, [isCustomer]);
 
   const handleLogout = () => {
     authLogout();
@@ -190,6 +209,7 @@ const ProfilePage: React.FC = () => {
             user={user ?? undefined}
             activeSection={activeSection}
             onNavigate={setActiveSection}
+            allVisibleItems={allVisibleItems}
           />
 
           <ProfileDesktopSidebar
@@ -197,7 +217,8 @@ const ProfilePage: React.FC = () => {
             activeSection={activeSection}
             onNavigate={setActiveSection}
             onLogout={handleLogout}
-            reservationCount={reservationsLoading ? null : reservations.length}
+            reservationCount={isCustomer && !reservationsLoading ? reservations.length : null}
+            visibleSections={visibleSidebarSections}
           />
 
           <main className="flex-1 min-w-0">
@@ -206,6 +227,7 @@ const ProfilePage: React.FC = () => {
                 reservations={reservations}
                 upcomingReservations={upcomingReservations}
                 isLoading={reservationsLoading}
+                isCustomer={isCustomer}
                 onNavigate={setActiveSection}
               />
             )}
@@ -231,6 +253,7 @@ interface OverviewSectionProps {
   reservations: Reservation[];
   upcomingReservations: Reservation[];
   isLoading: boolean;
+  isCustomer: boolean;
   onNavigate: (section: SidebarSection) => void;
 }
 
@@ -238,6 +261,7 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({
   reservations,
   upcomingReservations,
   isLoading,
+  isCustomer,
   onNavigate,
 }) => {
   const { user } = useAuth();
@@ -385,30 +409,32 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({
           Welcome back, {user?.first_name}!
         </h1>
         <p className="text-ot-pale-sky dark:text-dark-text-secondary mt-1">
-          Here's an overview of your account activity.
+          {isCustomer ? "Here's an overview of your account activity." : "Manage your account details below."}
         </p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        {statCards.map((card, i) => (
-          <div
-            key={i}
-            className="bg-white dark:bg-dark-paper rounded-xl border border-ot-iron dark:border-dark-border p-4 shadow-sm"
-          >
+      {isCustomer && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          {statCards.map((card, i) => (
             <div
-              className={`w-10 h-10 rounded-lg ${card.color} flex items-center justify-center mb-3`}
+              key={i}
+              className="bg-white dark:bg-dark-paper rounded-xl border border-ot-iron dark:border-dark-border p-4 shadow-sm"
             >
-              {card.icon}
+              <div
+                className={`w-10 h-10 rounded-lg ${card.color} flex items-center justify-center mb-3`}
+              >
+                {card.icon}
+              </div>
+              <p className="text-2xl font-bold text-ot-charade dark:text-dark-text">
+                {isLoading ? '–' : card.value}
+              </p>
+              <p className="text-xs text-ot-manatee dark:text-dark-text-secondary mt-0.5">
+                {card.label}
+              </p>
             </div>
-            <p className="text-2xl font-bold text-ot-charade dark:text-dark-text">
-              {isLoading ? '–' : card.value}
-            </p>
-            <p className="text-xs text-ot-manatee dark:text-dark-text-secondary mt-0.5">
-              {card.label}
-            </p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <div className="bg-white dark:bg-dark-paper rounded-xl border border-ot-iron dark:border-dark-border overflow-hidden shadow-sm mb-8">
         <div className="px-6 py-4 border-b border-ot-iron dark:border-dark-border flex items-center justify-between">
@@ -436,7 +462,7 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({
         </div>
       </div>
 
-      {upcomingReservations.length > 0 && (
+      {isCustomer && upcomingReservations.length > 0 && (
         <div className="bg-white dark:bg-dark-paper rounded-xl border border-ot-iron dark:border-dark-border overflow-hidden shadow-sm mb-8">
           <div className="px-6 py-4 border-b border-ot-iron dark:border-dark-border flex items-center justify-between">
             <h2 className="text-sm font-bold text-ot-charade dark:text-dark-text">
@@ -479,25 +505,27 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({
       )}
 
       <div className="flex flex-wrap gap-3">
-        <Link
-          to="/search"
-          className="inline-flex items-center gap-2 bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-6 py-3 rounded-lg transition-colors text-sm"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
+        {isCustomer && (
+          <Link
+            to="/search"
+            className="inline-flex items-center gap-2 bg-ot-primary hover:bg-ot-primary-dark text-white font-bold px-6 py-3 rounded-lg transition-colors text-sm"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-          Browse Restaurants
-        </Link>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            Browse Restaurants
+          </Link>
+        )}
         <button
           onClick={() => onNavigate('settings')}
           className="inline-flex items-center gap-2 bg-white dark:bg-dark-paper border border-ot-iron dark:border-dark-border text-ot-charade dark:text-dark-text font-bold px-6 py-3 rounded-lg hover:bg-ot-athens-gray dark:hover:bg-dark-surface transition-colors text-sm"
@@ -1623,6 +1651,7 @@ interface ProfileDesktopSidebarProps {
   onNavigate: (section: SidebarSection) => void;
   onLogout: () => void;
   reservationCount: number | null;
+  visibleSections: ProfileSidebarSection[];
 }
 
 const ProfileDesktopSidebar: React.FC<ProfileDesktopSidebarProps> = ({
@@ -1631,6 +1660,7 @@ const ProfileDesktopSidebar: React.FC<ProfileDesktopSidebarProps> = ({
   onNavigate,
   onLogout,
   reservationCount,
+  visibleSections,
 }) => {
   const [collapsed, setCollapsed] = useState(getInitialProfileCollapsed);
 
@@ -1691,7 +1721,7 @@ const ProfileDesktopSidebar: React.FC<ProfileDesktopSidebarProps> = ({
       )}
 
       <nav className="flex flex-col gap-6 flex-1">
-        {PROFILE_SIDEBAR_SECTIONS.map((section) => (
+        {visibleSections.map((section) => (
           <div key={section.label}>
             {!collapsed && (
               <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-dark-text-secondary mb-2 px-3">
@@ -1764,12 +1794,14 @@ interface ProfileMobileNavProps {
   user?: User;
   activeSection: SidebarSection;
   onNavigate: (section: SidebarSection) => void;
+  allVisibleItems: ProfileSidebarItem[];
 }
 
 const ProfileMobileNav: React.FC<ProfileMobileNavProps> = ({
   user,
   activeSection,
   onNavigate,
+  allVisibleItems,
 }) => (
   <div className="lg:hidden mb-4">
     <div className="flex items-center gap-3 mb-4">
@@ -1787,7 +1819,7 @@ const ProfileMobileNav: React.FC<ProfileMobileNavProps> = ({
       </div>
     </div>
     <nav className="flex gap-1 overflow-x-auto pb-4 border-b border-gray-200 dark:border-dark-border">
-      {ALL_SIDEBAR_ITEMS.map((item) => {
+      {allVisibleItems.map((item) => {
         const Icon = item.icon;
         const active = activeSection === item.key;
         return (

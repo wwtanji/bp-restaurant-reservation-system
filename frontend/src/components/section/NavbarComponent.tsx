@@ -9,10 +9,8 @@ import {
   BellIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext';
-import { useNotification } from '../../context/NotificationContext';
 import { useThemeMode } from '../../context/ThemeContext';
 import { Link, useNavigate } from 'react-router-dom';
-import NotificationComponent from '../notification/NotificationComponent';
 import { OWNER_ROLE } from '../../constants/dashboard';
 import { ADMIN_ROLE } from '../../constants/admin';
 import { STORAGE_KEY_JUST_LOGGED_IN } from '../../constants/storage';
@@ -20,7 +18,6 @@ import { STORAGE_KEY_JUST_LOGGED_IN } from '../../constants/storage';
 const NavbarComponent: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, logout: authLogout } = useAuth();
-  const { show } = useNotification();
   const { isDark, toggleTheme } = useThemeMode();
   const navigate = useNavigate();
 
@@ -33,7 +30,6 @@ const NavbarComponent: React.FC = () => {
   const handleLogout = () => {
     authLogout();
     localStorage.removeItem(STORAGE_KEY_JUST_LOGGED_IN);
-    show('You have successfully logged out', 'error');
     navigate('/');
   };
 
@@ -69,7 +65,6 @@ const NavbarComponent: React.FC = () => {
 
   return (
     <>
-      <NotificationComponent />
       <header className="bg-white dark:bg-dark-paper border-b border-ot-iron dark:border-dark-border">
         <nav
           aria-label="Global"

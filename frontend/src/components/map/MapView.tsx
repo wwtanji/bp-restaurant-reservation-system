@@ -22,9 +22,54 @@ const MARKER_BG_INACTIVE = '#ffffff';
 const MARKER_TEXT_ACTIVE = '#ffffff';
 const MARKER_TEXT_INACTIVE = '#2D333F';
 const MARKER_BORDER_INACTIVE = '1px solid #E5E7EB';
-const MARKER_NO_RATING_LABEL = 'New';
 
-const createPillMarker = (rating: number | null, isActive: boolean): L.DivIcon =>
+const DOT_COLOR = '#4F46E5';
+const DOT_COLOR_ACTIVE = '#2D333F';
+
+const createDotMarker = (isActive: boolean): L.DivIcon => {
+  const outerSize = isActive ? 26 : 20;
+  const innerSize = isActive ? 14 : 10;
+  const haloOpacity = isActive ? '0.25' : '0.15';
+  const haloBorder = isActive ? `1.5px solid rgba(79,70,229,0.5)` : `1px solid rgba(79,70,229,0.3)`;
+  const dotColor = isActive ? DOT_COLOR_ACTIVE : DOT_COLOR;
+  const shadow = isActive ? '0 4px 14px rgba(79,70,229,0.45)' : '0 1px 6px rgba(79,70,229,0.25)';
+
+  return L.divIcon({
+    className: '',
+    html: `
+      <div style="
+        position: relative;
+        width: ${outerSize}px;
+        height: ${outerSize}px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      ">
+        <div style="
+          position: absolute;
+          inset: 0;
+          border-radius: 50%;
+          background: rgba(79,70,229,${haloOpacity});
+          border: ${haloBorder};
+        "></div>
+        <div style="
+          width: ${innerSize}px;
+          height: ${innerSize}px;
+          border-radius: 50%;
+          background: ${dotColor};
+          border: 2px solid #ffffff;
+          box-shadow: ${shadow};
+          transition: all 0.15s ease;
+        "></div>
+      </div>
+    `,
+    iconSize: [outerSize, outerSize],
+    iconAnchor: [outerSize / 2, outerSize / 2],
+  });
+};
+
+const createPillMarker = (rating: number, isActive: boolean): L.DivIcon =>
   L.divIcon({
     className: '',
     html: `
@@ -46,7 +91,7 @@ const createPillMarker = (rating: number | null, isActive: boolean): L.DivIcon =
         border: ${isActive ? 'none' : MARKER_BORDER_INACTIVE};
         box-shadow: ${isActive ? '0 4px 12px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.15)'};
         transform: ${isActive ? 'scale(1.15)' : 'scale(1)'};
-      ">${rating ? rating.toFixed(1) : MARKER_NO_RATING_LABEL}</div>
+      ">${rating.toFixed(1)}</div>
     `,
     iconSize: [40, 28],
     iconAnchor: [20, 14],
@@ -182,7 +227,10 @@ const RestaurantMarker: React.FC<RestaurantMarkerProps> = ({
   onSelect,
 }) => {
   const icon = useMemo(
-    () => createPillMarker(restaurant.rating, isActive),
+    () =>
+      restaurant.rating
+        ? createPillMarker(restaurant.rating, isActive)
+        : createDotMarker(isActive),
     [restaurant.rating, isActive],
   );
 

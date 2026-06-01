@@ -32,7 +32,7 @@ const RestaurantCard = React.memo<{
     onClick={onClick}
     className="flex-shrink-0 w-[234px] cursor-pointer group rounded-lg border border-ot-iron dark:border-dark-border shadow-sm hover:shadow-md transition-shadow overflow-hidden"
   >
-    <div className="relative h-[140px] overflow-hidden bg-ot-athens-gray dark:bg-dark-bg">
+    <div className="relative h-[156px] overflow-hidden bg-ot-athens-gray dark:bg-dark-bg">
       <img
         src={resolveImageUrl(restaurant.cover_image) || getFallbackImage(restaurant.id)}
         alt={restaurant.name}
@@ -41,13 +41,15 @@ const RestaurantCard = React.memo<{
         }}
         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
       />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 px-3 pb-2.5">
+        <h3 className="font-bold text-white text-[15px] leading-snug line-clamp-1 drop-shadow-sm">
+          {restaurant.name}
+        </h3>
+      </div>
     </div>
 
-    <div className="flex flex-col items-start p-2 h-[160px] bg-white dark:bg-dark-paper">
-      <h3 className="w-full font-bold text-[17px] leading-6 text-ot-charade dark:text-dark-text line-clamp-1 pb-1">
-        {restaurant.name}
-      </h3>
-
+    <div className="flex flex-col items-start p-2 bg-white dark:bg-dark-paper">
       <div className="flex items-center pb-1">
         <StarRating rating={restaurant.rating ?? 0} />
         <span className="text-[12.7px] font-medium leading-5 text-ot-charade dark:text-dark-text pl-1">
@@ -55,7 +57,7 @@ const RestaurantCard = React.memo<{
         </span>
       </div>
 
-      <p className="text-[13.8px] leading-5 text-ot-charade dark:text-dark-text pb-2">
+      <p className="w-full text-[13.8px] leading-5 text-ot-charade dark:text-dark-text pb-2 truncate">
         {restaurant.cuisine}
         <span className="mx-1">&middot;</span>
         {PRICE_SYMBOLS[restaurant.price_range]}

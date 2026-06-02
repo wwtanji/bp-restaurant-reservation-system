@@ -40,8 +40,6 @@ async def stripe_webhook(
         payment_service.handle_checkout_completed(db, event.data.object)
     elif event.type == "checkout.session.expired":
         payment_service.handle_checkout_expired(db, event.data.object)
-    elif event.type == "charge.refunded":
-        payment_service.handle_charge_refunded(db, event.data.object)
 
     return {"status": "ok"}
 

@@ -68,6 +68,11 @@ class TestRegister:
         resp = test_client.post(REGISTER_URL, json=data)
         assert resp.status_code == 200
 
+    def test_admin_role_registration_rejected(self, test_client: TestClient):
+        data = {**VALID_REGISTRATION, "role": UserRole.ADMIN}
+        resp = test_client.post(REGISTER_URL, json=data)
+        assert resp.status_code == 422
+
 
 class TestLogin:
     def test_success(self, test_client: TestClient):

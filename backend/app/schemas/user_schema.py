@@ -7,6 +7,8 @@ from email_validator import validate_email, EmailNotValidError
 from app.models.user import UserRole
 from app.schemas.validators import validate_password_strength
 
+SELF_REGISTRATION_ROLES = (UserRole.CUSTOMER, UserRole.RESTAURANT_OWNER)
+
 
 class UserRegister(BaseModel):
     role: UserRole = UserRole.CUSTOMER
@@ -19,12 +21,11 @@ class UserRegister(BaseModel):
     @field_validator("role")
     @classmethod
     def validate_role(cls, value: int) -> int:
-        try:
-            return UserRole(value)
-        except ValueError:
+        if value not in SELF_REGISTRATION_ROLES:
             raise ValueError(
-                f"Invalid role. Must be one of: {[role.value for role in UserRole]}"
+                f"Invalid role. Must be one of: {[role.value for role in SELF_REGISTRATION_ROLES]}"
             )
+        return UserRole(value)
 
     @field_validator("user_password")
     @classmethod

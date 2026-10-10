@@ -35,7 +35,7 @@ class TestCreateReservation:
                 "reservation_time": "18:00:00",
             },
         )
-        assert resp.status_code == 403
+        assert resp.status_code == 401
 
     def test_wrong_role(self, test_client, owner, restaurant, auth_headers):
         headers = auth_headers(owner)

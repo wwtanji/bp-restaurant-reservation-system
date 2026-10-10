@@ -52,7 +52,7 @@ class TestCreateReview:
             f"/reviews/{restaurant.id}",
             json={"rating": 5},
         )
-        assert resp.status_code == 403
+        assert resp.status_code == 401
 
     def test_invalid_rating_too_high(self, test_client, customer, restaurant, auth_headers):
         headers = auth_headers(customer)

@@ -70,7 +70,7 @@ class TestListRestaurants:
 
     def test_no_auth(self, test_client):
         resp = test_client.get("/restaurants/")
-        assert resp.status_code == 403
+        assert resp.status_code == 401
 
 
 class TestListCities:

@@ -186,7 +186,7 @@ class TestGetMe:
 
     def test_no_token(self, test_client: TestClient):
         resp = test_client.get(ME_URL)
-        assert resp.status_code == 403
+        assert resp.status_code == 401
 
 
 class TestUpdateMe:
@@ -204,7 +204,7 @@ class TestUpdateMe:
         resp = test_client.put(
             ME_URL, json={"first_name": "Updated", "last_name": "Name"}
         )
-        assert resp.status_code == 403
+        assert resp.status_code == 401
 
 
 class TestChangePassword:

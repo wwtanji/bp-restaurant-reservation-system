@@ -60,7 +60,7 @@ class TestCreateCheckoutSession:
             "/payments/create-session",
             json={"reservation_id": 1},
         )
-        assert resp.status_code == 403
+        assert resp.status_code == 401
 
     @patch("app.services.payment_service.stripe")
     def test_already_paid(
@@ -280,7 +280,7 @@ class TestListMyPayments:
 
     def test_no_auth(self, test_client):
         resp = test_client.get("/payments/my")
-        assert resp.status_code == 403
+        assert resp.status_code == 401
 
 
 class TestGetPaymentBySession:

@@ -37,15 +37,15 @@ class TestFavorites:
 
     def test_no_auth_list(self, test_client):
         resp = test_client.get("/favorites/")
-        assert resp.status_code == 403
+        assert resp.status_code == 401
 
     def test_no_auth_add(self, test_client, restaurant):
         resp = test_client.post(f"/favorites/{restaurant.id}")
-        assert resp.status_code == 403
+        assert resp.status_code == 401
 
     def test_no_auth_remove(self, test_client, restaurant):
         resp = test_client.delete(f"/favorites/{restaurant.id}")
-        assert resp.status_code == 403
+        assert resp.status_code == 401
 
     def test_add_nonexistent_restaurant(self, test_client, customer, auth_headers):
         headers = auth_headers(customer)

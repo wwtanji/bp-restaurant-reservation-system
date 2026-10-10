@@ -35,7 +35,7 @@ class TestCreateRestaurant:
 
     def test_no_auth(self, test_client):
         resp = test_client.post(f"{BASE_URL}/", json=RESTAURANT_DATA)
-        assert resp.status_code == 403
+        assert resp.status_code == 401
 
     def test_customer_forbidden(self, test_client, customer, auth_headers):
         headers = auth_headers(customer)

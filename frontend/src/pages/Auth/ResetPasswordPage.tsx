@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import NavbarComponent from '../../components/section/NavbarComponent';
+import { API_URL } from '../../utils/api';
 
 const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -55,7 +56,7 @@ const ResetPasswordPage: React.FC = () => {
     setErrors({});
 
     try {
-      const response = await fetch('http://localhost:8000/api/authentication/reset-password', {
+      const response = await fetch(`${API_URL}/authentication/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: token, new_password: password }),

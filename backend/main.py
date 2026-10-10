@@ -1,3 +1,4 @@
+import os
 import fastapi as fa
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -7,9 +8,9 @@ import app.models
 
 API = fa.FastAPI(title="API", version="0.1.0", root_path="/api")
 
-origins = [
-    "http://localhost:3000",
-]
+DEFAULT_CORS_ORIGINS = "http://localhost:3000"
+
+origins = os.getenv("CORS_ORIGINS", DEFAULT_CORS_ORIGINS).split(",")
 
 API.add_middleware(
     CORSMiddleware,

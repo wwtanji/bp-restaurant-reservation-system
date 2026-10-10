@@ -1,0 +1,62 @@
+# Оверрайд для локальной разработки: hot-reload фронта и бэка.
+# Применяется явно: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# (файл намеренно НЕ назван docker-compose.override.yml, чтобы прод-запуск
+#  `docker compose up -d` никогда не подхватил dev-режим случайно)
+
+services:
+  db:
+    # Порт наружу для DBeaver/phpMyAdmin. 3307, чтобы не конфликтовать с локальным XAMPP на 3306
+    ports:
+      - '${DB_PORT:-3307}:3306'
+    networks:
+      - backend_net
+      - frontend_net
+
+  backend:
+    volumes:
+      # Монтируется только код — uvicorn --reload перезапускается на каждое сохранение.
+      # Каталог ./backend целиком монтировать НЕЛЬЗЯ: внутрь попадёт хостовый backend/.env,
+      # а load_dotenv(override=True) в migrations/env.py перебьёт им DATABASE_URL из compose
+      # (там localhost вместо db) и миграции упадут.
+      - ./backend/app:/app/app
+      - ./backend/main.py:/app/main.py
+      - ./backend/static/uploads:/app/static/uploads
+    # Явный /bin/sh: бит исполнения у .sh теряется при чекауте на Windows
+    entrypoint: ['/usr/bin/tini', '--', '/bin/sh', '/app/docker-entrypoint.sh']
+    command:
+      [
+        'uvicorn',
+        'main:API',
+        '--host',
+        '0.0.0.0',
+        '--port',
+        '8000',
+        '--reload',
+      ]
+    environment:
+      # Ссылки в письмах ведут на dev-сервер CRA
+      FRONTEND_URL: http://localhost:3000
+    ports:
+      - '${BACKEND_PORT:-8000}:8000'
+
+  frontend:
+    build:
+      target: development
+    command: ['npm', 'start']
+    environment:
+      # В dev-режиме nginx не участвует: CRA дергает бэкенд напрямую,
+      # CORS для http://localhost:3000 уже разрешён в main.py
+      REACT_APP_API_URL: http://localhost:8000/api
+      # Опрос файловой системы — без него webpack не видит правки в bind-mount на Windows/WSL
+      WATCHPACK_POLLING: 'true'
+      PORT: '3000'
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      - ./frontend/tailwind.config.js:/app/tailwind.config.js
+    ports:
+      - '${FRONTEND_DEV_PORT:-3000}:3000'
+    healthcheck:
+      # У dev-сервера CRA нет /healthz
+      disable: true

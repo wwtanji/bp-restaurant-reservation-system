@@ -1,6 +1,8 @@
 import { STORAGE_KEY_TOKEN, STORAGE_KEY_REFRESH_TOKEN } from '../constants/storage';
 
-export const API_URL = 'http://localhost:8000/api';
+const DEFAULT_API_URL = 'http://localhost:8000/api';
+
+export const API_URL = process.env.REACT_APP_API_URL || DEFAULT_API_URL;
 
 export class ApiError extends Error {
   constructor(
